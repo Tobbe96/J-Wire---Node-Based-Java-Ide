@@ -104,6 +104,13 @@ export interface StringOpNodeData extends Record<string, unknown> {
   operation: string;
 }
 
+export interface ArrayNodeData extends Record<string, unknown> {
+  label: string;
+  operation: string; // 'literal' | 'access' | 'length'
+  arrayType: string; // 'int' | 'String'
+  values?: string;   // comma-separated values for literal
+}
+
 // ─── Enriched Data (injected at runtime by page.tsx) ───────────
 
 export type EnrichedData<T> = T & {

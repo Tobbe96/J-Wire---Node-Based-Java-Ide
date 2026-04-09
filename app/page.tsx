@@ -19,6 +19,7 @@ import SetLocalVarNode from './components/Nodes/SetLocalVarNode';
 import SetVariableNode from './components/Nodes/SetVariableNode';
 import VariableGetterNode from './components/Nodes/VariableGetterNode';
 import StringOpNode from './components/Nodes/StringOpNode';
+import ArrayOpNode from './components/Nodes/ArrayOpNode';
 
 // Panels & UI
 import LeftSidebar from './components/Panels/LeftSidebar';
@@ -47,6 +48,7 @@ const nodeTypes = {
   setLocalVar: SetLocalVarNode,
   setVar: SetVariableNode,
   stringOp: StringOpNode,
+  arrayOp: ArrayOpNode,
 };
 
 function JavaNodeEditor() {
@@ -66,6 +68,8 @@ function JavaNodeEditor() {
     runScript,
     saveNodeGraph,
     loadNodeGraph,
+    exportToFile,
+    importFromFile,
     updateNodeData,
     updateNodeModifier,
     addGetter,
@@ -185,6 +189,8 @@ function JavaNodeEditor() {
           onSelectNode={setSelectedSidebarNodeId}
           onSave={saveNodeGraph}
           onLoad={loadNodeGraph}
+          onExport={exportToFile}
+          onImport={importFromFile}
           updateNodeModifier={updateNodeModifier}
           updateNodeData={updateNodeData}
           onAddGetter={addGetter}

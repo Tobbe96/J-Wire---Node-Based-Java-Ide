@@ -99,6 +99,34 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
       }
     }
 
+    if (node.type === 'arrayOp') {
+      switch (node.data.operation) {
+        case 'literal': {
+          const arrayType = (node.data.arrayType as string) || 'int';
+          const rawValues = (node.data.values as string) || '';
+          const items = rawValues.split(',').map(v => v.trim()).filter(Boolean);
+          return arrayType === 'int'
+            ? items.map(v => Number(v))
+            : items.map(v => String(v));
+        }
+        case 'access': {
+          const edgeArr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-array');
+          const edgeIdx = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-index');
+          const arr = evaluateData(edgeArr?.source || "", edgeArr?.sourceHandle || undefined, localScope);
+          const idx = Number(evaluateData(edgeIdx?.source || "", edgeIdx?.sourceHandle || undefined, localScope));
+          if (Array.isArray(arr)) return arr[idx] ?? null;
+          return null;
+        }
+        case 'length': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const arr = evaluateData(edgeIn?.source || "", edgeIn?.sourceHandle || undefined, localScope);
+          if (Array.isArray(arr)) return arr.length;
+          return 0;
+        }
+        default: return null;
+      }
+    }
+
     if (node.type === 'for') {
       if (localScope && ('__for_index__' + nodeId) in localScope) {
         return localScope['__for_index__' + nodeId];

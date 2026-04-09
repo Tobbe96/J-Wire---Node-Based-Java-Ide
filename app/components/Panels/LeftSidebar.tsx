@@ -9,6 +9,8 @@ interface LeftSidebarProps {
   onSelectNode: (id: string) => void;
   onSave: () => void;
   onLoad: () => void;
+  onExport: () => void;
+  onImport: (file: File) => void;
   updateNodeModifier: (id: string, modifier: string) => void;
   updateNodeData: (id: string, data: object | ((node: Node) => object)) => void;
   onAddGetter: (variableNode: Node) => void;
@@ -22,6 +24,8 @@ const LeftSidebar = ({
   onSelectNode,
   onSave,
   onLoad,
+  onExport,
+  onImport,
   updateNodeModifier,
   updateNodeData,
   onAddGetter,
@@ -49,9 +53,14 @@ const LeftSidebar = ({
     <div style={sidebarStyle}>
       <div style={{ padding: '15px', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', color: '#888' }}>PROJECT EXPLORER</span>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           <button onClick={onSave} style={btnStyleSave}>SAVE</button>
           <button onClick={onLoad} style={btnStyleLoad}>LOAD</button>
+          <button onClick={onExport} style={btnStyleLoad}>EXPORT</button>
+          <label style={{ ...btnStyleLoad, display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+            IMPORT
+            <input type="file" accept=".json" onChange={(e) => { if (e.target.files?.[0]) onImport(e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
+          </label>
         </div>
       </div>
 

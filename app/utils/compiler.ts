@@ -78,6 +78,32 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
         default: return '""';
       }
     }
+    if (node.type === 'arrayOp') {
+      switch (node.data.operation) {
+        case 'literal': {
+          const arrayType = (node.data.arrayType as string) || 'int';
+          const rawValues = (node.data.values as string) || '';
+          const items = rawValues.split(',').map(v => v.trim()).filter(Boolean);
+          const formatted = arrayType === 'String'
+            ? items.map(v => `"${v}"`).join(', ')
+            : items.join(', ');
+          return `new ${arrayType}[]{${formatted}}`;
+        }
+        case 'access': {
+          const edgeArr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-array');
+          const edgeIdx = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-index');
+          const arrExpr = edgeArr ? evaluateDataNode(edgeArr.source, edgeArr.sourceHandle || undefined) : 'null';
+          const idxExpr = edgeIdx ? evaluateDataNode(edgeIdx.source, edgeIdx.sourceHandle || undefined) : '0';
+          return `${arrExpr}[${idxExpr}]`;
+        }
+        case 'length': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const arrExpr = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : 'null';
+          return `${arrExpr}.length`;
+        }
+        default: return 'null';
+      }
+    }
     if (node.type === 'for') {
       return 'i';
     }

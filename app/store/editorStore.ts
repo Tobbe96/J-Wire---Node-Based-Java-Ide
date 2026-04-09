@@ -85,6 +85,8 @@ export interface EditorActions {
   // Persistence
   saveNodeGraph: () => void;
   loadNodeGraph: () => void;
+  exportToFile: () => void;
+  importFromFile: (file: File) => void;
 
   // Validation
   validateConnection: IsValidConnection;
@@ -254,14 +256,10 @@ export const useEditorStore = create<EditorStore>()(
 
       // --- Persistence ---
       saveNodeGraph: () => {
-        const { _rfInstance } = get();
-        if (_rfInstance) {
-          const flow = _rfInstance.toObject();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(flow));
-        } else {
-          const { nodes, edges } = get();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ nodes, edges }));
-        }
+        const { _rfInstance, className } = get();
+        const flow = _rfInstance ? _rfInstance.toObject() : { nodes: get().nodes, edges: get().edges };
+        const payload = { version: 2, className, ...flow, savedAt: new Date().toISOString() };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
         set((state) => ({
           consoleOutput: [...state.consoleOutput, '> Nodegraph saved to LocalStorage'],
         }));
@@ -274,9 +272,14 @@ export const useEditorStore = create<EditorStore>()(
           try {
             const flow = JSON.parse(savedData);
             if (flow) {
+              // Migrate v1 (no version field) to v2
+              const nodes = flow.nodes || [];
+              const edges = flow.edges || [];
+              const cls = flow.className || 'VisualScript';
               set({
-                nodes: flow.nodes || [],
-                edges: flow.edges || [],
+                nodes,
+                edges,
+                className: cls,
                 consoleOutput: ['> Nodegraph loaded successfully'],
               });
               useToastStore.getState().addToast('Project loaded', 'info');
@@ -286,6 +289,41 @@ export const useEditorStore = create<EditorStore>()(
             useToastStore.getState().addToast('Failed to load project', 'error');
           }
         }
+      },
+
+      exportToFile: () => {
+        const { _rfInstance, className } = get();
+        const flow = _rfInstance ? _rfInstance.toObject() : { nodes: get().nodes, edges: get().edges };
+        const payload = { version: 2, className, ...flow, savedAt: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${className || 'jflow-project'}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        useToastStore.getState().addToast('Project exported', 'success');
+      },
+
+      importFromFile: (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const flow = JSON.parse(e.target?.result as string);
+            if (flow && flow.nodes) {
+              set({
+                nodes: flow.nodes || [],
+                edges: flow.edges || [],
+                className: flow.className || 'VisualScript',
+                consoleOutput: ['> Project imported from file'],
+              });
+              useToastStore.getState().addToast('Project imported', 'success');
+            }
+          } catch {
+            useToastStore.getState().addToast('Invalid project file', 'error');
+          }
+        };
+        reader.readAsText(file);
       },
 
       // --- Validation ---

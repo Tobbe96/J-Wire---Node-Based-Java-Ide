@@ -2,7 +2,8 @@ export const NODE_CATEGORIES = {
   Variables: ['int', 'String', 'boolean'],
   Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'setVar', 'setLocalVar', 'print', 'return'],
   Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-gt', 'math-eq', 'math-and', 'math-or', 'math-not'],
-  Strings: ['string-concat', 'string-length', 'string-substring']
+  Strings: ['string-concat', 'string-length', 'string-substring'],
+  Arrays: ['array-literal', 'array-access', 'array-length']
 };
 
 export const NODE_CONFIGS: Record<string, any> = {
@@ -99,6 +100,11 @@ export const NODE_CONFIGS: Record<string, any> = {
   'string-concat': { type: 'stringOp', data: { label: 'STRING: Concat', operation: 'concat' } },
   'string-length': { type: 'stringOp', data: { label: 'STRING: Length', operation: 'length' } },
   'string-substring': { type: 'stringOp', data: { label: 'STRING: Substring', operation: 'substring' } },
+
+  // --- ARRAY OPERATIONS ---
+  'array-literal': { type: 'arrayOp', data: { label: 'Array Literal', operation: 'literal', arrayType: 'int', values: '1,2,3' } },
+  'array-access': { type: 'arrayOp', data: { label: 'Array Access', operation: 'access' } },
+  'array-length': { type: 'arrayOp', data: { label: 'Array Length', operation: 'length' } },
 
   // --- VARIABLES ---
   int: { 
