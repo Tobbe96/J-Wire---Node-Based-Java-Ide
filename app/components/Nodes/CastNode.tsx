@@ -22,7 +22,7 @@ const CastNode = ({ id, data, selected }: NodeProps<Node<CastNodeData>>) => {
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
-      <div style={nodeHeaderSolid(ACCENT)}>
+      <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         CAST (Type Convert)
       </div>
 

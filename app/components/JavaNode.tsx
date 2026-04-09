@@ -1,57 +1,61 @@
 import React, { memo } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { getTypeColor } from '../utils/theme';
-import { nodeHeaderGradient, execHandleStyle, dataHandleStyle } from '../utils/nodeStyles';
+import { nodeContainer, nodeHeaderGradient, execHandleStyle, dataHandleStyle } from '../utils/nodeStyles';
 
-const inputStyle = {
-  background: '#000',
-  border: '1px solid #444',
+const inputStyle: React.CSSProperties = {
+  background: 'rgba(0,0,0,0.5)',
+  border: '1px solid rgba(255,255,255,0.1)',
   color: '#fff',
-  fontSize: '10px',
-  padding: '4px',
+  fontSize: '11px',
+  padding: '4px 8px',
   width: '90px',
   outline: 'none',
+  borderRadius: '4px',
 };
 
-const JavaNode = ({ id, data }: { id: string; data: Record<string, unknown> }) => {
+const sanitizeJavaIdentifier = (value: string): string => {
+  return value.replace(/[^a-zA-Z0-9_$]/g, '');
+};
+
+const JavaNode = ({ id, data, selected }: { id: string; data: Record<string, unknown>; selected?: boolean }) => {
   const { updateNodeData } = useReactFlow();
   const color = getTypeColor(data.type as string);
+  const typeName = (data.type as string)?.toUpperCase() || 'VAR';
 
   return (
-    <div style={{
-      background: '#1a1a1a',
-      color: '#fff',
-      borderRadius: '4px',
-      border: '1px solid #000',
-      minWidth: '200px',
-      boxShadow: '0 10px 15px rgba(0,0,0,0.5)',
-      fontFamily: 'Segoe UI, Tahoma, sans-serif',
-    }}>
-      <div style={{ position: 'relative', height: '10px' }}>
-        <Handle type="target" position={Position.Top} id="exec-in" style={execHandleStyle('top')} />
-      </div>
-
-      <div style={nodeHeaderGradient(color)}>
-        <span>SET {(data.type as string)?.toUpperCase()}</span>
-        <span style={{ color }}>◆</span>
-      </div>
-
-      <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '10px', color: '#888' }}>Variable Name</span>
-          <input value={(data.label as string) || ''} onChange={(e) => updateNodeData(id, { label: e.target.value })} style={inputStyle} />
+    <div style={nodeContainer(color, !!selected)}>
+      <div className="jflow-header-shimmer" style={nodeHeaderGradient(color)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
+          <Handle type="target" position={Position.Left} id="exec-in" title="Execution in" style={execHandleStyle('left')} />
+          <span>SET {typeName}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '10px', color: '#888' }}>Value</span>
-          <input value={(data.value as string) || ''} onChange={(e) => updateNodeData(id, { value: e.target.value })} style={inputStyle} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
+          <span style={{ color }}>◆</span>
+          <Handle type="source" position={Position.Right} id="exec-out" title="Execution out" style={execHandleStyle('right')} />
         </div>
       </div>
 
-      <Handle type="target" position={Position.Left} id="data-in" style={dataHandleStyle(color, 'left')} />
-      <Handle type="source" position={Position.Right} id="data-out" style={dataHandleStyle(color, 'right')} />
+      <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#666' }}>Name</span>
+          <input className="nodrag" value={(data.label as string) || ''} onChange={(e) => updateNodeData(id, { label: sanitizeJavaIdentifier(e.target.value) })} style={inputStyle} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#666' }}>Value</span>
+          <input className="nodrag" value={(data.value as string) || ''} onChange={(e) => updateNodeData(id, { value: e.target.value })} style={inputStyle} />
+        </div>
+      </div>
 
-      <div style={{ position: 'relative', height: '10px' }}>
-        <Handle type="source" position={Position.Bottom} id="exec-out" style={{ ...execHandleStyle('bottom'), width: '100px' }} />
+      <div style={{ padding: '0 10px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Handle type="target" position={Position.Left} id="data-in" title={`Set ${data.type as string} value`} style={{ ...dataHandleStyle(color, 'left'), left: '-16px' }} />
+          <span style={{ fontSize: '10px', color: '#888' }}>Set</span>
+        </div>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <span style={{ fontSize: '10px', color, fontWeight: 'bold' }}>{data.type as string}</span>
+          <Handle type="source" position={Position.Right} id="data-out" title={`Output ${data.type as string}`} style={{ ...dataHandleStyle(color, 'right'), right: '-16px' }} />
+        </div>
       </div>
     </div>
   );

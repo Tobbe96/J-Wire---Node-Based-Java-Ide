@@ -1,5 +1,6 @@
 'use client';
 import React, { memo } from 'react';
+import { useVfxStore } from '../../store/vfxStore';
 
 interface TerminalProps {
   consoleOutput: string[];
@@ -11,12 +12,20 @@ interface TerminalProps {
 }
 
 const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDebugging }: TerminalProps) => {
+  const vfxEnabled = useVfxStore((s) => s.vfxEnabled);
+
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
         <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>TERMINAL</span>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={onRun} style={runButtonStyle}>
+          <button
+            onClick={onRun}
+            style={{
+              ...runButtonStyle,
+              ...(vfxEnabled ? { boxShadow: '0 0 8px #22c55e44', transition: 'box-shadow 0.3s ease' } : {}),
+            }}
+          >
             ▶ RUN SCRIPT
           </button>
           {onRunJava && (
@@ -27,6 +36,9 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
                 ...runJavaButtonStyle,
                 opacity: isCompiling ? 0.6 : 1,
                 cursor: isCompiling ? 'not-allowed' : 'pointer',
+                ...(vfxEnabled && isCompiling
+                  ? { animation: 'vfx-btn-glow 1s ease-in-out infinite', '--btn-glow-color': '#f9731688' } as React.CSSProperties
+                  : {}),
               }}
             >
               {isCompiling ? '⏳ COMPILING...' : '☕ RUN JAVA'}
@@ -38,6 +50,9 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
               style={{
                 ...debugButtonStyle,
                 background: isDebugging ? '#ef4444' : '#fbbf24',
+                ...(vfxEnabled && isDebugging
+                  ? { boxShadow: '0 0 12px #ef444488' }
+                  : {}),
               }}
             >
               {isDebugging ? '⏹ STOP DEBUG' : '🐛 DEBUG'}
@@ -45,7 +60,17 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
           )}
         </div>
       </div>
-      <div style={outputStyle}>
+      <div style={{ ...outputStyle, position: 'relative' }}>
+        {/* Scanline overlay */}
+        {vfxEnabled && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.015) 2px, rgba(255,255,255,0.015) 4px)',
+            zIndex: 1,
+          }} />
+        )}
         {consoleOutput.length === 0 && (
           <span style={{ color: '#555' }}>Ready to run...</span>
         )}
@@ -55,6 +80,7 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
             style={{
               marginBottom: '6px',
               color: line.startsWith('>') ? '#22c55e' : '#fff',
+              ...(vfxEnabled ? { animation: 'vfx-line-fade-in 0.25s ease-out both', animationDelay: `${i * 30}ms` } : {}),
             }}
           >
             {line}

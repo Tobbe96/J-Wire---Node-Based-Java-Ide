@@ -23,7 +23,7 @@ describe('executeGraph', () => {
     expect(output[output.length - 1]).toBe('> Process finished.');
   });
 
-  it('prints null when no data is connected', () => {
+  it('prints empty when no data is connected and no inline value', () => {
     const nodes: Node[] = [
       makeNode('main', 'main', { label: 'Main' }),
       makeNode('p1', 'print', { label: 'Print' }),
@@ -32,7 +32,7 @@ describe('executeGraph', () => {
       makeEdge('main', 'p1', 'exec-out', 'exec-in'),
     ];
     const output = executeGraph(nodes, edges);
-    expect(output).toContain('> null');
+    expect(output).toContain('> ');
   });
 
   it('prints variable value', () => {
@@ -299,5 +299,169 @@ describe('executeGraph', () => {
     ];
     const output = executeGraph(nodes, edges);
     expect(output).toContain('> true');
+  });
+
+  // --- Scanner tests ---
+
+  it('reads scanner input via inputProvider and prints it', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read Line', readType: 'nextLine' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'data-out', 'data-in'),
+    ];
+    const inputProvider = () => 'Hello World';
+    const output = executeGraph(nodes, edges, inputProvider);
+    expect(output).toContain('> Hello World');
+    expect(output).toContain('< Hello World');
+  });
+
+  it('reads scanner nextInt and parses to number', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read Int', readType: 'nextInt' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'data-out', 'data-in'),
+    ];
+    const inputProvider = () => '42';
+    const output = executeGraph(nodes, edges, inputProvider);
+    expect(output).toContain('> 42');
+  });
+
+  it('uses empty string when no inputProvider for scanner', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read Line', readType: 'nextLine' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> ');
+    expect(output).toContain('< ');
+  });
+
+  it('shows prompt message before scanner read', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'msg', type: 'String', value: 'Enter name:' }),
+      makeNode('sc1', 'scanner', { label: 'Read Line', readType: 'nextLine' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'sc1', 'data-out', 'data-in-prompt'),
+      makeEdge('sc1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'data-out', 'data-in'),
+    ];
+    const inputProvider = () => 'Alice';
+    const output = executeGraph(nodes, edges, inputProvider);
+    expect(output).toContain('> Enter name:');
+    expect(output).toContain('> Alice');
+  });
+
+  // --- Literal node tests ---
+
+  it('prints literal String value directly', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('lit1', 'literal', { label: 'Literal', literalType: 'String', value: 'hello world' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('lit1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> hello world');
+  });
+
+  it('prints literal int value', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('lit1', 'literal', { label: 'Literal', literalType: 'int', value: '42' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('lit1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 42');
+  });
+
+  it('uses literal as scanner prompt', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('lit1', 'literal', { label: 'Literal', literalType: 'String', value: 'What is your name?' }),
+      makeNode('sc1', 'scanner', { label: 'Read Line', readType: 'nextLine' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('lit1', 'sc1', 'data-out', 'data-in-prompt'),
+      makeEdge('sc1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'data-out', 'data-in'),
+    ];
+    const inputProvider = () => 'Bob';
+    const output = executeGraph(nodes, edges, inputProvider);
+    expect(output).toContain('> What is your name?');
+    expect(output).toContain('> Bob');
+  });
+
+  // --- Inline default tests ---
+
+  it('prints inline value when no data edge connected', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('p1', 'print', { label: 'Print', inlineValue: 'Hello inline' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> Hello inline');
+  });
+
+  it('uses inline prompt for scanner when no prompt edge', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read', readType: 'nextLine', inlinePrompt: 'Your name?' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'data-out', 'data-in'),
+    ];
+    const inputProvider = () => 'Alice';
+    const output = executeGraph(nodes, edges, inputProvider);
+    expect(output).toContain('> Your name?');
+    expect(output).toContain('> Alice');
+  });
+
+  it('uses inline A/B for math when no data edges', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('math1', 'math', { label: 'ADD', operation: '+', inlineA: '10', inlineB: '7' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('math1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 17');
   });
 });

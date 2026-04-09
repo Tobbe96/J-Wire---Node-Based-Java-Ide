@@ -16,10 +16,11 @@ export interface DebugStep {
  * Trace-generating executor: mirrors executeGraph logic but records
  * a DebugStep for every node visited so the UI can step through them.
  */
-export function traceExecution(nodes: Node[], edges: Edge[]): DebugStep[] {
+export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (prompt: string) => string | null): DebugStep[] {
   const steps: DebugStep[] = [];
   const consoleOutput: string[] = [];
   const runtimeMemory: Record<string, unknown> = {};
+  const scannerValues = new Map<string, unknown>();
 
   // Initialize variables
   nodes.filter(n => n.type === 'java').forEach(n => {
@@ -91,16 +92,30 @@ export function traceExecution(nodes: Node[], edges: Edge[]): DebugStep[] {
 
     if (node.type === 'java') return runtimeMemory[node.data.label as string];
 
+    if (node.type === 'literal') {
+      const litType = (node.data.literalType as string) || 'String';
+      const rawVal = (node.data.value as string) || '';
+      if (litType === 'String') return rawVal;
+      if (litType === 'boolean') return rawVal === 'true';
+      return Number(rawVal) || 0;
+    }
+
     if (node.type === 'print') {
       const dataEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
-      return dataEdge ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope) : '';
+      return dataEdge
+        ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+        : ((node.data.inlineValue as string) ?? '');
     }
 
     if (node.type === 'math') {
       const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
       const edgeB = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-b');
-      const valA = evaluateData(edgeA?.source || '', edgeA?.sourceHandle || undefined, localScope);
-      const valB = evaluateData(edgeB?.source || '', edgeB?.sourceHandle || undefined, localScope);
+      const valA = edgeA
+        ? evaluateData(edgeA.source, edgeA.sourceHandle || undefined, localScope)
+        : (node.data.inlineA != null && node.data.inlineA !== '' ? Number(node.data.inlineA) || 0 : 0);
+      const valB = edgeB
+        ? evaluateData(edgeB.source, edgeB.sourceHandle || undefined, localScope)
+        : (node.data.inlineB != null && node.data.inlineB !== '' ? Number(node.data.inlineB) || 0 : 0);
       switch (node.data.operation) {
         case '+': return Number(valA) + Number(valB);
         case '-': return Number(valA) - Number(valB);
@@ -180,6 +195,10 @@ export function traceExecution(nodes: Node[], edges: Edge[]): DebugStep[] {
       return 0;
     }
 
+    if (node.type === 'scanner') {
+      return scannerValues.get(nodeId) ?? '';
+    }
+
     return '';
   };
 
@@ -205,7 +224,9 @@ export function traceExecution(nodes: Node[], edges: Edge[]): DebugStep[] {
 
       if (nextNode.type === 'print') {
         const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
-        const val = evaluateData(dataEdge?.source || '', dataEdge?.sourceHandle || undefined, localScope);
+        const val = dataEdge
+          ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+          : ((nextNode.data.inlineValue as string) ?? '');
         consoleOutput.push(`> ${val}`);
         pushStep(nextNode.id, 'print', `Print: ${val}`, localScope, callStack);
       }
@@ -242,7 +263,9 @@ export function traceExecution(nodes: Node[], edges: Edge[]): DebugStep[] {
         const varName = nextNode.data.variableName as string;
         const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
         if (varName) {
-          runtimeMemory[varName] = evaluateData(dataEdge?.source || '', dataEdge?.sourceHandle || undefined, localScope);
+          runtimeMemory[varName] = dataEdge
+            ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+            : ((nextNode.data.inlineValue as string) ?? 0);
         }
         pushStep(nextNode.id, 'setVar', `Set ${varName} = ${runtimeMemory[varName]}`, localScope, callStack);
       }
@@ -251,14 +274,18 @@ export function traceExecution(nodes: Node[], edges: Edge[]): DebugStep[] {
         const localVarName = nextNode.data.localVarName as string;
         const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
         if (localVarName && localScope) {
-          localScope[localVarName] = evaluateData(dataEdge?.source || '', dataEdge?.sourceHandle || undefined, localScope);
+          localScope[localVarName] = dataEdge
+            ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+            : ((nextNode.data.inlineValue as string) ?? 0);
         }
         pushStep(nextNode.id, 'setLocalVar', `Set local ${localVarName} = ${localScope[localVarName]}`, localScope, callStack);
       }
 
       if (nextNode.type === 'branch') {
         const condEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
-        const condition = evaluateData(condEdge?.source || '', condEdge?.sourceHandle || undefined, localScope);
+        const condition = condEdge
+          ? evaluateData(condEdge.source, condEdge.sourceHandle || undefined, localScope)
+          : ((nextNode.data.inlineValue as string) === 'true');
         pushStep(nextNode.id, 'branch', `Branch: ${condition ? 'TRUE' : 'FALSE'}`, localScope, callStack);
         runLogicChain(nextNode.id, condition ? 'exec-out-true' : 'exec-out-false', localScope, callStack);
         break;
@@ -285,13 +312,38 @@ export function traceExecution(nodes: Node[], edges: Edge[]): DebugStep[] {
         pushStep(nextNode.id, 'while', 'While loop entry', localScope, callStack);
       }
 
+      if (nextNode.type === 'scanner') {
+        const readType = (nextNode.data.readType as string) || 'nextLine';
+        const promptEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-prompt');
+        const promptText = promptEdge
+          ? String(evaluateData(promptEdge.source, promptEdge.sourceHandle || undefined, localScope))
+          : ((nextNode.data.inlinePrompt as string) || '');
+
+        if (promptText) consoleOutput.push(`> ${promptText}`);
+
+        const rawInput = inputProvider ? (inputProvider(promptText || 'Enter input:') ?? '') : '';
+        consoleOutput.push(`< ${rawInput}`);
+
+        let value: unknown;
+        switch (readType) {
+          case 'nextInt': value = parseInt(rawInput, 10) || 0; break;
+          case 'nextFloat':
+          case 'nextDouble': value = parseFloat(rawInput) || 0; break;
+          case 'nextLong': value = parseInt(rawInput, 10) || 0; break;
+          case 'nextBoolean': value = rawInput === 'true'; break;
+          default: value = rawInput;
+        }
+        scannerValues.set(nextNode.id, value);
+        pushStep(nextNode.id, 'scanner', `Read ${readType}: ${rawInput}`, localScope, callStack);
+      }
+
       if (nextNode.type === 'return') {
         pushStep(nextNode.id, 'return', 'Return', localScope, callStack);
         break;
       }
 
       // Default fallthrough nodes (not already handled above with break)
-      if (!['print', 'callMethod', 'setVar', 'setLocalVar', 'branch', 'for', 'return', 'while'].includes(nextNode.type || '')) {
+      if (!['print', 'callMethod', 'setVar', 'setLocalVar', 'branch', 'for', 'return', 'while', 'scanner'].includes(nextNode.type || '')) {
         pushStep(nextNode.id, nextNode.type || 'unknown', `Execute ${nextNode.type}`, localScope, callStack);
       }
 

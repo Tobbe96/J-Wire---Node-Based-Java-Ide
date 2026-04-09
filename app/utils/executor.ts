@@ -2,14 +2,22 @@ import { Node, Edge } from '@xyflow/react';
 import { getRuntimeDefault } from './theme';
 import type { Parameter, LocalVariable } from './nodeTypes';
 
-export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
+export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prompt: string) => string | null): string[] {
   const consoleOutput: string[] = [];
   const runtimeMemory: Record<string, unknown> = {};
+  const scannerValues = new Map<string, unknown>();
   
   // 1. Initialize Memory (Variables)
   nodes.filter(n => n.type === 'java').forEach(n => {
     const varName = n.data.label as string;
-    runtimeMemory[varName] = n.data.type === 'int' ? Number(n.data.value) : String(n.data.value);
+    const varType = n.data.type as string;
+    if (varType === 'String') {
+      runtimeMemory[varName] = String(n.data.value);
+    } else if (varType === 'boolean') {
+      runtimeMemory[varName] = n.data.value === 'true';
+    } else {
+      runtimeMemory[varName] = Number(n.data.value);
+    }
   });
 
   const mainNode = nodes.find(n => n.type === 'main');
@@ -41,17 +49,31 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
     }
 
     if (node.type === 'java') return runtimeMemory[node.data.label as string];
+
+    if (node.type === 'literal') {
+      const litType = (node.data.literalType as string) || 'String';
+      const rawVal = (node.data.value as string) || '';
+      if (litType === 'String') return rawVal;
+      if (litType === 'boolean') return rawVal === 'true';
+      return Number(rawVal) || 0;
+    }
     
     if (node.type === 'print') {
       const dataEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
-      return dataEdge ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope) : "";
+      return dataEdge
+        ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+        : ((node.data.inlineValue as string) ?? "");
     }
     
     if (node.type === 'math') {
       const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
       const edgeB = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-b');
-      const valA = evaluateData(edgeA?.source || "", edgeA?.sourceHandle || undefined, localScope);
-      const valB = evaluateData(edgeB?.source || "", edgeB?.sourceHandle || undefined, localScope);
+      const valA = edgeA
+        ? evaluateData(edgeA.source, edgeA.sourceHandle || undefined, localScope)
+        : (node.data.inlineA != null && node.data.inlineA !== '' ? Number(node.data.inlineA) || 0 : 0);
+      const valB = edgeB
+        ? evaluateData(edgeB.source, edgeB.sourceHandle || undefined, localScope)
+        : (node.data.inlineB != null && node.data.inlineB !== '' ? Number(node.data.inlineB) || 0 : 0);
 
       switch (node.data.operation) {
         case '+': return Number(valA) + Number(valB);
@@ -168,9 +190,12 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
       const val = evaluateData(edgeIn?.source || "", edgeIn?.sourceHandle || undefined, localScope);
       const targetType = (node.data.targetType as string) || 'String';
       switch (targetType) {
-        case 'int': return parseInt(String(val), 10) || 0;
+        case 'int':
+        case 'short':
+        case 'byte': return parseInt(String(val), 10) || 0;
         case 'float':
-        case 'double': return parseFloat(String(val)) || 0;
+        case 'double':
+        case 'long': return parseFloat(String(val)) || 0;
         case 'boolean': return val === 'true' || val === true || val === 1;
         case 'String': return String(val);
         default: return val;
@@ -195,9 +220,14 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
           const arrayType = (node.data.arrayType as string) || 'int';
           const rawValues = (node.data.values as string) || '';
           const items = rawValues.split(',').map(v => v.trim()).filter(Boolean);
-          return arrayType === 'int'
-            ? items.map(v => Number(v))
-            : items.map(v => String(v));
+          if (arrayType === 'String') return items.map(v => String(v));
+          if (arrayType === 'boolean') return items.map(v => v === 'true');
+          return items.map(v => Number(v));
+        }
+        case 'new': {
+          const sizeEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-size');
+          const size = Number(evaluateData(sizeEdge?.source || "", sizeEdge?.sourceHandle || undefined, localScope)) || 0;
+          return new Array(size).fill(null);
         }
         case 'access': {
           const edgeArr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-array');
@@ -217,11 +247,29 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
       }
     }
 
+    if (node.type === 'forEach') {
+      if (localScope) {
+        if (sourceHandle === 'data-out-element') return localScope['__forEach_elem__' + nodeId] ?? null;
+        if (sourceHandle === 'data-out-index') return localScope['__forEach_idx__' + nodeId] ?? 0;
+      }
+      return null;
+    }
+
     if (node.type === 'for') {
       if (localScope && ('__for_index__' + nodeId) in localScope) {
         return localScope['__for_index__' + nodeId];
       }
       return 0;
+    }
+
+    if (node.type === 'tryCatchFinally') {
+      if (sourceHandle === 'data-out-exception' && localScope) {
+        return localScope['__exception_msg__' + nodeId] ?? '';
+      }
+    }
+
+    if (node.type === 'scanner') {
+      return scannerValues.get(nodeId) ?? '';
     }
 
     return "";
@@ -246,7 +294,9 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
 
       if (nextNode.type === 'print') {
         const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
-        const val = evaluateData(dataEdge?.source || "", dataEdge?.sourceHandle || undefined, localScope);
+        const val = dataEdge
+          ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+          : ((nextNode.data.inlineValue as string) ?? "");
         consoleOutput.push(`> ${val}`); 
       }
 
@@ -281,7 +331,9 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
         const varName = nextNode.data.variableName as string;
         const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
         if (varName) {
-          runtimeMemory[varName] = evaluateData(dataEdge?.source || "", dataEdge?.sourceHandle || undefined, localScope);
+          runtimeMemory[varName] = dataEdge
+            ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+            : ((nextNode.data.inlineValue as string) ?? 0);
         }
       }
 
@@ -289,13 +341,17 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
         const localVarName = nextNode.data.localVarName as string;
         const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
         if (localVarName && localScope) {
-          localScope[localVarName] = evaluateData(dataEdge?.source || "", dataEdge?.sourceHandle || undefined, localScope);
+          localScope[localVarName] = dataEdge
+            ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+            : ((nextNode.data.inlineValue as string) ?? 0);
         }
       }
 
       if (nextNode.type === 'branch') {
         const condEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
-        const condition = evaluateData(condEdge?.source || "", condEdge?.sourceHandle || undefined, localScope);
+        const condition = condEdge
+          ? evaluateData(condEdge.source, condEdge.sourceHandle || undefined, localScope)
+          : ((nextNode.data.inlineValue as string) === 'true');
         const signal = runLogicChain(nextNode.id, condition ? 'exec-out-true' : 'exec-out-false', localScope);
         if (signal === 'break' || signal === 'continue') return signal;
         break; 
@@ -349,6 +405,36 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
         break;
       }
 
+      // Array Set: arr[idx] = value
+      if (nextNode.type === 'arrayOp' && nextNode.data.operation === 'set') {
+        const arrEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-array');
+        const idxEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-index');
+        const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+        const arr = evaluateData(arrEdge?.source || "", arrEdge?.sourceHandle || undefined, localScope);
+        const idx = Number(evaluateData(idxEdge?.source || "", idxEdge?.sourceHandle || undefined, localScope));
+        const val = evaluateData(valEdge?.source || "", valEdge?.sourceHandle || undefined, localScope);
+        if (Array.isArray(arr) && idx >= 0 && idx < arr.length) {
+          arr[idx] = val;
+        }
+      }
+
+      // For-Each: iterate over array elements
+      if (nextNode.type === 'forEach') {
+        const arrEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-array');
+        const arr = evaluateData(arrEdge?.source || "", arrEdge?.sourceHandle || undefined, localScope);
+        if (Array.isArray(arr)) {
+          const feScope = localScope ? { ...localScope } : {};
+          for (let i = 0; i < arr.length; i++) {
+            feScope['__forEach_elem__' + nextNode.id] = arr[i];
+            feScope['__forEach_idx__' + nextNode.id] = i;
+            const signal = runLogicChain(nextNode.id, 'exec-body', feScope);
+            if (signal === 'break') break;
+          }
+        }
+        runLogicChain(nextNode.id, 'exec-out', localScope);
+        break;
+      }
+
       if (nextNode.type === 'switch') {
         const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
         const switchVal = evaluateData(valEdge?.source || "", valEdge?.sourceHandle || undefined, localScope);
@@ -368,6 +454,54 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
         }
         runLogicChain(nextNode.id, 'exec', localScope);
         break;
+      }
+
+      if (nextNode.type === 'tryCatchFinally') {
+        const tcfScope = localScope ? { ...localScope } : {};
+        try {
+          runLogicChain(nextNode.id, 'exec-try', tcfScope);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          tcfScope['__exception_msg__' + nextNode.id] = msg;
+          consoleOutput.push(`> CAUGHT: ${msg}`);
+          runLogicChain(nextNode.id, 'exec-catch', tcfScope);
+        } finally {
+          runLogicChain(nextNode.id, 'exec-finally', tcfScope);
+        }
+        runLogicChain(nextNode.id, 'exec-out', localScope);
+        break;
+      }
+
+      if (nextNode.type === 'throw') {
+        const msgEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
+        const message = msgEdge
+          ? String(evaluateData(msgEdge.source, msgEdge.sourceHandle || undefined, localScope))
+          : ((nextNode.data.inlineValue as string) || 'Error');
+        throw new Error(message);
+      }
+
+      if (nextNode.type === 'scanner') {
+        const readType = (nextNode.data.readType as string) || 'nextLine';
+        const promptEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-prompt');
+        const promptText = promptEdge
+          ? String(evaluateData(promptEdge.source, promptEdge.sourceHandle || undefined, localScope))
+          : ((nextNode.data.inlinePrompt as string) || '');
+
+        if (promptText) consoleOutput.push(`> ${promptText}`);
+
+        const rawInput = inputProvider ? (inputProvider(promptText || 'Enter input:') ?? '') : '';
+        consoleOutput.push(`< ${rawInput}`);
+
+        let value: unknown;
+        switch (readType) {
+          case 'nextInt': value = parseInt(rawInput, 10) || 0; break;
+          case 'nextFloat':
+          case 'nextDouble': value = parseFloat(rawInput) || 0; break;
+          case 'nextLong': value = parseInt(rawInput, 10) || 0; break;
+          case 'nextBoolean': value = rawInput === 'true'; break;
+          default: value = rawInput;
+        }
+        scannerValues.set(nextNode.id, value);
       }
 
       if (nextNode.type === 'return') {

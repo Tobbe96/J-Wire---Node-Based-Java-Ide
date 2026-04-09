@@ -12,7 +12,7 @@ const BOOL_COLOR = getTypeColor('boolean');
 
 const TernaryNode = ({ selected }: NodeProps<Node<TernaryNodeData>>) => (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-    <div style={nodeHeaderSolid(ACCENT)}>
+    <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
       TERNARY ( ? : )
     </div>
 

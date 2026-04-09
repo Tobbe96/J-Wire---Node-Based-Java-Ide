@@ -11,6 +11,7 @@ const EXECUTION_TIMEOUT_MS = 10_000;
 interface CompileRequest {
   code: string;
   className: string;
+  inputs?: string[];
 }
 
 interface CompileResponse {
@@ -25,7 +26,7 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const body = (await request.json()) as CompileRequest;
-    const { code, className } = body;
+    const { code, className, inputs } = body;
 
     if (!code || !className) {
       return Response.json(
@@ -70,11 +71,12 @@ export async function POST(request: Request): Promise<Response> {
 
     // --- Execute ---
     try {
+      const stdinInput = inputs && inputs.length > 0 ? inputs.join('\n') + '\n' : undefined;
       const stdout = execSync(`java "${safeClassName}"`, {
         cwd: workDir,
         timeout: EXECUTION_TIMEOUT_MS,
         stdio: 'pipe',
-        // Combine stderr into stdout so we capture runtime errors
+        input: stdinInput,
       });
       return Response.json({
         success: true,

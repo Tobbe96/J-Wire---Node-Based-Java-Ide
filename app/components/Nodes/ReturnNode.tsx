@@ -7,18 +7,18 @@ const ACCENT = '#9b59b6';
 
 const ReturnNode = ({ selected }: NodeProps<Node<ReturnNodeData>>) => (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '140px' }}>
-    <Handle type="target" position={Position.Top} id="exec-in" style={execHandleStyle('top')} />
-
-    <div style={nodeHeaderGradient(ACCENT)}>
-      <span>RETURN</span>
+    <div className="jflow-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
+        <Handle type="target" position={Position.Left} id="exec-in" style={execHandleStyle('left')} />
+        <span>RETURN</span>
+      </div>
       <span style={{ color: ACCENT }}>⮐</span>
     </div>
 
-    <div style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div style={{ padding: '10px', display: 'flex', alignItems: 'center', position: 'relative' }}>
+      <Handle type="target" position={Position.Left} id="data-in" style={{ ...dataHandleStyle(ACCENT, 'left'), left: '-16px' }} />
       <span style={{ fontSize: '10px', color: '#888' }}>Value</span>
     </div>
-
-    <Handle type="target" position={Position.Left} id="data-in" style={dataHandleStyle(ACCENT, 'left')} />
   </div>
 );
 

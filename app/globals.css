@@ -24,3 +24,247 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ═══════════════════════════════════════════════════════
+   VFX ANIMATIONS
+   ═══════════════════════════════════════════════════════ */
+
+/* --- Node glow pulse --- */
+@keyframes vfx-node-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.1); }
+}
+
+@keyframes vfx-node-pulse {
+  0%, 100% { box-shadow: var(--node-glow-shadow, 0 0 8px #6366f144); }
+  50% { box-shadow: var(--node-glow-shadow-bright, 0 0 20px #6366f188); }
+}
+
+/* --- Node hover lift --- */
+.react-flow__node:hover {
+  filter: brightness(1.08);
+}
+
+.react-flow__node.selected {
+  z-index: 10 !important;
+}
+
+/* --- Handle hover glow + scale --- */
+.react-flow__handle {
+  transition: box-shadow 0.2s ease, transform 0.2s ease, filter 0.2s ease !important;
+}
+
+.react-flow__handle:hover {
+  transform: scale(1.4) !important;
+  filter: brightness(1.4) drop-shadow(0 0 6px currentColor);
+  z-index: 20 !important;
+}
+
+/* Connecting state: pulse valid handles */
+.react-flow__handle.connectingto,
+.react-flow__handle.connectingfrom {
+  animation: vfx-handle-pulse 1s ease-in-out infinite !important;
+}
+
+/* --- Handle pulse --- */
+@keyframes vfx-handle-pulse {
+  0%, 100% { box-shadow: 0 0 4px var(--handle-color, #fff); transform: scale(1); }
+  50% { box-shadow: 0 0 12px var(--handle-color, #fff); transform: scale(1.2); }
+}
+
+/* --- Edge flowing dashes --- */
+@keyframes vfx-edge-flow {
+  from { stroke-dashoffset: 20; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* --- Connection spark burst --- */
+.vfx-spark-burst {
+  width: 0;
+  height: 0;
+}
+
+.vfx-spark-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color, #6366f1);
+  animation: vfx-spark-fly 0.5s ease-out forwards;
+  transform: rotate(var(--angle, 0deg)) translateX(0);
+}
+
+@keyframes vfx-spark-fly {
+  0% {
+    transform: rotate(var(--angle, 0deg)) translateX(0);
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    transform: rotate(var(--angle, 0deg)) translateX(30px);
+    opacity: 0;
+    scale: 0.3;
+  }
+}
+
+/* --- Canvas click ripple --- */
+.vfx-ripple {
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  animation: vfx-ripple-expand 0.7s ease-out forwards;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes vfx-ripple-expand {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.6;
+    border-width: 2px;
+  }
+  100% {
+    width: 120px;
+    height: 120px;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* --- Node spawn animation --- */
+@keyframes vfx-node-spawn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.vfx-node-enter {
+  animation: vfx-node-spawn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* --- Node browser slide-in --- */
+@keyframes vfx-menu-slide-in {
+  0% {
+    transform: translateY(-8px) scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes vfx-submenu-slide {
+  0% {
+    transform: translateX(-6px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* --- Scanline overlay for terminal --- */
+@keyframes vfx-scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* --- Terminal output line fade-in --- */
+@keyframes vfx-line-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* --- Button glow pulse --- */
+@keyframes vfx-btn-glow {
+  0%, 100% { box-shadow: 0 0 6px var(--btn-glow-color, #22c55e44); }
+  50% { box-shadow: 0 0 18px var(--btn-glow-color, #22c55e88); }
+}
+
+/* --- Animated gradient border --- */
+@keyframes vfx-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* --- Code flash on update --- */
+@keyframes vfx-code-flash {
+  0% { background: rgba(99, 102, 241, 0.12); }
+  100% { background: transparent; }
+}
+
+/* --- Syncing indicator pulse --- */
+@keyframes vfx-sync-pulse {
+  0%, 100% { opacity: 1; text-shadow: 0 0 4px #22c55e44; }
+  50% { opacity: 0.5; text-shadow: 0 0 10px #22c55eaa; }
+}
+
+/* --- Header shimmer sweep --- */
+@keyframes vfx-shimmer {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(400%) skewX(-15deg); }
+}
+
+.jflow-header-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.jflow-header-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  animation: vfx-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* --- VFX-off kill switch --- */
+[data-vfx="off"] .vfx-node-enter,
+[data-vfx="off"] .vfx-spark-burst,
+[data-vfx="off"] .vfx-spark-particle,
+[data-vfx="off"] .vfx-ripple {
+  animation: none !important;
+}
+
+[data-vfx="off"] .react-flow__edge-path {
+  animation: none !important;
+  stroke-dasharray: none !important;
+}
+
+[data-vfx="off"] .react-flow__node:hover {
+  filter: none;
+}
+
+[data-vfx="off"] .react-flow__handle:hover {
+  transform: none !important;
+  filter: none;
+}
+
+[data-vfx="off"] .jflow-header-shimmer::after {
+  animation: none;
+  display: none;
+}

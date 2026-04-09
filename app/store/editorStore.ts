@@ -17,7 +17,7 @@ import { getLayoutedElements } from '../utils/autoLayout';
 import { generateJavaCode } from '../utils/compiler';
 import { executeGraph } from '../utils/executor';
 import { NODE_CONFIGS } from '../utils/nodeRegistry';
-import { isValidJavaConnection } from '../utils/validation';
+import { isValidJavaConnection, resolveSourceType, resolveTargetAccepts, getAutoConvertType } from '../utils/validation';
 import { useToastStore } from './toastStore';
 
 const STORAGE_KEY = 'java-nodegraph-save';
@@ -58,6 +58,9 @@ export interface EditorState {
   menuVisible: boolean;
   menuPosition: { x: number; y: number };
 
+  // Clipboard
+  clipboard: { nodes: Node[]; edges: Edge[] } | null;
+
   // React Flow instance reference (set after mount)
   _rfInstance: {
     screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
@@ -90,6 +93,12 @@ export interface EditorActions {
   ) => void;
   addGetter: (variableNode: Node) => void;
   updateNodeModifier: (id: string, modifier: string) => void;
+
+  // Copy / Paste / Duplicate / Group
+  copySelection: () => void;
+  pasteClipboard: () => void;
+  duplicateSelection: () => void;
+  groupSelection: () => void;
 
   // Context menu
   setMenuVisible: (visible: boolean) => void;
@@ -141,6 +150,7 @@ export const useEditorStore = create<EditorStore>()(
       activeFileId: 'main',
       menuVisible: false,
       menuPosition: { x: 0, y: 0 },
+      clipboard: null,
       _rfInstance: null,
 
       // --- Graph Mutations ---
@@ -155,7 +165,69 @@ export const useEditorStore = create<EditorStore>()(
       onConnect: (connection) => {
         const { nodes } = get();
         const sourceNode = nodes.find((n) => n.id === connection.source);
-        const style = getEdgeStyle(sourceNode, connection.sourceHandle ?? null);
+        const targetNode = nodes.find((n) => n.id === connection.target);
+        const sourceHandle = connection.sourceHandle ?? '';
+        const targetHandle = connection.targetHandle ?? '';
+
+        // Skip auto-convert for exec handles
+        if (!sourceHandle.startsWith('exec') && sourceNode && targetNode) {
+          const sourceType = resolveSourceType(sourceNode, sourceHandle);
+          const acceptedTypes = resolveTargetAccepts(targetNode, targetHandle, nodes)
+            ?? (targetNode.data.type ? [targetNode.data.type as string] : undefined);
+
+          if (sourceType && acceptedTypes && !acceptedTypes.includes(sourceType)) {
+            const castTo = getAutoConvertType(sourceType, acceptedTypes);
+            if (castTo) {
+              // Insert a Cast node between source and target
+              const castId = `cast-${Date.now()}`;
+              const sx = sourceNode.position.x + (sourceNode.measured?.width ?? 200);
+              const tx = targetNode.position.x;
+              const sy = sourceNode.position.y;
+              const ty = targetNode.position.y;
+              const castPos = { x: (sx + tx) / 2 - 60, y: (sy + ty) / 2 };
+
+              const srcStyle = getEdgeStyle(sourceNode, sourceHandle);
+              const castStyle = { stroke: getTypeColor(castTo), strokeWidth: 2 };
+
+              set((state) => ({
+                nodes: [
+                  ...state.nodes,
+                  {
+                    id: castId,
+                    type: 'cast',
+                    position: castPos,
+                    data: { label: 'Cast', targetType: castTo },
+                  },
+                ],
+                edges: addEdge(
+                  {
+                    id: `e-${connection.source}-${castId}`,
+                    source: connection.source!,
+                    sourceHandle,
+                    target: castId,
+                    targetHandle: 'data-in',
+                    style: { stroke: srcStyle.stroke, strokeWidth: srcStyle.strokeWidth },
+                  } as Edge,
+                  addEdge(
+                    {
+                      id: `e-${castId}-${connection.target}`,
+                      source: castId,
+                      sourceHandle: 'data-out',
+                      target: connection.target!,
+                      targetHandle,
+                      style: { stroke: castStyle.stroke, strokeWidth: castStyle.strokeWidth },
+                    } as Edge,
+                    state.edges
+                  )
+                ),
+              }));
+              return;
+            }
+          }
+        }
+
+        // Normal connection (exact match or exec)
+        const style = getEdgeStyle(sourceNode, sourceHandle);
         set((state) => ({
           edges: addEdge(
             {
@@ -193,13 +265,29 @@ export const useEditorStore = create<EditorStore>()(
 
       runScript: () => {
         const { nodes, edges } = get();
-        set({ consoleOutput: executeGraph(nodes, edges) });
+        const hasScannerNodes = nodes.some(n => n.type === 'scanner');
+        const inputProvider = hasScannerNodes
+          ? (prompt: string) => window.prompt(prompt) ?? ''
+          : undefined;
+        set({ consoleOutput: executeGraph(nodes, edges, inputProvider) });
       },
 
       compileAndRunJava: async () => {
         const { nodes, edges, className } = get();
         const code = generateJavaCode(nodes, edges, className);
         const toast = useToastStore.getState();
+
+        // Collect inputs for scanner nodes before running
+        const scannerNodes = nodes.filter(n => n.type === 'scanner');
+        let inputs: string[] | undefined;
+        if (scannerNodes.length > 0) {
+          inputs = [];
+          for (const sn of scannerNodes) {
+            const readType = (sn.data.readType as string) || 'nextLine';
+            const val = window.prompt(`[Scanner] Enter value for ${readType}:`) ?? '';
+            inputs.push(val);
+          }
+        }
 
         set({
           isCompiling: true,
@@ -210,7 +298,7 @@ export const useEditorStore = create<EditorStore>()(
           const res = await fetch('/api/compile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, className }),
+            body: JSON.stringify({ code, className, inputs }),
           });
           const data = await res.json();
 
@@ -321,6 +409,95 @@ export const useEditorStore = create<EditorStore>()(
 
       updateNodeModifier: (id, modifier) => {
         get().updateNodeData(id, { modifier });
+      },
+
+      // --- Copy / Paste / Duplicate / Group ---
+      copySelection: () => {
+        const { nodes, edges } = get();
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length === 0) return;
+        const selectedIds = new Set(selectedNodes.map(n => n.id));
+        const connectedEdges = edges.filter(e => selectedIds.has(e.source) && selectedIds.has(e.target));
+        set({ clipboard: { nodes: selectedNodes, edges: connectedEdges } });
+        useToastStore.getState().addToast(`Copied ${selectedNodes.length} node(s)`, 'info');
+      },
+
+      pasteClipboard: () => {
+        const { clipboard, nodes, edges } = get();
+        if (!clipboard || clipboard.nodes.length === 0) return;
+
+        const idMap = new Map<string, string>();
+        const ts = Date.now();
+        clipboard.nodes.forEach((n, i) => {
+          idMap.set(n.id, `paste-${ts}-${i}`);
+        });
+
+        const newNodes: Node[] = clipboard.nodes.map((n, i) => ({
+          ...n,
+          id: idMap.get(n.id)!,
+          position: { x: n.position.x + 40, y: n.position.y + 40 },
+          selected: true,
+          data: { ...n.data },
+          parentId: undefined,
+        }));
+
+        const newEdges: Edge[] = clipboard.edges.map((e, i) => ({
+          ...e,
+          id: `pe-${ts}-${i}`,
+          source: idMap.get(e.source) || e.source,
+          target: idMap.get(e.target) || e.target,
+        }));
+
+        // Deselect existing nodes
+        const deselected = nodes.map(n => ({ ...n, selected: false }));
+
+        set({
+          nodes: [...deselected, ...newNodes],
+          edges: [...edges, ...newEdges],
+        });
+        useToastStore.getState().addToast(`Pasted ${newNodes.length} node(s)`, 'info');
+      },
+
+      duplicateSelection: () => {
+        // Copy then immediately paste
+        get().copySelection();
+        get().pasteClipboard();
+      },
+
+      groupSelection: () => {
+        const { nodes } = get();
+        const selectedNodes = nodes.filter(n => n.selected && n.type !== 'group');
+        if (selectedNodes.length === 0) return;
+
+        // Compute bounding box of selected nodes
+        const padding = 40;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const n of selectedNodes) {
+          const w = n.measured?.width ?? 200;
+          const h = n.measured?.height ?? 100;
+          minX = Math.min(minX, n.position.x);
+          minY = Math.min(minY, n.position.y);
+          maxX = Math.max(maxX, n.position.x + w);
+          maxY = Math.max(maxY, n.position.y + h);
+        }
+
+        const groupId = `group-${Date.now()}`;
+        const groupNode: Node = {
+          id: groupId,
+          type: 'group',
+          position: { x: minX - padding, y: minY - padding + 30 },
+          data: { label: 'Group', color: '#6366f1' },
+          style: {
+            width: maxX - minX + padding * 2,
+            height: maxY - minY + padding * 2,
+          },
+          zIndex: -1,
+        };
+
+        set((state) => ({
+          nodes: [groupNode, ...state.nodes],
+        }));
+        useToastStore.getState().addToast('Group created', 'success');
       },
 
       // --- Context Menu ---

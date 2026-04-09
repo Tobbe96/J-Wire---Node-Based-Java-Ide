@@ -9,7 +9,7 @@ const CONDITION_COLOR = getTypeColor('int');
 
 const WhileNode = ({ selected }: NodeProps<Node<WhileNodeData>>) => (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-    <div style={nodeHeaderSolid(ACCENT)}>
+    <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
       WHILE (Loop)
     </div>
 

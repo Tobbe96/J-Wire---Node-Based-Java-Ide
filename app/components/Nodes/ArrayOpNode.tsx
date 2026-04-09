@@ -1,12 +1,12 @@
 import React, { memo, useCallback } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
-import { nodeContainer, nodeHeaderSolid } from '../../utils/nodeStyles';
-import { getTypeColor } from '../../utils/theme';
+import { nodeContainer, nodeHeaderSolid, execHandleStyle } from '../../utils/nodeStyles';
+import { getTypeColor, ALL_NUMERIC } from '../../utils/theme';
 import type { ArrayNodeData } from '../../utils/nodeTypes';
 
 const ACCENT = '#1abc9c';
 const INT_COLOR = getTypeColor('int');
-const STRING_COLOR = getTypeColor('String');
+const ALL_ARRAY_TYPES = [...ALL_NUMERIC, 'String', 'boolean'];
 
 const handleStyle = (color: string, side: 'left' | 'right') => ({
   background: color,
@@ -51,17 +51,16 @@ const ArrayOpNode = ({ id, data, selected }: NodeProps<Node<ArrayNodeData>>) => 
 
   if (op === 'literal') {
     const arrayType = (data.arrayType as string) || 'int';
-    const outputColor = arrayType === 'String' ? STRING_COLOR : INT_COLOR;
+    const outputColor = getTypeColor(arrayType);
 
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-        <div style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '10px', color: '#aaa', whiteSpace: 'nowrap' }}>Type</span>
             <select value={arrayType} onChange={onTypeChange} style={selectStyle}>
-              <option value="int">int</option>
-              <option value="String">String</option>
+              {ALL_ARRAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -82,10 +81,39 @@ const ArrayOpNode = ({ id, data, selected }: NodeProps<Node<ArrayNodeData>>) => 
     );
   }
 
+  if (op === 'new') {
+    const arrayType = (data.arrayType as string) || 'int';
+    const outputColor = getTypeColor(arrayType);
+
+    return (
+      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
+        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '10px', color: '#aaa', whiteSpace: 'nowrap' }}>Type</span>
+            <select value={arrayType} onChange={onTypeChange} style={selectStyle}>
+              {ALL_ARRAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-size" style={handleStyle(INT_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Size</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}>{arrayType}[]</span>
+              <Handle type="source" position={Position.Right} id="data-out" style={handleStyle(outputColor, 'right')} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (op === 'access') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
-        <div style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -106,10 +134,44 @@ const ArrayOpNode = ({ id, data, selected }: NodeProps<Node<ArrayNodeData>>) => 
     );
   }
 
+  if (op === 'set') {
+    return (
+      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
+        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="exec-in" style={{ ...execHandleStyle('left'), left: '-16px' }} />
+              <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}>Exec</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-array" style={handleStyle(ACCENT, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Array</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-index" style={handleStyle(INT_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Index</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-value" style={handleStyle(ACCENT, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Value</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-end' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#ccc', fontWeight: 'bold', marginRight: '5px' }}>Out</span>
+              <Handle type="source" position={Position.Right} id="exec-out" style={{ ...execHandleStyle('right'), right: '-16px' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // length
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
-      <div style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+      <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
       <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>

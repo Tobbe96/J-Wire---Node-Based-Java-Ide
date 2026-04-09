@@ -4,7 +4,7 @@ import { nodeContainer, nodeHeaderSolid, execHandleStyle } from '../../utils/nod
 
 const BreakNode = ({ selected }: NodeProps<Node<Record<string, unknown>>>) => (
   <div style={{ ...nodeContainer('#c0392b', !!selected), minWidth: '120px' }}>
-    <div style={nodeHeaderSolid('#c0392b')}>
+    <div className="jflow-header-shimmer" style={nodeHeaderSolid('#c0392b')}>
       BREAK
     </div>
     <div style={{ padding: '10px' }}>

@@ -33,7 +33,11 @@ export const useDebugStore = create<DebugStore>()((set, get) => ({
   isPlaying: false,
 
   startDebug: (nodes, edges) => {
-    const trace = traceExecution(nodes, edges);
+    const hasScannerNodes = nodes.some((n: Node) => n.type === 'scanner');
+    const inputProvider = hasScannerNodes
+      ? (prompt: string) => window.prompt(prompt) ?? ''
+      : undefined;
+    const trace = traceExecution(nodes, edges, inputProvider);
     set({
       isDebugging: true,
       traceSteps: trace,

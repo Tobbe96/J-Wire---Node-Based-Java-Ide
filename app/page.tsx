@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
-import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow } from '@xyflow/react';
+import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow, SelectionMode } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 // Node Components
@@ -27,6 +27,12 @@ import DoWhileNode from './components/Nodes/DoWhileNode';
 import SwitchNode from './components/Nodes/SwitchNode';
 import BreakNode from './components/Nodes/BreakNode';
 import ContinueNode from './components/Nodes/ContinueNode';
+import TryCatchFinallyNode from './components/Nodes/TryCatchFinallyNode';
+import ThrowNode from './components/Nodes/ThrowNode';
+import ForEachNode from './components/Nodes/ForEachNode';
+import GroupNode from './components/Nodes/GroupNode';
+import ScannerNode from './components/Nodes/ScannerNode';
+import LiteralNode from './components/Nodes/LiteralNode';
 
 // Panels & UI
 import LeftSidebar from './components/Panels/LeftSidebar';
@@ -36,12 +42,20 @@ import NodeBrowser from './components/NodeBrowse';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toast } from './components/Toast';
 import ThemeToggle from './components/ThemeToggle';
+import VfxToggle from './components/VfxToggle';
 import DocsModal from './components/DocsModal';
 import DebugPanel from './components/DebugPanel';
+
+// VFX
+import AnimatedEdge from './components/AnimatedEdge';
+import AmbientParticles from './components/vfx/AmbientParticles';
+import ConnectionSpark, { triggerConnectionSpark } from './components/vfx/ConnectionSpark';
+import CanvasRipple from './components/vfx/CanvasRipple';
 
 // Store
 import { useEditorStore } from './store/editorStore';
 import { useDebugStore } from './store/debugStore';
+import { useVfxStore } from './store/vfxStore';
 import { getTypeColor } from './utils/theme';
 
 const nodeTypes = {
@@ -68,6 +82,16 @@ const nodeTypes = {
   switch: SwitchNode,
   break: BreakNode,
   continue: ContinueNode,
+  tryCatchFinally: TryCatchFinallyNode,
+  throw: ThrowNode,
+  forEach: ForEachNode,
+  group: GroupNode,
+  scanner: ScannerNode,
+  literal: LiteralNode,
+};
+
+const edgeTypes = {
+  animated: AnimatedEdge,
 };
 
 function JavaNodeEditor() {
@@ -108,10 +132,17 @@ function JavaNodeEditor() {
     removeFile,
     switchFile,
     renameFile,
+    copySelection,
+    pasteClipboard,
+    duplicateSelection,
+    groupSelection,
   } = useEditorStore();
 
   const { isDebugging, currentStepIndex, traceSteps, breakpoints, startDebug, stopDebug, toggleBreakpoint } = useDebugStore();
   const activeDebugNodeId = isDebugging && currentStepIndex >= 0 ? traceSteps[currentStepIndex]?.nodeId : null;
+  const vfxEnabled = useVfxStore((s) => s.vfxEnabled);
+  const hydrateVfx = useVfxStore((s) => s.hydrate);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const { screenToFlowPosition, toObject } = useReactFlow();
 
@@ -124,7 +155,7 @@ function JavaNodeEditor() {
   const { undo, redo } = useEditorStore.temporal.getState();
 
   // Load on mount
-  useEffect(() => { loadNodeGraph(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadNodeGraph(); hydrateVfx(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard shortcuts
   const mousePos = useRef({ x: 0, y: 0 });
@@ -150,6 +181,10 @@ function JavaNodeEditor() {
         if (e.key === 'z' && e.shiftKey) { e.preventDefault(); redo(); }
         if (e.key === 'y') { e.preventDefault(); redo(); }
         if (e.key === 's') { e.preventDefault(); saveNodeGraph(); }
+        if (e.key === 'c' && !isInput) { e.preventDefault(); copySelection(); }
+        if (e.key === 'v' && !isInput) { e.preventDefault(); pasteClipboard(); }
+        if (e.key === 'd' && !isInput) { e.preventDefault(); duplicateSelection(); }
+        if (e.key === 'g' && !isInput) { e.preventDefault(); groupSelection(); }
       }
       if (e.key === 'Escape') { setMenuVisible(false); setSelectedSidebarNodeId(null); }
     };
@@ -159,7 +194,7 @@ function JavaNodeEditor() {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [menuVisible, setMenuPosition, setMenuVisible, undo, redo, saveNodeGraph, setSelectedSidebarNodeId]);
+  }, [menuVisible, setMenuPosition, setMenuVisible, undo, redo, saveNodeGraph, setSelectedSidebarNodeId, copySelection, pasteClipboard, duplicateSelection, groupSelection]);
 
   // Connection drag state
   const dragConnectStart = useRef<{ nodeId: string; handleId: string } | null>(null);
@@ -174,6 +209,23 @@ function JavaNodeEditor() {
       startDebug(nodes, edges);
     }
   }, [isDebugging, stopDebug, startDebug, nodes, edges]);
+
+  // Wrap onConnect to trigger spark VFX
+  const handleConnect = useCallback((...args: Parameters<typeof onConnect>) => {
+    onConnect(...args);
+    const connection = args[0];
+    if (vfxEnabled && connection.target) {
+      const targetEl = document.querySelector(`[data-handleid="${connection.targetHandle}"][data-nodeid="${connection.target}"]`);
+      if (targetEl) {
+        const rect = targetEl.getBoundingClientRect();
+        const sourceNode = nodes.find((n) => n.id === connection.source);
+        const color = connection.sourceHandle?.includes('exec')
+          ? '#ffffff'
+          : getTypeColor((sourceNode?.data?.type as string) || '');
+        triggerConnectionSpark(rect.left + rect.width / 2, rect.top + rect.height / 2, color);
+      }
+    }
+  }, [onConnect, vfxEnabled, nodes]);
 
   const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: { id: string }) => {
     toggleBreakpoint(node.id);
@@ -246,10 +298,23 @@ function JavaNodeEditor() {
     }));
   }, [nodes, updateNodeData, validateConnection, activeDebugNodeId, breakpoints]);
 
+  // Enrich edges with animated type when VFX enabled
+  const enrichedEdges = useMemo(() => {
+    if (!vfxEnabled) return edges;
+    return edges.map((edge) => ({
+      ...edge,
+      type: 'animated',
+    }));
+  }, [edges, vfxEnabled]);
+
   const generatedJavaCode = useMemo(() => getGeneratedCode(), [getGeneratedCode, nodes, edges, className]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#121212', display: 'flex', overflow: 'hidden' }}>
+    <div
+      data-vfx={vfxEnabled ? 'on' : 'off'}
+      style={{ width: '100vw', height: '100vh', background: '#121212', display: 'flex', overflow: 'hidden' }}
+    >
+      {vfxEnabled && <AmbientParticles />}
       <ErrorBoundary fallbackLabel="Sidebar">
         <LeftSidebar
           nodes={nodes}
@@ -273,11 +338,12 @@ function JavaNodeEditor() {
         />
       </ErrorBoundary>
 
-      <div style={{ flexGrow: 1, position: 'relative' }}>
+      <div ref={canvasContainerRef} style={{ flexGrow: 1, position: 'relative' }}>
         <ThemeToggle />
+        <VfxToggle />
         <button
           onClick={autoLayout}
-          style={{ position: 'absolute', top: 10, right: 90, zIndex: 20, background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
+          style={{ position: 'absolute', top: 10, right: 170, zIndex: 20, background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
         >
           Auto Layout
         </button>
@@ -288,14 +354,18 @@ function JavaNodeEditor() {
         >
           ?
         </button>
+
+        <CanvasRipple containerRef={canvasContainerRef} />
+
         <ErrorBoundary fallbackLabel="Canvas">
           <ReactFlow
             nodes={enrichedNodes}
-            edges={edges}
+            edges={enrichedEdges}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
+            onConnect={handleConnect}
             onConnectStart={onConnectStart}
             onConnectEnd={onConnectEnd}
             onPaneClick={onPaneClick}
@@ -304,6 +374,9 @@ function JavaNodeEditor() {
             isValidConnection={validateConnection}
             connectionLineStyle={{ stroke: connectionLineColor, strokeWidth: 2 }}
             deleteKeyCode={['Backspace', 'Delete']}
+            selectionOnDrag
+            panOnDrag={[1, 2]}
+            selectionMode={SelectionMode.Partial}
             fitView
           >
             <Background color="#333" gap={20} />
@@ -331,9 +404,10 @@ function JavaNodeEditor() {
         )}
 
         <DebugPanel />
+        <ConnectionSpark />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', width: '350px', borderLeft: '1px solid #000', zIndex: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', width: '350px', borderLeft: '1px solid #000' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ErrorBoundary fallbackLabel="Preview">
             <LivePreview code={generatedJavaCode} />
@@ -355,7 +429,7 @@ function JavaNodeEditor() {
       {showDocs && <DocsModal onClose={() => setShowDocs(false)} />}
     </div>
   );
-}
+  }
 
 export default function App() {
   return (

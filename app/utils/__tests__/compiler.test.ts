@@ -24,8 +24,8 @@ describe('generateJavaCode', () => {
       makeNode('v2', 'java', { label: 'name', type: 'String', value: 'hello', modifier: 'private' }),
     ];
     const code = generateJavaCode(nodes, []);
-    expect(code).toContain('public int score = 42;');
-    expect(code).toContain('private String name = "hello";');
+    expect(code).toContain('public static int score = 42;');
+    expect(code).toContain('private static String name = "hello";');
   });
 
   it('generates a main method with print statement', () => {
@@ -83,7 +83,7 @@ describe('generateJavaCode', () => {
       }),
     ];
     const code = generateJavaCode(nodes, []);
-    expect(code).toContain('public void greet(String msg)');
+    expect(code).toContain('public static void greet(String msg)');
   });
 
   it('generates a method with local variables', () => {
@@ -263,6 +263,238 @@ describe('generateJavaCode', () => {
       makeNode('v1', 'java', { label: 'val', type: 'int', value: '1' }),
     ];
     const code = generateJavaCode(nodes, []);
-    expect(code).toContain('public int val = 1;');
+    expect(code).toContain('public static int val = 1;');
+  });
+
+  // --- Scanner tests ---
+
+  it('generates Scanner import and field when scanner nodes exist', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read Line', readType: 'nextLine' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('import java.util.Scanner;');
+    expect(code).toContain('static Scanner __scanner = new Scanner(System.in);');
+  });
+
+  it('does not generate Scanner import when no scanner nodes exist', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+    ];
+    const code = generateJavaCode(nodes, []);
+    expect(code).not.toContain('import java.util.Scanner');
+    expect(code).not.toContain('Scanner');
+  });
+
+  it('generates scanner nextLine read', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read Line', readType: 'nextLine' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('String __input_0__ = __scanner.nextLine();');
+    expect(code).toContain('System.out.println(__input_0__)');
+  });
+
+  it('generates scanner nextInt read', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read Int', readType: 'nextInt' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('int __input_0__ = __scanner.nextInt();');
+  });
+
+  it('generates scanner with prompt', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'promptMsg', type: 'String', value: 'Enter name: ' }),
+      makeNode('sc1', 'scanner', { label: 'Read Line', readType: 'nextLine' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'sc1', 'data-out', 'data-in-prompt'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('System.out.print(promptMsg);');
+    expect(code).toContain('String __input_0__ = __scanner.nextLine();');
+  });
+
+  it('generates multiple scanner reads with unique variable names', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read Line', readType: 'nextLine' }),
+      makeNode('sc2', 'scanner', { label: 'Read Int', readType: 'nextInt' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+      makeEdge('sc1', 'sc2', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('String __input_0__ = __scanner.nextLine();');
+    expect(code).toContain('int __input_1__ = __scanner.nextInt();');
+  });
+
+  // --- Literal node tests ---
+
+  it('generates literal String value in data expressions', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('lit1', 'literal', { label: 'Literal', literalType: 'String', value: 'hello world' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('lit1', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('System.out.println("hello world")');
+  });
+
+  it('generates literal int value', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('lit1', 'literal', { label: 'Literal', literalType: 'int', value: '42' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('lit1', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('System.out.println(42)');
+  });
+
+  // --- String .equals() tests ---
+
+  it('uses .equals() for String == comparison', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'name', type: 'String', value: 'test' }),
+      makeNode('v2', 'java', { label: 'other', type: 'String', value: 'test' }),
+      makeNode('eq', 'math', { type: 'boolean', label: 'EQUALS', operation: '==', accepts: ['String'] }),
+      makeNode('br', 'branch', { label: 'Branch', accepts: ['boolean'] }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'br', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'eq', 'data-out', 'data-in-a'),
+      makeEdge('v2', 'eq', 'data-out', 'data-in-b'),
+      makeEdge('eq', 'br', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('name.equals(other)');
+    expect(code).not.toContain('name == other');
+  });
+
+  it('uses !.equals() for String != comparison', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'name', type: 'String', value: 'test' }),
+      makeNode('v2', 'java', { label: 'other', type: 'String', value: 'test' }),
+      makeNode('neq', 'math', { type: 'boolean', label: 'NOT EQUALS', operation: '!=', accepts: ['String'] }),
+      makeNode('br', 'branch', { label: 'Branch', accepts: ['boolean'] }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'br', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'neq', 'data-out', 'data-in-a'),
+      makeEdge('v2', 'neq', 'data-out', 'data-in-b'),
+      makeEdge('neq', 'br', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('!name.equals(other)');
+  });
+
+  // --- Static methods test ---
+
+  it('generates static methods callable from main', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('m1', 'method', { label: 'greet', type: 'void', parameters: [], localVariables: [] }),
+      makeNode('call1', 'callMethod', { methodName: 'greet' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'call1', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('public static void greet()');
+    expect(code).toContain('greet();');
+  });
+
+  // --- Inline default tests ---
+
+  it('uses inline value for print when no data edge', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('p1', 'print', { label: 'Print', inlineValue: 'Hello inline' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('System.out.println("Hello inline")');
+  });
+
+  it('uses inline value for branch when no data edge', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('br', 'branch', { label: 'Branch', inlineValue: 'true' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'br', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('if (true)');
+  });
+
+  it('uses inline prompt for scanner when no prompt edge', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sc1', 'scanner', { label: 'Read', readType: 'nextLine', inlinePrompt: 'Enter name:' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sc1', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('System.out.print("Enter name:")');
+    expect(code).toContain('__scanner.nextLine()');
+  });
+
+  it('uses inline A/B values for math when no data edges', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('math1', 'math', { label: 'ADD', operation: '+', inlineA: '5', inlineB: '3' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('math1', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('(5 + 3)');
+  });
+
+  it('uses inline value for throw when no data edge', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('t1', 'throw', { label: 'Throw', inlineValue: 'Something went wrong' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 't1', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('throw new RuntimeException("Something went wrong")');
   });
 });

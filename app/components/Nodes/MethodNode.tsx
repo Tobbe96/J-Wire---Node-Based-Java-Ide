@@ -43,7 +43,7 @@ const MethodNode = ({ id, data, selected }: NodeProps<Node<MethodNodeData>>) => 
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '240px' }}>
-      <div style={nodeHeaderGradient(ACCENT)}>
+      <div className="jflow-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
         <span>METHOD DEFINITION</span>
         <span style={{ color: ACCENT }}>{data.returnType || 'void'}</span>
       </div>

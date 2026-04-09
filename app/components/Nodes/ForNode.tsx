@@ -12,7 +12,7 @@ interface ForNodeData extends Record<string, unknown> {
 
 const ForNode = ({ selected }: NodeProps<Node<ForNodeData>>) => (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-    <div style={nodeHeaderSolid(ACCENT)}>
+    <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
       FOR (Loop)
     </div>
 

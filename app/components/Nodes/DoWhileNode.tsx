@@ -12,7 +12,7 @@ interface DoWhileNodeData extends Record<string, unknown> {
 
 const DoWhileNode = ({ selected }: NodeProps<Node<DoWhileNodeData>>) => (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-    <div style={nodeHeaderSolid(ACCENT)}>
+    <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
       DO-WHILE (Loop)
     </div>
 

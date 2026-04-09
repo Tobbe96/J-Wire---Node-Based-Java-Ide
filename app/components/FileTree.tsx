@@ -35,7 +35,7 @@ const FileTree = ({ files, activeFileId, onSwitch, onAdd, onRemove, onRename }: 
     <div style={{ borderBottom: '1px solid #333', padding: '8px 10px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: 1 }}>FILES</span>
-        <button onClick={onAdd} style={addBtnStyle} title="Add new class file">+</button>
+        <button onClick={() => onAdd()} style={addBtnStyle} title="Add new class file">+</button>
       </div>
       {files.map(file => (
         <div

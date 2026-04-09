@@ -1,11 +1,14 @@
+import { ALL_NUMERIC, ALL_TYPES } from './theme';
+
 export const NODE_CATEGORIES = {
-  Variables: ['int', 'String', 'boolean'],
-  Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'doWhile', 'switch', 'break', 'continue', 'setVar', 'setLocalVar', 'print', 'return'],
+  Variables: ['int', 'float', 'double', 'long', 'short', 'byte', 'String', 'boolean'],
+  Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'doWhile', 'switch', 'tryCatchFinally', 'throw', 'break', 'continue', 'setVar', 'setLocalVar', 'print', 'return'],
+  Input: ['scanner-nextLine', 'scanner-nextInt', 'scanner-nextFloat', 'scanner-nextDouble', 'scanner-nextLong', 'scanner-nextBoolean'],
   Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-mod', 'math-gt', 'math-lt', 'math-lte', 'math-gte', 'math-eq', 'math-neq', 'math-and', 'math-or', 'math-not'],
   'Math Functions': ['math-abs', 'math-min', 'math-max', 'math-pow'],
-  Conversion: ['cast', 'ternary'],
+  Conversion: ['cast', 'ternary', 'literal'],
   Strings: ['string-concat', 'string-length', 'string-substring', 'string-charAt', 'string-indexOf', 'string-replace', 'string-trim', 'string-toUpperCase', 'string-toLowerCase'],
-  Arrays: ['array-literal', 'array-access', 'array-length']
+  Arrays: ['array-literal', 'array-new', 'array-access', 'array-set', 'array-length', 'forEach']
 };
 
 export const NODE_CONFIGS: Record<string, any> = {
@@ -22,14 +25,14 @@ export const NODE_CONFIGS: Record<string, any> = {
     type: 'print', 
     data: { 
       label: 'Print', 
-      accepts: ['int', 'String', 'boolean'] // Accepts anything printable
+      accepts: ALL_TYPES
     } 
   },
   branch: { 
     type: 'branch', 
     data: { 
       label: 'Branch', 
-      accepts: ['boolean'] // MUST be a boolean condition
+      accepts: ['boolean']
     } 
   },
   callMethod: { 
@@ -41,7 +44,7 @@ export const NODE_CONFIGS: Record<string, any> = {
     data: {
       variableName: 'myVar', 
       label:'Set Variable',
-      accepts: ['int', 'String', 'boolean']
+      accepts: ALL_TYPES
     }
   },
   setLocalVar: {
@@ -56,21 +59,21 @@ export const NODE_CONFIGS: Record<string, any> = {
     type: 'while', 
     data: {
       label: "WHILE Loop",
-      accepts: ['boolean'] // Condition must be boolean
+      accepts: ['boolean']
     }
   },
   for: {
     type: 'for',
     data: {
       label: 'FOR Loop',
-      accepts: ['int']
+      accepts: ALL_NUMERIC
     }
   },
   return: {
     type: 'return', 
     data: {
       label: 'Return',
-      accepts: ['int', 'String', 'boolean'] // Updated dynamically by the IDE later
+      accepts: ALL_TYPES
     }
   },
 
@@ -86,7 +89,7 @@ export const NODE_CONFIGS: Record<string, any> = {
     data: {
       label: 'SWITCH',
       caseCount: 2,
-      accepts: ['int']
+      accepts: ALL_NUMERIC
     }
   },
   cast: {
@@ -102,6 +105,14 @@ export const NODE_CONFIGS: Record<string, any> = {
       label: 'Ternary'
     }
   },
+  literal: {
+    type: 'literal',
+    data: {
+      label: 'Literal',
+      literalType: 'String',
+      value: ''
+    }
+  },
   break: {
     type: 'break',
     data: {
@@ -114,6 +125,19 @@ export const NODE_CONFIGS: Record<string, any> = {
       label: 'Continue'
     }
   },
+  tryCatchFinally: {
+    type: 'tryCatchFinally',
+    data: {
+      label: 'Try / Catch / Finally'
+    }
+  },
+  throw: {
+    type: 'throw',
+    data: {
+      label: 'Throw',
+      accepts: ['String']
+    }
+  },
 
   getter: {
     type: 'getter',
@@ -124,20 +148,19 @@ export const NODE_CONFIGS: Record<string, any> = {
   },
 
   // --- MATH & COMPARISON ---
-  // Math nodes specifically output 'int' and accept 'int'
-  'math-add': { type: 'math', data: { type: 'int', label: 'ADD', symbol: '+', operation: '+', accepts: ['int'] } },
-  'math-sub': { type: 'math', data: { type: 'int', label: 'SUBTRACT', symbol: '-', operation: '-', accepts: ['int'] } },
-  'math-mul': { type: 'math', data: { type: 'int', label: 'MULTIPLY', symbol: '*', operation: '*', accepts: ['int'] } },
-  'math-div': { type: 'math', data: { type: 'int', label: 'DIVIDE', symbol: '/', operation: '/', accepts: ['int'] } },
-  'math-mod': { type: 'math', data: { type: 'int', label: 'MODULO', symbol: '%', operation: '%', accepts: ['int'] } },
+  'math-add': { type: 'math', data: { type: 'int', label: 'ADD', symbol: '+', operation: '+', accepts: ALL_NUMERIC } },
+  'math-sub': { type: 'math', data: { type: 'int', label: 'SUBTRACT', symbol: '-', operation: '-', accepts: ALL_NUMERIC } },
+  'math-mul': { type: 'math', data: { type: 'int', label: 'MULTIPLY', symbol: '*', operation: '*', accepts: ALL_NUMERIC } },
+  'math-div': { type: 'math', data: { type: 'int', label: 'DIVIDE', symbol: '/', operation: '/', accepts: ALL_NUMERIC } },
+  'math-mod': { type: 'math', data: { type: 'int', label: 'MODULO', symbol: '%', operation: '%', accepts: ALL_NUMERIC } },
   
-  // Comparison nodes output 'boolean' and accept 'int'
-  'math-gt':  { type: 'math', data: { type: 'boolean', label: 'GREATER THAN', symbol: '>', operation: '>', accepts: ['int'] } },
-  'math-lt':  { type: 'math', data: { type: 'boolean', label: 'LESS THAN', symbol: '<', operation: '<', accepts: ['int'] } },
-  'math-lte': { type: 'math', data: { type: 'boolean', label: 'LESS OR EQUAL', symbol: '<=', operation: '<=', accepts: ['int'] } },
-  'math-gte': { type: 'math', data: { type: 'boolean', label: 'GREATER OR EQUAL', symbol: '>=', operation: '>=', accepts: ['int'] } },
-  'math-eq':  { type: 'math', data: { type: 'boolean', label: 'EQUALS', symbol: '==', operation: '==', accepts: ['int', 'String', 'boolean'] } },
-  'math-neq': { type: 'math', data: { type: 'boolean', label: 'NOT EQUALS', symbol: '!=', operation: '!=', accepts: ['int', 'String', 'boolean'] } },
+  // Comparison nodes output 'boolean' and accept all numeric types
+  'math-gt':  { type: 'math', data: { type: 'boolean', label: 'GREATER THAN', symbol: '>', operation: '>', accepts: ALL_NUMERIC } },
+  'math-lt':  { type: 'math', data: { type: 'boolean', label: 'LESS THAN', symbol: '<', operation: '<', accepts: ALL_NUMERIC } },
+  'math-lte': { type: 'math', data: { type: 'boolean', label: 'LESS OR EQUAL', symbol: '<=', operation: '<=', accepts: ALL_NUMERIC } },
+  'math-gte': { type: 'math', data: { type: 'boolean', label: 'GREATER OR EQUAL', symbol: '>=', operation: '>=', accepts: ALL_NUMERIC } },
+  'math-eq':  { type: 'math', data: { type: 'boolean', label: 'EQUALS', symbol: '==', operation: '==', accepts: ALL_TYPES } },
+  'math-neq': { type: 'math', data: { type: 'boolean', label: 'NOT EQUALS', symbol: '!=', operation: '!=', accepts: ALL_TYPES } },
   
   // Logical nodes output 'boolean' and accept 'boolean'
   'math-and': { type: 'math', data: { type: 'boolean', label: 'AND', symbol: '&&', operation: '&&', accepts: ['boolean'] } },
@@ -145,10 +168,10 @@ export const NODE_CONFIGS: Record<string, any> = {
   'math-not': { type: 'not', data: { type: 'boolean', label: 'NOT', symbol: '!', operation: '!', accepts: ['boolean'] } },
   
   // --- MATH FUNCTIONS ---
-  'math-abs': { type: 'mathFunc', data: { type: 'int', label: 'ABS', operation: 'abs', accepts: ['int'] } },
-  'math-min': { type: 'mathFunc', data: { type: 'int', label: 'MIN', operation: 'min', accepts: ['int'] } },
-  'math-max': { type: 'mathFunc', data: { type: 'int', label: 'MAX', operation: 'max', accepts: ['int'] } },
-  'math-pow': { type: 'mathFunc', data: { type: 'int', label: 'POW', operation: 'pow', accepts: ['int'] } },
+  'math-abs': { type: 'mathFunc', data: { type: 'int', label: 'ABS', operation: 'abs', accepts: ALL_NUMERIC } },
+  'math-min': { type: 'mathFunc', data: { type: 'int', label: 'MIN', operation: 'min', accepts: ALL_NUMERIC } },
+  'math-max': { type: 'mathFunc', data: { type: 'int', label: 'MAX', operation: 'max', accepts: ALL_NUMERIC } },
+  'math-pow': { type: 'mathFunc', data: { type: 'int', label: 'POW', operation: 'pow', accepts: ALL_NUMERIC } },
 
   // --- STRING OPERATIONS ---
   'string-concat': { type: 'stringOp', data: { label: 'STRING: Concat', operation: 'concat' } },
@@ -163,20 +186,33 @@ export const NODE_CONFIGS: Record<string, any> = {
 
   // --- ARRAY OPERATIONS ---
   'array-literal': { type: 'arrayOp', data: { label: 'Array Literal', operation: 'literal', arrayType: 'int', values: '1,2,3' } },
+  'array-new': { type: 'arrayOp', data: { label: 'Array New', operation: 'new', arrayType: 'int' } },
   'array-access': { type: 'arrayOp', data: { label: 'Array Access', operation: 'access' } },
+  'array-set': { type: 'arrayOp', data: { label: 'Array Set', operation: 'set' } },
   'array-length': { type: 'arrayOp', data: { label: 'Array Length', operation: 'length' } },
+  forEach: {
+    type: 'forEach',
+    data: {
+      label: 'For-Each',
+      elementType: 'int'
+    }
+  },
+
+  // --- SCANNER (User Input) ---
+  'scanner-nextLine': { type: 'scanner', data: { label: 'Read Line', readType: 'nextLine' } },
+  'scanner-nextInt': { type: 'scanner', data: { label: 'Read Int', readType: 'nextInt' } },
+  'scanner-nextFloat': { type: 'scanner', data: { label: 'Read Float', readType: 'nextFloat' } },
+  'scanner-nextDouble': { type: 'scanner', data: { label: 'Read Double', readType: 'nextDouble' } },
+  'scanner-nextLong': { type: 'scanner', data: { label: 'Read Long', readType: 'nextLong' } },
+  'scanner-nextBoolean': { type: 'scanner', data: { label: 'Read Boolean', readType: 'nextBoolean' } },
 
   // --- VARIABLES ---
-  int: { 
-    type: 'java', 
-    data: { type: 'int', value: '0', label: 'NewInt' } 
-  },
-  String: { 
-    type: 'java', 
-    data: { type: 'String', value: '', label: 'NewString' } 
-  },
-  boolean: { 
-    type: 'java', 
-    data: { type: 'boolean', value: 'true', label: 'NewBool' } 
-  },
+  int: { type: 'java', data: { type: 'int', value: '0', label: 'NewInt' } },
+  float: { type: 'java', data: { type: 'float', value: '0.0', label: 'NewFloat' } },
+  double: { type: 'java', data: { type: 'double', value: '0.0', label: 'NewDouble' } },
+  long: { type: 'java', data: { type: 'long', value: '0', label: 'NewLong' } },
+  short: { type: 'java', data: { type: 'short', value: '0', label: 'NewShort' } },
+  byte: { type: 'java', data: { type: 'byte', value: '0', label: 'NewByte' } },
+  String: { type: 'java', data: { type: 'String', value: '', label: 'NewString' } },
+  boolean: { type: 'java', data: { type: 'boolean', value: 'true', label: 'NewBool' } },
 };

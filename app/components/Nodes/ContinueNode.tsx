@@ -4,7 +4,7 @@ import { nodeContainer, nodeHeaderSolid, execHandleStyle } from '../../utils/nod
 
 const ContinueNode = ({ selected }: NodeProps<Node<Record<string, unknown>>>) => (
   <div style={{ ...nodeContainer('#f39c12', !!selected), minWidth: '130px' }}>
-    <div style={nodeHeaderSolid('#f39c12')}>
+    <div className="jflow-header-shimmer" style={nodeHeaderSolid('#f39c12')}>
       CONTINUE
     </div>
     <div style={{ padding: '10px' }}>

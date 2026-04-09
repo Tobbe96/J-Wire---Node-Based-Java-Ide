@@ -49,7 +49,6 @@ export default function NodeBrowser({ position, onAddNode, onClose }: NodeBrowse
         />
       </div>
 
-      {/* FIXED: overflowY is now 'visible' so submenus can pop out without scrolling */}
       <div style={{ maxHeight: '350px', overflowY: 'visible', padding: '4px' }}>
         {searchTerm === '' ? (
           /* CATEGORY VIEW */
@@ -85,7 +84,7 @@ export default function NodeBrowser({ position, onAddNode, onClose }: NodeBrowse
           ))
         ) : (
           /* SEARCH RESULTS VIEW */
-          <div>
+          <div style={{ maxHeight: '300px', overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#555 #1a1a1a' }}>
             {filteredNodes.length > 0 ? (
               filteredNodes.map((nodeKind) => (
                 <button 
@@ -117,8 +116,9 @@ const browserStyle: React.CSSProperties = {
   border: '1px solid #444',
   borderRadius: '8px',
   zIndex: 9999,
-  boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
-  pointerEvents: 'all', // FIXED: Ensures the menu registers clicks properly
+  boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 15px rgba(99,102,241,0.15)',
+  pointerEvents: 'all',
+  animation: 'vfx-menu-slide-in 0.2s ease-out',
 };
 
 const searchInputStyle: React.CSSProperties = {
@@ -137,13 +137,18 @@ const subMenuStyle: React.CSSProperties = {
   position: 'absolute',
   top: '0',
   width: '180px',
-  marginLeft: '-2px', // FIXED: Slight overlap to prevent the mouse from "falling off" and closing the menu
+  marginLeft: '-2px',
   background: '#1a1a1a',
   border: '1px solid #444',
   borderRadius: '6px',
   padding: '4px',
-  boxShadow: '0 10px 30px rgba(0,0,0,0.7)',
-  zIndex: 10000, // FIXED: Ensure submenu stays above the parent menu
+  boxShadow: '0 10px 30px rgba(0,0,0,0.7), 0 0 10px rgba(99,102,241,0.1)',
+  zIndex: 10000,
+  animation: 'vfx-submenu-slide 0.15s ease-out',
+  maxHeight: '300px',
+  overflowY: 'auto',
+  scrollbarWidth: 'thin',
+  scrollbarColor: '#555 #1a1a1a',
 };
 
 const itemStyle: React.CSSProperties = {
@@ -154,6 +159,7 @@ const itemStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
+  transition: 'all 0.15s ease',
 };
 
 const buttonStyle: React.CSSProperties = {
@@ -167,6 +173,6 @@ const buttonStyle: React.CSSProperties = {
   cursor: 'pointer',
   borderRadius: '4px',
   display: 'block',
-  transition: 'background 0.1s',
-  borderBottom: '1px solid #222'
+  transition: 'background 0.15s, box-shadow 0.15s',
+  borderBottom: '1px solid #222',
 };

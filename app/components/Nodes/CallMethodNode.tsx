@@ -13,7 +13,7 @@ const CallMethodNode = ({ id, data, selected }: NodeProps<Node<CallMethodNodeDat
 
   return (
     <div style={nodeContainer(ACCENT, !!selected)}>
-      <div style={nodeHeaderSolid('#e74c3c')}>CALL METHOD</div>
+      <div className="jflow-header-shimmer" style={nodeHeaderSolid('#e74c3c')}>CALL METHOD</div>
 
       <Handle type="target" position={Position.Left} id="exec-in" style={execHandleStyle('left')} />
 

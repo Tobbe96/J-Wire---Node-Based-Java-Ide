@@ -15,7 +15,7 @@ const SetLocalVarNode = ({ id, data, selected }: NodeProps<Node<SetLocalVarNodeD
 
   return (
     <div style={nodeContainer(ACCENT, !!selected)}>
-      <div style={{ ...nodeHeaderSolid(ACCENT), color: '#000' }}>SET LOCAL VARIABLE</div>
+      <div className="jflow-header-shimmer" style={{ ...nodeHeaderSolid(ACCENT), color: '#000' }}>SET LOCAL VARIABLE</div>
 
       <Handle type="target" position={Position.Left} id="exec-in" style={execHandleStyle('left')} />
 

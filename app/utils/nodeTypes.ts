@@ -113,9 +113,36 @@ export interface MathFuncNodeData extends Record<string, unknown> {
 
 export interface ArrayNodeData extends Record<string, unknown> {
   label: string;
-  operation: string; // 'literal' | 'access' | 'length'
-  arrayType: string; // 'int' | 'String'
+  operation: string; // 'literal' | 'access' | 'length' | 'set' | 'new'
+  arrayType: string; // 'int' | 'float' | 'double' | 'long' | 'short' | 'byte' | 'String' | 'boolean'
   values?: string;   // comma-separated values for literal
+}
+
+export interface ForEachNodeData extends Record<string, unknown> {
+  label: string;
+  elementType?: string;
+}
+
+export interface TryCatchFinallyNodeData extends Record<string, unknown> {
+  label: string;
+}
+
+export interface ThrowNodeData extends Record<string, unknown> {
+  label: string;
+  accepts: string[];
+}
+
+export interface ScannerNodeData extends Record<string, unknown> {
+  label: string;
+  readType: string; // 'nextLine' | 'nextInt' | 'nextFloat' | 'nextDouble' | 'nextLong' | 'nextBoolean'
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface LiteralNodeData extends Record<string, unknown> {
+  label: string;
+  literalType: string; // 'String' | 'int' | 'float' | 'double' | 'long' | 'short' | 'byte' | 'boolean'
+  value: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
 }
 
 // ─── Enriched Data (injected at runtime by page.tsx) ───────────

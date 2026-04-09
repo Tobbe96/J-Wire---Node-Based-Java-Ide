@@ -1,11 +1,14 @@
 'use client';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { codeToHtml } from 'shiki';
+import { useVfxStore } from '../store/vfxStore';
 
 export default function LivePreview({ code }: { code: string }) {
   const [highlightedHtml, setHighlightedHtml] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [flashKey, setFlashKey] = useState(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const vfxEnabled = useVfxStore((s) => s.vfxEnabled);
 
   useEffect(() => {
     let cancelled = false;
@@ -13,10 +16,13 @@ export default function LivePreview({ code }: { code: string }) {
       lang: 'java',
       theme: 'vitesse-dark',
     }).then((html) => {
-      if (!cancelled) setHighlightedHtml(html);
+      if (!cancelled) {
+        setHighlightedHtml(html);
+        if (vfxEnabled) setFlashKey((k) => k + 1);
+      }
     });
     return () => { cancelled = true; };
-  }, [code]);
+  }, [code, vfxEnabled]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(code).then(() => {
@@ -27,18 +33,34 @@ export default function LivePreview({ code }: { code: string }) {
   }, [code]);
 
   return (
-    <div style={codePanelStyle}>
+    <div style={{
+      ...codePanelStyle,
+      ...(vfxEnabled ? {
+        borderImage: 'linear-gradient(180deg, #6366f144, #a855f744, #06b6d444) 1',
+        borderWidth: '0 0 0 2px',
+        borderStyle: 'solid',
+      } : {}),
+    }}>
       <div style={headerStyle}>
         <span>LIVE JAVA PREVIEW</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button onClick={handleCopy} style={copyButtonStyle} title="Copy code to clipboard">
             {copied ? '✓ Copied' : '⎘ Copy'}
           </button>
-          <span style={{ color: '#22c55e' }}>● Syncing</span>
+          <span style={{
+            color: '#22c55e',
+            ...(vfxEnabled ? { animation: 'vfx-sync-pulse 2s ease-in-out infinite' } : {}),
+          }}>
+            ● Syncing
+          </span>
         </div>
       </div>
       <div
-        style={codeAreaStyle}
+        key={vfxEnabled ? flashKey : undefined}
+        style={{
+          ...codeAreaStyle,
+          ...(vfxEnabled ? { animation: 'vfx-code-flash 0.4s ease-out' } : {}),
+        }}
         dangerouslySetInnerHTML={{ __html: highlightedHtml }}
       />
     </div>
@@ -48,10 +70,13 @@ export default function LivePreview({ code }: { code: string }) {
 const codePanelStyle: React.CSSProperties = {
   width: '350px',
   background: '#1a1a1a',
-  borderLeft: '1px solid #000',
+  borderLeftWidth: '1px',
+  borderLeftStyle: 'solid',
+  borderLeftColor: '#000',
   color: '#ccc',
   display: 'flex',
   flexDirection: 'column',
+  flex: 1,
   zIndex: 10,
 };
 

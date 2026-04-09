@@ -13,7 +13,7 @@ const MathFuncNode = ({ data, selected }: NodeProps<Node<MathFuncNodeData>>) => 
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
-      <div style={nodeHeaderSolid(ACCENT)}>
+      <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         Math.{op}()
       </div>
 
