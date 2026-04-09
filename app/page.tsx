@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -28,9 +28,11 @@ import Terminal from './components/Panels/Terminal';
 import NodeBrowser from './components/NodeBrowse';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toast } from './components/Toast';
+import ThemeToggle from './components/ThemeToggle';
 
 // Store
 import { useEditorStore } from './store/editorStore';
+import { getTypeColor } from './utils/theme';
 
 const nodeTypes = {
   java: JavaNode,
@@ -78,6 +80,7 @@ function JavaNodeEditor() {
     setMenuVisible,
     setMenuPosition,
     setRfInstance,
+    autoLayout,
     addNodeAndConnect,
     getGeneratedCode,
   } = useEditorStore();
@@ -128,10 +131,20 @@ function JavaNodeEditor() {
   // Connection drag state
   const dragConnectStart = useRef<{ nodeId: string; handleId: string } | null>(null);
   const lastConnectEnd = useRef<number>(0);
+  const [connectionLineColor, setConnectionLineColor] = useState('#fff');
 
   const onConnectStart = useCallback((_: unknown, { nodeId, handleId }: { nodeId: string | null; handleId: string | null }) => {
-    if (nodeId && handleId) dragConnectStart.current = { nodeId, handleId };
-  }, []);
+    if (nodeId && handleId) {
+      dragConnectStart.current = { nodeId, handleId };
+      if (handleId.includes('exec')) {
+        setConnectionLineColor('#fff');
+      } else {
+        const sourceNode = nodes.find(n => n.id === nodeId);
+        const type = sourceNode?.data?.type as string | undefined;
+        setConnectionLineColor(type ? getTypeColor(type) : '#888');
+      }
+    }
+  }, [nodes]);
 
   const onConnectEnd = useCallback((event: MouseEvent | TouchEvent) => {
     if (!dragConnectStart.current) return;
@@ -200,6 +213,13 @@ function JavaNodeEditor() {
       </ErrorBoundary>
 
       <div style={{ flexGrow: 1, position: 'relative' }}>
+        <ThemeToggle />
+        <button
+          onClick={autoLayout}
+          style={{ position: 'absolute', top: 10, right: 50, zIndex: 20, background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
+        >
+          Auto Layout
+        </button>
         <ErrorBoundary fallbackLabel="Canvas">
           <ReactFlow
             nodes={enrichedNodes}
@@ -213,6 +233,7 @@ function JavaNodeEditor() {
             onPaneClick={onPaneClick}
             onSelectionChange={onSelectionChange}
             isValidConnection={validateConnection}
+            connectionLineStyle={{ stroke: connectionLineColor, strokeWidth: 2 }}
             deleteKeyCode={['Backspace', 'Delete']}
             fitView
           >

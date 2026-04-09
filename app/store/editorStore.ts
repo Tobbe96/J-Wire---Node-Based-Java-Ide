@@ -13,6 +13,7 @@ import {
   IsValidConnection,
 } from '@xyflow/react';
 import { getTypeColor } from '../utils/theme';
+import { getLayoutedElements } from '../utils/autoLayout';
 import { generateJavaCode } from '../utils/compiler';
 import { executeGraph } from '../utils/executor';
 import { NODE_CONFIGS } from '../utils/nodeRegistry';
@@ -86,10 +87,14 @@ export interface EditorActions {
   saveNodeGraph: () => void;
   loadNodeGraph: () => void;
   exportToFile: () => void;
+  exportToJava: () => void;
   importFromFile: (file: File) => void;
 
   // Validation
   validateConnection: IsValidConnection;
+
+  // Layout
+  autoLayout: () => void;
 
   // Internal
   setRfInstance: (instance: EditorState['_rfInstance']) => void;
@@ -305,6 +310,19 @@ export const useEditorStore = create<EditorStore>()(
         useToastStore.getState().addToast('Project exported', 'success');
       },
 
+      exportToJava: () => {
+        const { nodes, edges, className } = get();
+        const code = generateJavaCode(nodes, edges, className);
+        const blob = new Blob([code], { type: 'text/x-java-source' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${className || 'VisualScript'}.java`;
+        a.click();
+        URL.revokeObjectURL(url);
+        useToastStore.getState().addToast('Java file exported', 'success');
+      },
+
       importFromFile: (file: File) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -330,6 +348,12 @@ export const useEditorStore = create<EditorStore>()(
       validateConnection: (connection) => {
         const { nodes } = get();
         return isValidJavaConnection(connection as Connection | Edge, nodes);
+      },
+
+      // --- Layout ---
+      autoLayout: () => {
+        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(get().nodes, get().edges);
+        set({ nodes: layoutedNodes, edges: layoutedEdges });
       },
 
       // --- Internal ---
