@@ -12,6 +12,8 @@ interface LeftSidebarProps {
   updateNodeModifier: (id: string, modifier: string) => void;
   updateNodeData: (id: string, data: object | ((node: Node) => object)) => void;
   onAddGetter: (variableNode: Node) => void;
+  className: string;
+  onClassNameChange: (name: string) => void;
 }
 
 const LeftSidebar = ({
@@ -23,6 +25,8 @@ const LeftSidebar = ({
   updateNodeModifier,
   updateNodeData,
   onAddGetter,
+  className,
+  onClassNameChange,
 }: LeftSidebarProps) => {
   const selectedNode = nodes.find(n => n.id === selectedNodeId);
 
@@ -37,6 +41,13 @@ const LeftSidebar = ({
       </div>
 
       <div style={{ padding: '10px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ fontSize: '10px', color: '#555', marginBottom: '6px', fontWeight: 'bold' }}>CLASS NAME</div>
+        <input
+          value={className}
+          onChange={(e) => onClassNameChange(e.target.value)}
+          style={{ background: '#111', border: '1px solid #333', color: '#89ddff', padding: '6px', fontSize: '11px', borderRadius: '3px', outline: 'none', width: '100%', marginBottom: '15px', boxSizing: 'border-box' }}
+        />
+
         <div style={{ fontSize: '10px', color: '#555', marginBottom: '10px', fontWeight: 'bold' }}>VARIABLES</div>
         {nodes.filter(n => n.type === 'java').map((node) => (
           <div

@@ -45,12 +45,12 @@ const MethodNode = ({ id, data, selected }: NodeProps<Node<MethodNodeData>>) => 
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '240px' }}>
       <div style={nodeHeaderGradient(ACCENT)}>
         <span>METHOD DEFINITION</span>
-        <span style={{ color: ACCENT }}>{data.type || 'void'}</span>
+        <span style={{ color: ACCENT }}>{data.returnType || 'void'}</span>
       </div>
 
       <div style={{ padding: '12px' }}>
         {/* Method Name */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '15px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '10px' }}>
           <span style={{ fontSize: '10px', color: '#888' }}>Method Name</span>
           <input
             className="nodrag"
@@ -61,6 +61,27 @@ const MethodNode = ({ id, data, selected }: NodeProps<Node<MethodNodeData>>) => 
             }}
             style={nodeInputStyle}
           />
+        </div>
+
+        {/* Return Type */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '15px' }}>
+          <span style={{ fontSize: '10px', color: '#888' }}>Return Type</span>
+          <select
+            className="nodrag"
+            value={data.returnType || 'void'}
+            onChange={(e) => {
+              e.stopPropagation();
+              data.updateNodeData?.(id, { returnType: e.target.value });
+            }}
+            style={{ ...nodeInputStyle, cursor: 'pointer' }}
+          >
+            <option value="void">void</option>
+            <option value="int">int</option>
+            <option value="double">double</option>
+            <option value="boolean">boolean</option>
+            <option value="String">String</option>
+            <option value="char">char</option>
+          </select>
         </div>
 
         {/* Parameters */}

@@ -21,6 +21,7 @@ export interface LocalVariable {
 export interface MethodNodeData extends Record<string, unknown> {
   label: string;
   type: string;
+  returnType?: string;
   parameters?: Parameter[];
   localVariables?: LocalVariable[];
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
@@ -66,6 +67,11 @@ export interface BranchNodeData extends Record<string, unknown> {
 }
 
 export interface WhileNodeData extends Record<string, unknown> {
+  label: string;
+  accepts: string[];
+}
+
+export interface ForNodeData extends Record<string, unknown> {
   label: string;
   accepts: string[];
 }

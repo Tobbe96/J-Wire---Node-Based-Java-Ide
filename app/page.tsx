@@ -12,6 +12,8 @@ import MainNode from './components/Nodes/MainNode';
 import CallMethodNode from './components/Nodes/CallMethodNode';
 import BranchNode from './components/Nodes/BranchNode';
 import WhileNode from './components/Nodes/WhileNode';
+import ForNode from './components/Nodes/ForNode';
+import NotNode from './components/Nodes/NotNode';
 import ReturnNode from './components/Nodes/ReturnNode';
 import SetLocalVarNode from './components/Nodes/SetLocalVarNode';
 import SetVariableNode from './components/Nodes/SetVariableNode';
@@ -37,6 +39,8 @@ const nodeTypes = {
   callMethod: CallMethodNode,
   branch: BranchNode,
   while: WhileNode,
+  for: ForNode,
+  not: NotNode,
   return: ReturnNode,
   getter: VariableGetterNode,
   setLocalVar: SetLocalVarNode,
@@ -59,6 +63,8 @@ function JavaNodeEditor() {
           updateNodeModifier={editor.updateNodeModifier}
           updateNodeData={editor.updateNodeData}
           onAddGetter={editor.onAddGetter}
+          className={editor.className}
+          onClassNameChange={editor.setClassName}
         />
       </ErrorBoundary>
 

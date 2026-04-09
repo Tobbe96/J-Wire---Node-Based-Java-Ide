@@ -1,7 +1,7 @@
 export const NODE_CATEGORIES = {
   Variables: ['int', 'String', 'boolean'],
-  Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'setVar', 'setLocalVar', 'print', 'return'],
-  Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-gt', 'math-eq']
+  Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'setVar', 'setLocalVar', 'print', 'return'],
+  Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-gt', 'math-eq', 'math-and', 'math-or', 'math-not']
 };
 
 export const NODE_CONFIGS: Record<string, any> = {
@@ -55,6 +55,13 @@ export const NODE_CONFIGS: Record<string, any> = {
       accepts: ['boolean'] // Condition must be boolean
     }
   },
+  for: {
+    type: 'for',
+    data: {
+      label: 'FOR Loop',
+      accepts: ['int']
+    }
+  },
   return: {
     type: 'return', 
     data: {
@@ -81,6 +88,11 @@ export const NODE_CONFIGS: Record<string, any> = {
   // Comparison nodes output 'boolean' and accept 'int'
   'math-gt':  { type: 'math', data: { type: 'boolean', label: 'GREATER THAN', symbol: '>', operation: '>', accepts: ['int'] } },
   'math-eq':  { type: 'math', data: { type: 'boolean', label: 'EQUALS', symbol: '==', operation: '==', accepts: ['int', 'String', 'boolean'] } },
+  
+  // Logical nodes output 'boolean' and accept 'boolean'
+  'math-and': { type: 'math', data: { type: 'boolean', label: 'AND', symbol: '&&', operation: '&&', accepts: ['boolean'] } },
+  'math-or':  { type: 'math', data: { type: 'boolean', label: 'OR', symbol: '||', operation: '||', accepts: ['boolean'] } },
+  'math-not': { type: 'not', data: { type: 'boolean', label: 'NOT', symbol: '!', operation: '!', accepts: ['boolean'] } },
   
   // --- VARIABLES ---
   int: { 

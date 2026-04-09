@@ -29,6 +29,7 @@ export function useFlowEditor(menu: ContextMenuState) {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
   const [selectedSidebarNodeId, setSelectedSidebarNodeId] = useState<string | null>(null);
+  const [className, setClassName] = useState<string>('VisualScript');
 
   const addLog = useCallback((msg: string) => setConsoleOutput(prev => [...prev, msg]), []);
   const { saveNodeGraph, loadNodeGraph } = usePersistence(setNodes, setEdges, addLog);
@@ -40,7 +41,7 @@ export function useFlowEditor(menu: ContextMenuState) {
 
   // ─── Derived State ───────────────────────────────────────────
 
-  const generatedJavaCode = useMemo(() => generateJavaCode(nodes, edges), [nodes, edges]);
+  const generatedJavaCode = useMemo(() => generateJavaCode(nodes, edges, className), [nodes, edges, className]);
 
   const validateConnection: IsValidConnection = useCallback(
     (connection) => isValidJavaConnection(connection as Connection | Edge, nodes),
@@ -187,5 +188,7 @@ export function useFlowEditor(menu: ContextMenuState) {
     updateNodeData,
     updateNodeModifier,
     onAddGetter,
+    className,
+    setClassName,
   };
 }

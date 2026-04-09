@@ -60,9 +60,25 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
         case '/': return Number(valA) / Number(valB);
         case '>': return Number(valA) > Number(valB);
         case '==': return valA == valB;
+        case '&&': return Boolean(valA) && Boolean(valB);
+        case '||': return Boolean(valA) || Boolean(valB);
         default: return 0;
       }
     }
+
+    if (node.type === 'not') {
+      const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+      const val = evaluateData(edgeA?.source || "", edgeA?.sourceHandle || undefined, localScope);
+      return !val;
+    }
+
+    if (node.type === 'for') {
+      if (localScope && ('__for_index__' + nodeId) in localScope) {
+        return localScope['__for_index__' + nodeId];
+      }
+      return 0;
+    }
+
     return "";
   };
 
@@ -137,6 +153,21 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
         const condition = evaluateData(condEdge?.source || "", condEdge?.sourceHandle || undefined, localScope);
         runLogicChain(nextNode.id, condition ? 'exec-out-true' : 'exec-out-false', localScope);
         break; 
+      }
+
+      if (nextNode.type === 'for') {
+        const startEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-start');
+        const endEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-end');
+        const startVal = Number(evaluateData(startEdge?.source || "", startEdge?.sourceHandle || undefined, localScope)) || 0;
+        const endVal = Number(evaluateData(endEdge?.source || "", endEdge?.sourceHandle || undefined, localScope)) || 0;
+
+        const forScope = localScope ? { ...localScope } : {};
+        for (let i = startVal; i < endVal; i++) {
+          forScope['__for_index__' + nextNode.id] = i;
+          runLogicChain(nextNode.id, 'exec-body', forScope);
+        }
+        runLogicChain(nextNode.id, 'exec', localScope);
+        break;
       }
 
       if (nextNode.type === 'return') {

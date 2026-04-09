@@ -2,8 +2,8 @@ import { Node, Edge } from '@xyflow/react';
 import { getDefaultLiteral } from './theme';
 import type { Parameter, LocalVariable } from './nodeTypes';
 
-export function generateJavaCode(nodes: Node[], edges: Edge[]): string {
-  let code = "public class VisualScript {\n\n";
+export function generateJavaCode(nodes: Node[], edges: Edge[], className: string = 'VisualScript'): string {
+  let code = `public class ${className} {\n\n`;
 
   // 1. Generate Class Fields (Variables)
   const vars = nodes.filter(n => n.type === 'java');
@@ -46,6 +46,14 @@ export function generateJavaCode(nodes: Node[], edges: Edge[]): string {
       const valA = edgeA ? evaluateDataNode(edgeA.source, edgeA.sourceHandle || undefined) : '0';
       const valB = edgeB ? evaluateDataNode(edgeB.source, edgeB.sourceHandle || undefined) : '0';
       return `(${valA} ${node.data.operation} ${valB})`;
+    }
+    if (node.type === 'not') {
+      const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+      const val = edgeA ? evaluateDataNode(edgeA.source, edgeA.sourceHandle || undefined) : 'false';
+      return `(!${val})`;
+    }
+    if (node.type === 'for') {
+      return 'i';
     }
     return '""';
   };
@@ -138,6 +146,18 @@ export function generateJavaCode(nodes: Node[], edges: Edge[]): string {
         break; 
       }
 
+      if (nextNode.type === 'for') {
+        const startEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-start');
+        const endEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-end');
+        const startVal = startEdge ? evaluateDataNode(startEdge.source, startEdge.sourceHandle || undefined) : '0';
+        const endVal = endEdge ? evaluateDataNode(endEdge.source, endEdge.sourceHandle || undefined) : '10';
+        methodBody += `    for (int i = ${startVal}; i < ${endVal}; i++) {\n`;
+        methodBody += buildMethodBody(nextNode.id, 'exec-body', visited);
+        methodBody += `    }\n`;
+        methodBody += buildMethodBody(nextNode.id, 'exec-out', visited);
+        break;
+      }
+
       currentNodeId = nextNode.id;
       currentHandle = 'exec';
     }
@@ -157,7 +177,8 @@ export function generateJavaCode(nodes: Node[], edges: Edge[]): string {
     });
     body += buildMethodBody(m.id);
 
-    code += `  public void ${m.data.label as string}(${paramSignature}) {\n${body}  }\n\n`;
+    const returnType = (m.data.returnType as string) || 'void';
+    code += `  public ${returnType} ${m.data.label as string}(${paramSignature}) {\n${body}  }\n\n`;
   });
 
   // Main
