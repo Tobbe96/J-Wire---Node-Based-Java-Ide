@@ -1,0 +1,310 @@
+import { create } from 'zustand';
+import { temporal } from 'zundo';
+import {
+  Node,
+  Edge,
+  Connection,
+  OnNodesChange,
+  OnEdgesChange,
+  OnSelectionChangeParams,
+  applyNodeChanges,
+  applyEdgeChanges,
+  addEdge,
+  IsValidConnection,
+} from '@xyflow/react';
+import { getTypeColor } from '../utils/theme';
+import { generateJavaCode } from '../utils/compiler';
+import { executeGraph } from '../utils/executor';
+import { NODE_CONFIGS } from '../utils/nodeRegistry';
+import { isValidJavaConnection } from '../utils/validation';
+
+const STORAGE_KEY = 'java-nodegraph-save';
+
+function getEdgeStyle(sourceNode: Node | undefined, sourceHandle: string | null) {
+  if (!sourceNode || !sourceHandle) return { stroke: '#fff', strokeWidth: 2 };
+  if (sourceHandle.includes('exec')) return { stroke: '#fff', strokeWidth: 3, animated: true };
+  return { stroke: getTypeColor(sourceNode.data.type as string), strokeWidth: 2 };
+}
+
+// --- State Types ---
+
+export interface EditorState {
+  // Graph state
+  nodes: Node[];
+  edges: Edge[];
+
+  // Application state
+  consoleOutput: string[];
+  selectedSidebarNodeId: string | null;
+  className: string;
+
+  // Context menu
+  menuVisible: boolean;
+  menuPosition: { x: number; y: number };
+
+  // React Flow instance reference (set after mount)
+  _rfInstance: {
+    screenToFlowPosition: (pos: { x: number; y: number }) => { x: number; y: number };
+    toObject: () => { nodes: Node[]; edges: Edge[]; viewport: unknown };
+  } | null;
+}
+
+export interface EditorActions {
+  // Graph mutations
+  onNodesChange: OnNodesChange;
+  onEdgesChange: OnEdgesChange;
+  onConnect: (connection: Connection) => void;
+  updateNodeData: (nodeId: string, data: Record<string, unknown> | object) => void;
+
+  // Selection
+  onSelectionChange: (params: OnSelectionChangeParams) => void;
+  setSelectedSidebarNodeId: (id: string | null) => void;
+
+  // Code generation & execution
+  getGeneratedCode: () => string;
+  runScript: () => void;
+
+  // Node operations
+  addNode: (nodeKind: string, position: { x: number; y: number }) => string;
+  addNodeAndConnect: (
+    nodeKind: string,
+    sourceId: string,
+    sourceHandle: string
+  ) => void;
+  addGetter: (variableNode: Node) => void;
+  updateNodeModifier: (id: string, modifier: string) => void;
+
+  // Context menu
+  setMenuVisible: (visible: boolean) => void;
+  setMenuPosition: (pos: { x: number; y: number }) => void;
+
+  // Class name
+  setClassName: (name: string) => void;
+
+  // Persistence
+  saveNodeGraph: () => void;
+  loadNodeGraph: () => void;
+
+  // Validation
+  validateConnection: IsValidConnection;
+
+  // Internal
+  setRfInstance: (instance: EditorState['_rfInstance']) => void;
+}
+
+export type EditorStore = EditorState & EditorActions;
+
+// Separate tracked state (for undo/redo) from ephemeral state
+const isTrackedKey = (key: string) =>
+  key === 'nodes' || key === 'edges';
+
+export const useEditorStore = create<EditorStore>()(
+  temporal(
+    (set, get) => ({
+      // --- Initial State ---
+      nodes: [],
+      edges: [],
+      consoleOutput: [],
+      selectedSidebarNodeId: null,
+      className: 'VisualScript',
+      menuVisible: false,
+      menuPosition: { x: 0, y: 0 },
+      _rfInstance: null,
+
+      // --- Graph Mutations ---
+      onNodesChange: (changes) => {
+        set((state) => ({ nodes: applyNodeChanges(changes, state.nodes) }));
+      },
+
+      onEdgesChange: (changes) => {
+        set((state) => ({ edges: applyEdgeChanges(changes, state.edges) }));
+      },
+
+      onConnect: (connection) => {
+        const { nodes } = get();
+        const sourceNode = nodes.find((n) => n.id === connection.source);
+        const style = getEdgeStyle(sourceNode, connection.sourceHandle ?? null);
+        set((state) => ({
+          edges: addEdge(
+            {
+              ...connection,
+              animated: style.animated || false,
+              style: { stroke: style.stroke, strokeWidth: style.strokeWidth },
+            } as Edge,
+            state.edges
+          ),
+        }));
+      },
+
+      updateNodeData: (nodeId: string, data: Record<string, unknown> | object) => {
+        set((state) => ({
+          nodes: state.nodes.map((n) =>
+            n.id === nodeId ? { ...n, data: { ...n.data, ...(typeof data === 'function' ? {} : data) } } : n
+          ),
+        }));
+      },
+
+      // --- Selection ---
+      onSelectionChange: ({ nodes: selected }) => {
+        if (selected.length > 0) {
+          set({ selectedSidebarNodeId: selected[0].id });
+        }
+      },
+
+      setSelectedSidebarNodeId: (id) => set({ selectedSidebarNodeId: id }),
+
+      // --- Code Generation & Execution ---
+      getGeneratedCode: () => {
+        const { nodes, edges, className } = get();
+        return generateJavaCode(nodes, edges, className);
+      },
+
+      runScript: () => {
+        const { nodes, edges } = get();
+        set({ consoleOutput: executeGraph(nodes, edges) });
+      },
+
+      // --- Node Operations ---
+      addNode: (nodeKind, position) => {
+        const config = NODE_CONFIGS[nodeKind];
+        if (!config) return '';
+        const newNodeId = `node-${Date.now()}`;
+        set((state) => ({
+          nodes: [
+            ...state.nodes,
+            {
+              id: newNodeId,
+              type: config.type,
+              position,
+              data: { ...config.data },
+            },
+          ],
+        }));
+        return newNodeId;
+      },
+
+      addNodeAndConnect: (nodeKind, sourceId, sourceHandle) => {
+        const { nodes, menuPosition, _rfInstance } = get();
+        const config = NODE_CONFIGS[nodeKind];
+        if (!config) return;
+
+        const newNodeId = `node-${Date.now()}`;
+        const flowPos = _rfInstance
+          ? _rfInstance.screenToFlowPosition(menuPosition)
+          : menuPosition;
+
+        const sourceNode = nodes.find((n) => n.id === sourceId);
+        const style = getEdgeStyle(sourceNode, sourceHandle);
+
+        set((state) => ({
+          nodes: [
+            ...state.nodes,
+            {
+              id: newNodeId,
+              type: config.type,
+              position: flowPos,
+              data: { ...config.data },
+            },
+          ],
+          edges: addEdge(
+            {
+              id: `e-${sourceId}-${newNodeId}`,
+              source: sourceId,
+              sourceHandle,
+              target: newNodeId,
+              targetHandle: sourceHandle.includes('exec') ? 'exec-in' : 'data-in',
+              animated: style.animated || false,
+              style: { stroke: style.stroke, strokeWidth: style.strokeWidth },
+            } as Edge,
+            state.edges
+          ),
+          menuVisible: false,
+        }));
+      },
+
+      addGetter: (variableNode) => {
+        set((state) => ({
+          nodes: [
+            ...state.nodes,
+            {
+              id: `getter-${Date.now()}`,
+              type: 'getter',
+              position: { x: 400, y: 250 },
+              data: {
+                label: variableNode.data.label,
+                type: variableNode.data.type,
+                variableId: variableNode.id,
+              },
+            },
+          ],
+        }));
+      },
+
+      updateNodeModifier: (id, modifier) => {
+        get().updateNodeData(id, { modifier });
+      },
+
+      // --- Context Menu ---
+      setMenuVisible: (visible) => set({ menuVisible: visible }),
+      setMenuPosition: (pos) => set({ menuPosition: pos }),
+
+      // --- Class Name ---
+      setClassName: (name) => set({ className: name }),
+
+      // --- Persistence ---
+      saveNodeGraph: () => {
+        const { _rfInstance } = get();
+        if (_rfInstance) {
+          const flow = _rfInstance.toObject();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(flow));
+        } else {
+          const { nodes, edges } = get();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ nodes, edges }));
+        }
+        set((state) => ({
+          consoleOutput: [...state.consoleOutput, '> Nodegraph saved to LocalStorage'],
+        }));
+      },
+
+      loadNodeGraph: () => {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+          try {
+            const flow = JSON.parse(savedData);
+            if (flow) {
+              set({
+                nodes: flow.nodes || [],
+                edges: flow.edges || [],
+                consoleOutput: ['> Nodegraph loaded successfully'],
+              });
+            }
+          } catch (e) {
+            console.error('Failed to load graph:', e);
+          }
+        }
+      },
+
+      // --- Validation ---
+      validateConnection: (connection) => {
+        const { nodes } = get();
+        return isValidJavaConnection(connection as Connection | Edge, nodes);
+      },
+
+      // --- Internal ---
+      setRfInstance: (instance) => set({ _rfInstance: instance }),
+    }),
+    {
+      // Only track nodes and edges for undo/redo
+      partialize: (state) => {
+        const tracked: Record<string, unknown> = {};
+        for (const key of Object.keys(state)) {
+          if (isTrackedKey(key)) {
+            tracked[key] = state[key as keyof EditorState];
+          }
+        }
+        return tracked as Pick<EditorState, 'nodes' | 'edges'>;
+      },
+      limit: 50,
+    }
+  )
+);

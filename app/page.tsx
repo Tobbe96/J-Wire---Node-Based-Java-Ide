@@ -1,6 +1,6 @@
 'use client';
-import React from 'react';
-import { ReactFlow, Background, Controls, ReactFlowProvider } from '@xyflow/react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import { ReactFlow, Background, Controls, ReactFlowProvider, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 // Node Components
@@ -26,9 +26,8 @@ import Terminal from './components/Panels/Terminal';
 import NodeBrowser from './components/NodeBrowse';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Hooks
-import { useContextMenu } from './utils/useContextMenu';
-import { useFlowEditor } from './utils/useFlowEditor';
+// Store
+import { useEditorStore } from './store/editorStore';
 
 const nodeTypes = {
   java: JavaNode,
@@ -48,40 +47,149 @@ const nodeTypes = {
 };
 
 function JavaNodeEditor() {
-  const menu = useContextMenu();
-  const editor = useFlowEditor(menu);
+  const {
+    nodes,
+    edges,
+    consoleOutput,
+    selectedSidebarNodeId,
+    className,
+    menuVisible,
+    menuPosition,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    onSelectionChange,
+    validateConnection,
+    runScript,
+    saveNodeGraph,
+    loadNodeGraph,
+    updateNodeData,
+    updateNodeModifier,
+    addGetter,
+    setSelectedSidebarNodeId,
+    setClassName,
+    setMenuVisible,
+    setMenuPosition,
+    setRfInstance,
+    addNodeAndConnect,
+    getGeneratedCode,
+  } = useEditorStore();
+
+  const { screenToFlowPosition, toObject } = useReactFlow();
+
+  // Bridge React Flow instance into the store
+  useEffect(() => {
+    setRfInstance({ screenToFlowPosition, toObject });
+  }, [screenToFlowPosition, toObject, setRfInstance]);
+
+  // Load on mount
+  useEffect(() => { loadNodeGraph(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Context menu keyboard shortcut
+  const mousePos = useRef({ x: 0, y: 0 });
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => { mousePos.current = { x: e.clientX, y: e.clientY }; };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        setMenuPosition(mousePos.current);
+        setMenuVisible(!menuVisible);
+      }
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [menuVisible, setMenuPosition, setMenuVisible]);
+
+  // Connection drag state
+  const dragConnectStart = useRef<{ nodeId: string; handleId: string } | null>(null);
+  const lastConnectEnd = useRef<number>(0);
+
+  const onConnectStart = useCallback((_: unknown, { nodeId, handleId }: { nodeId: string | null; handleId: string | null }) => {
+    if (nodeId && handleId) dragConnectStart.current = { nodeId, handleId };
+  }, []);
+
+  const onConnectEnd = useCallback((event: MouseEvent | TouchEvent) => {
+    if (!dragConnectStart.current) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('.react-flow__node')) { dragConnectStart.current = null; return; }
+    lastConnectEnd.current = Date.now();
+    const x = 'clientX' in event ? event.clientX : event.touches?.[0]?.clientX ?? 0;
+    const y = 'clientY' in event ? event.clientY : event.touches?.[0]?.clientY ?? 0;
+    setMenuPosition({ x, y });
+    setMenuVisible(true);
+  }, [setMenuPosition, setMenuVisible]);
+
+  const onPaneClick = useCallback(() => {
+    if (Date.now() - lastConnectEnd.current < 100) return;
+    setMenuVisible(false);
+    dragConnectStart.current = null;
+    setSelectedSidebarNodeId(null);
+  }, [setMenuVisible, setSelectedSidebarNodeId]);
+
+  const handleAddNodeAndConnect = useCallback((nodeKind: string) => {
+    if (dragConnectStart.current) {
+      addNodeAndConnect(nodeKind, dragConnectStart.current.nodeId, dragConnectStart.current.handleId);
+      dragConnectStart.current = null;
+    } else {
+      // No drag — just add node at menu position
+      const config = useEditorStore.getState();
+      const flowPos = screenToFlowPosition(config.menuPosition);
+      useEditorStore.getState().addNode(nodeKind, flowPos);
+      setMenuVisible(false);
+    }
+  }, [addNodeAndConnect, screenToFlowPosition, setMenuVisible]);
+
+  // Enrich nodes with callbacks
+  const enrichedNodes = useMemo(() => {
+    const methodNodes = nodes.filter(n => n.type === 'method');
+    return nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        updateNodeData,
+        isValidConnection: validateConnection,
+        methodNodes,
+      },
+    }));
+  }, [nodes, updateNodeData, validateConnection]);
+
+  const generatedJavaCode = useMemo(() => getGeneratedCode(), [getGeneratedCode, nodes, edges, className]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#121212', display: 'flex', overflow: 'hidden' }}>
       <ErrorBoundary fallbackLabel="Sidebar">
         <LeftSidebar
-          nodes={editor.nodes}
-          selectedNodeId={editor.selectedSidebarNodeId}
-          onSelectNode={editor.setSelectedSidebarNodeId}
-          onSave={editor.saveNodeGraph}
-          onLoad={editor.loadNodeGraph}
-          updateNodeModifier={editor.updateNodeModifier}
-          updateNodeData={editor.updateNodeData}
-          onAddGetter={editor.onAddGetter}
-          className={editor.className}
-          onClassNameChange={editor.setClassName}
+          nodes={nodes}
+          selectedNodeId={selectedSidebarNodeId}
+          onSelectNode={setSelectedSidebarNodeId}
+          onSave={saveNodeGraph}
+          onLoad={loadNodeGraph}
+          updateNodeModifier={updateNodeModifier}
+          updateNodeData={updateNodeData}
+          onAddGetter={addGetter}
+          className={className}
+          onClassNameChange={setClassName}
         />
       </ErrorBoundary>
 
       <div style={{ flexGrow: 1, position: 'relative' }}>
         <ErrorBoundary fallbackLabel="Canvas">
           <ReactFlow
-            nodes={editor.enrichedNodes}
-            edges={editor.edges}
+            nodes={enrichedNodes}
+            edges={edges}
             nodeTypes={nodeTypes}
-            onNodesChange={editor.onNodesChange}
-            onEdgesChange={editor.onEdgesChange}
-            onConnect={editor.onConnect}
-            onConnectStart={editor.onConnectStart}
-            onConnectEnd={editor.onConnectEnd}
-            onPaneClick={editor.onPaneClick}
-            onSelectionChange={editor.onSelectionChange}
-            isValidConnection={editor.validateConnection}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
+            onPaneClick={onPaneClick}
+            onSelectionChange={onSelectionChange}
+            isValidConnection={validateConnection}
             deleteKeyCode={['Backspace', 'Delete']}
             fitView
           >
@@ -90,11 +198,11 @@ function JavaNodeEditor() {
           </ReactFlow>
         </ErrorBoundary>
 
-        {menu.menuVisible && (
+        {menuVisible && (
           <NodeBrowser
-            position={menu.menuPosition}
-            onAddNode={editor.addNodeAndConnect}
-            onClose={() => menu.setMenuVisible(false)}
+            position={menuPosition}
+            onAddNode={handleAddNodeAndConnect}
+            onClose={() => setMenuVisible(false)}
           />
         )}
       </div>
@@ -102,12 +210,12 @@ function JavaNodeEditor() {
       <div style={{ display: 'flex', flexDirection: 'column', width: '350px', borderLeft: '1px solid #000', zIndex: 10 }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ErrorBoundary fallbackLabel="Preview">
-            <LivePreview code={editor.generatedJavaCode} />
+            <LivePreview code={generatedJavaCode} />
           </ErrorBoundary>
         </div>
 
         <ErrorBoundary fallbackLabel="Terminal">
-          <Terminal consoleOutput={editor.consoleOutput} onRun={editor.runScript} />
+          <Terminal consoleOutput={consoleOutput} onRun={runScript} />
         </ErrorBoundary>
       </div>
     </div>
