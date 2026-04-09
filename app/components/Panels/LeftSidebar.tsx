@@ -1,6 +1,7 @@
 import React, { memo, useState, useMemo } from 'react';
 import { Node } from '@xyflow/react';
 import DetailsPanel from './DetailsPanel';
+import FileTree, { type ProjectFile } from '../FileTree';
 import { getTypeColor } from '../../utils/theme';
 
 interface LeftSidebarProps {
@@ -16,6 +17,12 @@ interface LeftSidebarProps {
   onAddGetter: (variableNode: Node) => void;
   className: string;
   onClassNameChange: (name: string) => void;
+  files: ProjectFile[];
+  activeFileId: string;
+  onSwitchFile: (fileId: string) => void;
+  onAddFile: () => void;
+  onRemoveFile: (fileId: string) => void;
+  onRenameFile: (fileId: string, newName: string) => void;
 }
 
 const LeftSidebar = ({
@@ -31,6 +38,12 @@ const LeftSidebar = ({
   onAddGetter,
   className,
   onClassNameChange,
+  files,
+  activeFileId,
+  onSwitchFile,
+  onAddFile,
+  onRemoveFile,
+  onRenameFile,
 }: LeftSidebarProps) => {
   const selectedNode = nodes.find(n => n.id === selectedNodeId);
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +78,15 @@ const LeftSidebar = ({
       </div>
 
       <div style={{ padding: '10px', overflowY: 'auto', flex: 1 }}>
+        <FileTree
+          files={files}
+          activeFileId={activeFileId}
+          onSwitch={onSwitchFile}
+          onAdd={onAddFile}
+          onRemove={onRemoveFile}
+          onRename={onRenameFile}
+        />
+
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

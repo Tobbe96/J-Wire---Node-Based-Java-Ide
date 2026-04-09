@@ -88,6 +88,12 @@ function JavaNodeEditor() {
     addNodeAndConnect,
     getGeneratedCode,
     compileAndRunJava,
+    files,
+    activeFileId,
+    addFile,
+    removeFile,
+    switchFile,
+    renameFile,
   } = useEditorStore();
 
   const { isDebugging, currentStepIndex, traceSteps, breakpoints, startDebug, stopDebug, toggleBreakpoint } = useDebugStore();
@@ -239,6 +245,12 @@ function JavaNodeEditor() {
           onAddGetter={addGetter}
           className={className}
           onClassNameChange={setClassName}
+          files={files}
+          activeFileId={activeFileId}
+          onSwitchFile={switchFile}
+          onAddFile={addFile}
+          onRemoveFile={removeFile}
+          onRenameFile={renameFile}
         />
       </ErrorBoundary>
 

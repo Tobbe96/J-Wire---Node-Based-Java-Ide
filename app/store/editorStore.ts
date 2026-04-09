@@ -22,6 +22,13 @@ import { useToastStore } from './toastStore';
 
 const STORAGE_KEY = 'java-nodegraph-save';
 
+export interface ProjectFile {
+  id: string;
+  className: string;
+  nodes: Node[];
+  edges: Edge[];
+}
+
 function getEdgeStyle(sourceNode: Node | undefined, sourceHandle: string | null) {
   if (!sourceNode || !sourceHandle) return { stroke: '#fff', strokeWidth: 2 };
   if (sourceHandle.includes('exec')) return { stroke: '#fff', strokeWidth: 3, animated: true };
@@ -42,6 +49,10 @@ export interface EditorState {
 
   // Compilation
   isCompiling: boolean;
+
+  // Multi-file
+  files: ProjectFile[];
+  activeFileId: string;
 
   // Context menu
   menuVisible: boolean;
@@ -100,6 +111,12 @@ export interface EditorActions {
   // Layout
   autoLayout: () => void;
 
+  // Multi-file
+  addFile: (className?: string) => void;
+  removeFile: (fileId: string) => void;
+  switchFile: (fileId: string) => void;
+  renameFile: (fileId: string, newName: string) => void;
+
   // Internal
   setRfInstance: (instance: EditorState['_rfInstance']) => void;
 }
@@ -120,6 +137,8 @@ export const useEditorStore = create<EditorStore>()(
       selectedSidebarNodeId: null,
       className: 'VisualScript',
       isCompiling: false,
+      files: [{ id: 'main', className: 'VisualScript', nodes: [], edges: [] }],
+      activeFileId: 'main',
       menuVisible: false,
       menuPosition: { x: 0, y: 0 },
       _rfInstance: null,
@@ -313,11 +332,16 @@ export const useEditorStore = create<EditorStore>()(
 
       // --- Persistence ---
       saveNodeGraph: () => {
-        const { _rfInstance, className } = get();
-        const flow = _rfInstance ? _rfInstance.toObject() : { nodes: get().nodes, edges: get().edges };
-        const payload = { version: 2, className, ...flow, savedAt: new Date().toISOString() };
+        const { _rfInstance, className, files, activeFileId, nodes, edges } = get();
+        const viewport = _rfInstance ? _rfInstance.toObject().viewport : undefined;
+        // Sync active file before saving
+        const allFiles = files.map(f =>
+          f.id === activeFileId ? { ...f, nodes, edges, className } : f
+        );
+        const payload = { version: 3, activeFileId, files: allFiles, viewport, savedAt: new Date().toISOString() };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
         set((state) => ({
+          files: allFiles,
           consoleOutput: [...state.consoleOutput, '> Nodegraph saved to LocalStorage'],
         }));
         useToastStore.getState().addToast('Project saved', 'success');
@@ -329,16 +353,33 @@ export const useEditorStore = create<EditorStore>()(
           try {
             const flow = JSON.parse(savedData);
             if (flow) {
-              // Migrate v1 (no version field) to v2
-              const nodes = flow.nodes || [];
-              const edges = flow.edges || [];
-              const cls = flow.className || 'VisualScript';
-              set({
-                nodes,
-                edges,
-                className: cls,
-                consoleOutput: ['> Nodegraph loaded successfully'],
-              });
+              if (flow.version === 3 && flow.files) {
+                // v3: multi-file
+                const activeId = flow.activeFileId || flow.files[0]?.id || 'main';
+                const activeFile = flow.files.find((f: ProjectFile) => f.id === activeId) || flow.files[0];
+                set({
+                  files: flow.files,
+                  activeFileId: activeId,
+                  nodes: activeFile?.nodes || [],
+                  edges: activeFile?.edges || [],
+                  className: activeFile?.className || 'VisualScript',
+                  consoleOutput: ['> Nodegraph loaded successfully'],
+                });
+              } else {
+                // Migrate v1/v2 to v3
+                const nodes = flow.nodes || [];
+                const edgesArr = flow.edges || [];
+                const cls = flow.className || 'VisualScript';
+                const mainFile: ProjectFile = { id: 'main', className: cls, nodes, edges: edgesArr };
+                set({
+                  files: [mainFile],
+                  activeFileId: 'main',
+                  nodes,
+                  edges: edgesArr,
+                  className: cls,
+                  consoleOutput: ['> Nodegraph loaded successfully (migrated to v3)'],
+                });
+              }
               useToastStore.getState().addToast('Project loaded', 'info');
             }
           } catch (e) {
@@ -349,30 +390,39 @@ export const useEditorStore = create<EditorStore>()(
       },
 
       exportToFile: () => {
-        const { _rfInstance, className } = get();
-        const flow = _rfInstance ? _rfInstance.toObject() : { nodes: get().nodes, edges: get().edges };
-        const payload = { version: 2, className, ...flow, savedAt: new Date().toISOString() };
+        const { _rfInstance, className, files, activeFileId, nodes, edges } = get();
+        const viewport = _rfInstance ? _rfInstance.toObject().viewport : undefined;
+        const allFiles = files.map(f =>
+          f.id === activeFileId ? { ...f, nodes, edges, className } : f
+        );
+        const payload = { version: 3, activeFileId, files: allFiles, viewport, savedAt: new Date().toISOString() };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${className || 'jflow-project'}.json`;
+        a.download = `jflow-project.json`;
         a.click();
         URL.revokeObjectURL(url);
         useToastStore.getState().addToast('Project exported', 'success');
       },
 
       exportToJava: () => {
-        const { nodes, edges, className } = get();
-        const code = generateJavaCode(nodes, edges, className);
-        const blob = new Blob([code], { type: 'text/x-java-source' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${className || 'VisualScript'}.java`;
-        a.click();
-        URL.revokeObjectURL(url);
-        useToastStore.getState().addToast('Java file exported', 'success');
+        const { files, activeFileId, nodes, edges, className } = get();
+        // Export all files
+        const allFiles = files.map(f =>
+          f.id === activeFileId ? { ...f, nodes, edges, className } : f
+        );
+        allFiles.forEach(f => {
+          const code = generateJavaCode(f.nodes, f.edges, f.className);
+          const blob = new Blob([code], { type: 'text/x-java-source' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${f.className || 'VisualScript'}.java`;
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+        useToastStore.getState().addToast(`Exported ${allFiles.length} Java file(s)`, 'success');
       },
 
       importFromFile: (file: File) => {
@@ -380,13 +430,29 @@ export const useEditorStore = create<EditorStore>()(
         reader.onload = (e) => {
           try {
             const flow = JSON.parse(e.target?.result as string);
-            if (flow && flow.nodes) {
-              set({
-                nodes: flow.nodes || [],
-                edges: flow.edges || [],
-                className: flow.className || 'VisualScript',
-                consoleOutput: ['> Project imported from file'],
-              });
+            if (flow) {
+              if (flow.version === 3 && flow.files) {
+                const activeId = flow.activeFileId || flow.files[0]?.id || 'main';
+                const activeFile = flow.files.find((f: ProjectFile) => f.id === activeId) || flow.files[0];
+                set({
+                  files: flow.files,
+                  activeFileId: activeId,
+                  nodes: activeFile?.nodes || [],
+                  edges: activeFile?.edges || [],
+                  className: activeFile?.className || 'VisualScript',
+                  consoleOutput: ['> Project imported from file'],
+                });
+              } else if (flow.nodes) {
+                const mainFile: ProjectFile = { id: 'main', className: flow.className || 'VisualScript', nodes: flow.nodes, edges: flow.edges || [] };
+                set({
+                  files: [mainFile],
+                  activeFileId: 'main',
+                  nodes: flow.nodes,
+                  edges: flow.edges || [],
+                  className: flow.className || 'VisualScript',
+                  consoleOutput: ['> Project imported from file'],
+                });
+              }
               useToastStore.getState().addToast('Project imported', 'success');
             }
           } catch {
@@ -406,6 +472,54 @@ export const useEditorStore = create<EditorStore>()(
       autoLayout: () => {
         const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(get().nodes, get().edges);
         set({ nodes: layoutedNodes, edges: layoutedEdges });
+      },
+
+      // --- Multi-file ---
+      addFile: (name) => {
+        const id = `file-${Date.now()}`;
+        const className = name || `Class${get().files.length + 1}`;
+        set((state) => ({
+          files: [...state.files, { id, className, nodes: [], edges: [] }],
+        }));
+        get().switchFile(id);
+        useToastStore.getState().addToast(`Created ${className}.java`, 'success');
+      },
+
+      removeFile: (fileId) => {
+        const { files, activeFileId } = get();
+        if (files.length <= 1) return;
+        const removed = files.find(f => f.id === fileId);
+        const remaining = files.filter(f => f.id !== fileId);
+        set({ files: remaining });
+        if (activeFileId === fileId) {
+          get().switchFile(remaining[0].id);
+        }
+        if (removed) useToastStore.getState().addToast(`Deleted ${removed.className}.java`, 'info');
+      },
+
+      switchFile: (fileId) => {
+        const { activeFileId, files, nodes, edges, className } = get();
+        if (fileId === activeFileId) return;
+        // Save current file state
+        const updatedFiles = files.map(f =>
+          f.id === activeFileId ? { ...f, nodes, edges, className } : f
+        );
+        const newFile = updatedFiles.find(f => f.id === fileId);
+        if (!newFile) return;
+        set({
+          files: updatedFiles,
+          activeFileId: fileId,
+          nodes: newFile.nodes,
+          edges: newFile.edges,
+          className: newFile.className,
+        });
+      },
+
+      renameFile: (fileId, newName) => {
+        set((state) => ({
+          files: state.files.map(f => f.id === fileId ? { ...f, className: newName } : f),
+          ...(state.activeFileId === fileId ? { className: newName } : {}),
+        }));
       },
 
       // --- Internal ---
