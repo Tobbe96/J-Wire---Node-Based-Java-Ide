@@ -17,6 +17,7 @@ import { generateJavaCode } from '../utils/compiler';
 import { executeGraph } from '../utils/executor';
 import { NODE_CONFIGS } from '../utils/nodeRegistry';
 import { isValidJavaConnection } from '../utils/validation';
+import { useToastStore } from './toastStore';
 
 const STORAGE_KEY = 'java-nodegraph-save';
 
@@ -264,6 +265,7 @@ export const useEditorStore = create<EditorStore>()(
         set((state) => ({
           consoleOutput: [...state.consoleOutput, '> Nodegraph saved to LocalStorage'],
         }));
+        useToastStore.getState().addToast('Project saved', 'success');
       },
 
       loadNodeGraph: () => {
@@ -277,9 +279,11 @@ export const useEditorStore = create<EditorStore>()(
                 edges: flow.edges || [],
                 consoleOutput: ['> Nodegraph loaded successfully'],
               });
+              useToastStore.getState().addToast('Project loaded', 'info');
             }
           } catch (e) {
             console.error('Failed to load graph:', e);
+            useToastStore.getState().addToast('Failed to load project', 'error');
           }
         }
       },

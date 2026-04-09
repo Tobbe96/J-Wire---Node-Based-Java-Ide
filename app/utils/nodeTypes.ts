@@ -99,6 +99,11 @@ export interface SetVarNodeData extends Record<string, unknown> {
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
 }
 
+export interface StringOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: string;
+}
+
 // ─── Enriched Data (injected at runtime by page.tsx) ───────────
 
 export type EnrichedData<T> = T & {

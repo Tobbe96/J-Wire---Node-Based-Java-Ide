@@ -1,7 +1,8 @@
 export const NODE_CATEGORIES = {
   Variables: ['int', 'String', 'boolean'],
   Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'setVar', 'setLocalVar', 'print', 'return'],
-  Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-gt', 'math-eq', 'math-and', 'math-or', 'math-not']
+  Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-gt', 'math-eq', 'math-and', 'math-or', 'math-not'],
+  Strings: ['string-concat', 'string-length', 'string-substring']
 };
 
 export const NODE_CONFIGS: Record<string, any> = {
@@ -94,6 +95,11 @@ export const NODE_CONFIGS: Record<string, any> = {
   'math-or':  { type: 'math', data: { type: 'boolean', label: 'OR', symbol: '||', operation: '||', accepts: ['boolean'] } },
   'math-not': { type: 'not', data: { type: 'boolean', label: 'NOT', symbol: '!', operation: '!', accepts: ['boolean'] } },
   
+  // --- STRING OPERATIONS ---
+  'string-concat': { type: 'stringOp', data: { label: 'STRING: Concat', operation: 'concat' } },
+  'string-length': { type: 'stringOp', data: { label: 'STRING: Length', operation: 'length' } },
+  'string-substring': { type: 'stringOp', data: { label: 'STRING: Substring', operation: 'substring' } },
+
   // --- VARIABLES ---
   int: { 
     type: 'java', 

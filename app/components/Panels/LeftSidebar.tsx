@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useMemo } from 'react';
 import { Node } from '@xyflow/react';
 import DetailsPanel from './DetailsPanel';
 import { getTypeColor } from '../../utils/theme';
@@ -29,6 +29,21 @@ const LeftSidebar = ({
   onClassNameChange,
 }: LeftSidebarProps) => {
   const selectedNode = nodes.find(n => n.id === selectedNodeId);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredVars = useMemo(() => {
+    const vars = nodes.filter(n => n.type === 'java');
+    if (!searchQuery) return vars;
+    const q = searchQuery.toLowerCase();
+    return vars.filter(n => (n.data.label as string).toLowerCase().includes(q));
+  }, [nodes, searchQuery]);
+
+  const filteredMethods = useMemo(() => {
+    const methods = nodes.filter(n => n.type === 'method');
+    if (!searchQuery) return methods;
+    const q = searchQuery.toLowerCase();
+    return methods.filter(n => (n.data.label as string).toLowerCase().includes(q));
+  }, [nodes, searchQuery]);
 
   return (
     <div style={sidebarStyle}>
@@ -41,6 +56,13 @@ const LeftSidebar = ({
       </div>
 
       <div style={{ padding: '10px', overflowY: 'auto', flex: 1 }}>
+        <input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search nodes..."
+          style={{ background: '#111', border: '1px solid #333', color: '#ccc', padding: '6px 8px', fontSize: '11px', borderRadius: '3px', outline: 'none', width: '100%', marginBottom: '12px', boxSizing: 'border-box' }}
+        />
+
         <div style={{ fontSize: '10px', color: '#555', marginBottom: '6px', fontWeight: 'bold' }}>CLASS NAME</div>
         <input
           value={className}
@@ -49,7 +71,7 @@ const LeftSidebar = ({
         />
 
         <div style={{ fontSize: '10px', color: '#555', marginBottom: '10px', fontWeight: 'bold' }}>VARIABLES</div>
-        {nodes.filter(n => n.type === 'java').map((node) => (
+        {filteredVars.map((node) => (
           <div
             key={node.id}
             onClick={() => onSelectNode(node.id)}
@@ -70,7 +92,7 @@ const LeftSidebar = ({
         ))}
 
         <div style={{ fontSize: '10px', color: '#555', marginTop: '20px', marginBottom: '10px', fontWeight: 'bold' }}>METHODS</div>
-        {nodes.filter(n => n.type === 'method').map((node) => (
+        {filteredMethods.map((node) => (
           <div
             key={node.id}
             onClick={() => onSelectNode(node.id)}

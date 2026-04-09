@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
-import { ReactFlow, Background, Controls, ReactFlowProvider, useReactFlow } from '@xyflow/react';
+import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 // Node Components
@@ -18,6 +18,7 @@ import ReturnNode from './components/Nodes/ReturnNode';
 import SetLocalVarNode from './components/Nodes/SetLocalVarNode';
 import SetVariableNode from './components/Nodes/SetVariableNode';
 import VariableGetterNode from './components/Nodes/VariableGetterNode';
+import StringOpNode from './components/Nodes/StringOpNode';
 
 // Panels & UI
 import LeftSidebar from './components/Panels/LeftSidebar';
@@ -25,6 +26,7 @@ import LivePreview from './components/LivePreview';
 import Terminal from './components/Panels/Terminal';
 import NodeBrowser from './components/NodeBrowse';
 import ErrorBoundary from './components/ErrorBoundary';
+import { Toast } from './components/Toast';
 
 // Store
 import { useEditorStore } from './store/editorStore';
@@ -44,6 +46,7 @@ const nodeTypes = {
   getter: VariableGetterNode,
   setLocalVar: SetLocalVarNode,
   setVar: SetVariableNode,
+  stringOp: StringOpNode,
 };
 
 function JavaNodeEditor() {
@@ -82,19 +85,33 @@ function JavaNodeEditor() {
     setRfInstance({ screenToFlowPosition, toObject });
   }, [screenToFlowPosition, toObject, setRfInstance]);
 
+  // Undo/Redo from zundo temporal store
+  const { undo, redo } = useEditorStore.temporal.getState();
+
   // Load on mount
   useEffect(() => { loadNodeGraph(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Context menu keyboard shortcut
+  // Keyboard shortcuts
   const mousePos = useRef({ x: 0, y: 0 });
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => { mousePos.current = { x: e.clientX, y: e.clientY }; };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') {
+      const isInput = (e.target as HTMLElement).tagName === 'INPUT' ||
+                      (e.target as HTMLElement).tagName === 'TEXTAREA' ||
+                      (e.target as HTMLElement).tagName === 'SELECT';
+
+      if (e.key === 'Tab' && !isInput) {
         e.preventDefault();
         setMenuPosition(mousePos.current);
         setMenuVisible(!menuVisible);
       }
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+        if (e.key === 'z' && e.shiftKey) { e.preventDefault(); redo(); }
+        if (e.key === 'y') { e.preventDefault(); redo(); }
+        if (e.key === 's') { e.preventDefault(); saveNodeGraph(); }
+      }
+      if (e.key === 'Escape') { setMenuVisible(false); setSelectedSidebarNodeId(null); }
     };
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('keydown', handleKeyDown);
@@ -102,7 +119,7 @@ function JavaNodeEditor() {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [menuVisible, setMenuPosition, setMenuVisible]);
+  }, [menuVisible, setMenuPosition, setMenuVisible, undo, redo, saveNodeGraph, setSelectedSidebarNodeId]);
 
   // Connection drag state
   const dragConnectStart = useRef<{ nodeId: string; handleId: string } | null>(null);
@@ -195,6 +212,17 @@ function JavaNodeEditor() {
           >
             <Background color="#333" gap={20} />
             <Controls />
+            <MiniMap
+              nodeColor={(n) => {
+                if (n.type === 'main') return '#e74c3c';
+                if (n.type === 'method') return '#9b59b6';
+                if (n.type === 'java') return '#2ecc71';
+                if (n.type === 'print') return '#3498db';
+                return '#666';
+              }}
+              maskColor="rgba(0,0,0,0.7)"
+              style={{ background: '#1a1a1a', border: '1px solid #333' }}
+            />
           </ReactFlow>
         </ErrorBoundary>
 
@@ -226,6 +254,7 @@ export default function App() {
   return (
     <ReactFlowProvider>
       <JavaNodeEditor />
+      <Toast />
     </ReactFlowProvider>
   );
 }

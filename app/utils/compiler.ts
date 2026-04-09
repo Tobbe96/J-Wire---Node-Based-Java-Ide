@@ -52,6 +52,32 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
       const val = edgeA ? evaluateDataNode(edgeA.source, edgeA.sourceHandle || undefined) : 'false';
       return `(!${val})`;
     }
+    if (node.type === 'stringOp') {
+      switch (node.data.operation) {
+        case 'concat': {
+          const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
+          const edgeB = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-b');
+          const valA = edgeA ? evaluateDataNode(edgeA.source, edgeA.sourceHandle || undefined) : '""';
+          const valB = edgeB ? evaluateDataNode(edgeB.source, edgeB.sourceHandle || undefined) : '""';
+          return `(${valA} + ${valB})`;
+        }
+        case 'length': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const valA = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : '""';
+          return `${valA}.length()`;
+        }
+        case 'substring': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeStart = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-start');
+          const edgeEnd = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-end');
+          const val = edgeStr ? evaluateDataNode(edgeStr.source, edgeStr.sourceHandle || undefined) : '""';
+          const start = edgeStart ? evaluateDataNode(edgeStart.source, edgeStart.sourceHandle || undefined) : '0';
+          const end = edgeEnd ? evaluateDataNode(edgeEnd.source, edgeEnd.sourceHandle || undefined) : '0';
+          return `${val}.substring(${start}, ${end})`;
+        }
+        default: return '""';
+      }
+    }
     if (node.type === 'for') {
       return 'i';
     }

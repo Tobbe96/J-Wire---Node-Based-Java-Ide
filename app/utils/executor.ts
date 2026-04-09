@@ -72,6 +72,33 @@ export function executeGraph(nodes: Node[], edges: Edge[]): string[] {
       return !val;
     }
 
+    if (node.type === 'stringOp') {
+      switch (node.data.operation) {
+        case 'concat': {
+          const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
+          const edgeB = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-b');
+          const valA = evaluateData(edgeA?.source || "", edgeA?.sourceHandle || undefined, localScope);
+          const valB = evaluateData(edgeB?.source || "", edgeB?.sourceHandle || undefined, localScope);
+          return String(valA) + String(valB);
+        }
+        case 'length': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const val = evaluateData(edgeIn?.source || "", edgeIn?.sourceHandle || undefined, localScope);
+          return String(val).length;
+        }
+        case 'substring': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeStart = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-start');
+          const edgeEnd = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-end');
+          const val = evaluateData(edgeStr?.source || "", edgeStr?.sourceHandle || undefined, localScope);
+          const start = evaluateData(edgeStart?.source || "", edgeStart?.sourceHandle || undefined, localScope);
+          const end = evaluateData(edgeEnd?.source || "", edgeEnd?.sourceHandle || undefined, localScope);
+          return String(val).substring(Number(start), Number(end));
+        }
+        default: return "";
+      }
+    }
+
     if (node.type === 'for') {
       if (localScope && ('__for_index__' + nodeId) in localScope) {
         return localScope['__for_index__' + nodeId];
