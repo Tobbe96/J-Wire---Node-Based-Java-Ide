@@ -75,8 +75,82 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
           const end = edgeEnd ? evaluateDataNode(edgeEnd.source, edgeEnd.sourceHandle || undefined) : '0';
           return `${val}.substring(${start}, ${end})`;
         }
+        case 'charAt': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeIdx = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-index');
+          const val = edgeStr ? evaluateDataNode(edgeStr.source, edgeStr.sourceHandle || undefined) : '""';
+          const idx = edgeIdx ? evaluateDataNode(edgeIdx.source, edgeIdx.sourceHandle || undefined) : '0';
+          return `String.valueOf(${val}.charAt(${idx}))`;
+        }
+        case 'indexOf': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeTarget = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = edgeStr ? evaluateDataNode(edgeStr.source, edgeStr.sourceHandle || undefined) : '""';
+          const target = edgeTarget ? evaluateDataNode(edgeTarget.source, edgeTarget.sourceHandle || undefined) : '""';
+          return `${val}.indexOf(${target})`;
+        }
+        case 'replace': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeTarget = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const edgeRepl = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-replacement');
+          const val = edgeStr ? evaluateDataNode(edgeStr.source, edgeStr.sourceHandle || undefined) : '""';
+          const target = edgeTarget ? evaluateDataNode(edgeTarget.source, edgeTarget.sourceHandle || undefined) : '""';
+          const repl = edgeRepl ? evaluateDataNode(edgeRepl.source, edgeRepl.sourceHandle || undefined) : '""';
+          return `${val}.replace(${target}, ${repl})`;
+        }
+        case 'trim': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const val = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : '""';
+          return `${val}.trim()`;
+        }
+        case 'toUpperCase': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const val = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : '""';
+          return `${val}.toUpperCase()`;
+        }
+        case 'toLowerCase': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const val = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : '""';
+          return `${val}.toLowerCase()`;
+        }
         default: return '""';
       }
+    }
+    if (node.type === 'mathFunc') {
+      const op = node.data.operation as string;
+      if (op === 'abs') {
+        const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+        const val = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : '0';
+        return `Math.abs(${val})`;
+      }
+      const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
+      const edgeB = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-b');
+      const valA = edgeA ? evaluateDataNode(edgeA.source, edgeA.sourceHandle || undefined) : '0';
+      const valB = edgeB ? evaluateDataNode(edgeB.source, edgeB.sourceHandle || undefined) : '0';
+      if (op === 'pow') return `(int)Math.pow(${valA}, ${valB})`;
+      return `Math.${op}(${valA}, ${valB})`;
+    }
+    if (node.type === 'cast') {
+      const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+      const val = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : 'null';
+      const targetType = (node.data.targetType as string) || 'String';
+      switch (targetType) {
+        case 'int': return `Integer.parseInt(String.valueOf(${val}))`;
+        case 'float': return `Float.parseFloat(String.valueOf(${val}))`;
+        case 'double': return `Double.parseDouble(String.valueOf(${val}))`;
+        case 'boolean': return `Boolean.parseBoolean(String.valueOf(${val}))`;
+        case 'String': return `String.valueOf(${val})`;
+        default: return `(${targetType})${val}`;
+      }
+    }
+    if (node.type === 'ternary') {
+      const edgeCond = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-condition');
+      const edgeTrue = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-true');
+      const edgeFalse = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-false');
+      const cond = edgeCond ? evaluateDataNode(edgeCond.source, edgeCond.sourceHandle || undefined) : 'false';
+      const trueVal = edgeTrue ? evaluateDataNode(edgeTrue.source, edgeTrue.sourceHandle || undefined) : 'null';
+      const falseVal = edgeFalse ? evaluateDataNode(edgeFalse.source, edgeFalse.sourceHandle || undefined) : 'null';
+      return `(${cond} ? ${trueVal} : ${falseVal})`;
     }
     if (node.type === 'arrayOp') {
       switch (node.data.operation) {
@@ -162,6 +236,16 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
         break; 
       }
 
+      if (nextNode.type === 'break') {
+        methodBody += `    break;\n`;
+        break;
+      }
+
+      if (nextNode.type === 'continue') {
+        methodBody += `    continue;\n`;
+        break;
+      }
+
       if (nextNode.type === 'setVar') {
         const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
         const newValue = dataEdge ? evaluateDataNode(dataEdge.source, dataEdge.sourceHandle || undefined) : '0';
@@ -205,6 +289,36 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
         const endVal = endEdge ? evaluateDataNode(endEdge.source, endEdge.sourceHandle || undefined) : '10';
         methodBody += `    for (int i = ${startVal}; i < ${endVal}; i++) {\n`;
         methodBody += buildMethodBody(nextNode.id, 'exec-body', visited);
+        methodBody += `    }\n`;
+        methodBody += buildMethodBody(nextNode.id, 'exec-out', visited);
+        break;
+      }
+
+      if (nextNode.type === 'doWhile') {
+        const condEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
+        const condition = condEdge ? evaluateDataNode(condEdge.source, condEdge.sourceHandle || undefined) : 'false';
+        methodBody += `    do {\n`;
+        methodBody += buildMethodBody(nextNode.id, 'exec-body', visited);
+        methodBody += `    } while (${condition});\n`;
+        methodBody += buildMethodBody(nextNode.id, 'exec-out', visited);
+        break;
+      }
+
+      if (nextNode.type === 'switch') {
+        const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
+        const switchVal = valEdge ? evaluateDataNode(valEdge.source, valEdge.sourceHandle || undefined) : '0';
+        const caseCount = (nextNode.data.caseCount as number) || 2;
+        methodBody += `    switch (${switchVal}) {\n`;
+        for (let i = 0; i < caseCount; i++) {
+          const caseEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === `data-case-${i}`);
+          const caseVal = caseEdge ? evaluateDataNode(caseEdge.source, caseEdge.sourceHandle || undefined) : String(i);
+          methodBody += `      case ${caseVal}:\n`;
+          methodBody += buildMethodBody(nextNode.id, `exec-case-${i}`, visited);
+          methodBody += `        break;\n`;
+        }
+        methodBody += `      default:\n`;
+        methodBody += buildMethodBody(nextNode.id, 'exec-default', visited);
+        methodBody += `        break;\n`;
         methodBody += `    }\n`;
         methodBody += buildMethodBody(nextNode.id, 'exec-out', visited);
         break;

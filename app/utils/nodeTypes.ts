@@ -104,6 +104,13 @@ export interface StringOpNodeData extends Record<string, unknown> {
   operation: string;
 }
 
+export interface MathFuncNodeData extends Record<string, unknown> {
+  label: string;
+  type: string;
+  operation: string;
+  accepts: string[];
+}
+
 export interface ArrayNodeData extends Record<string, unknown> {
   label: string;
   operation: string; // 'literal' | 'access' | 'length'

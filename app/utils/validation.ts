@@ -21,6 +21,19 @@ function resolveSourceType(node: Node, sourceHandle: string): string | undefined
     return locals[index]?.type;
   }
 
+  // StringOp output type depends on the operation
+  if (node.type === 'stringOp') {
+    const op = node.data.operation as string;
+    if (op === 'length' || op === 'indexOf') return 'int';
+    return 'String';
+  }
+
+  // For nodes expose data-index (e.g., for-loop index output)
+  if (node.type === 'for' && sourceHandle === 'data-index') return 'int';
+
+  // CastNode output type is the selected target type
+  if (node.type === 'cast') return (node.data.targetType as string) || 'String';
+
   return node.data.type as string | undefined;
 }
 
@@ -54,6 +67,30 @@ function resolveTargetAccepts(node: Node, targetHandle: string, allNodes: Node[]
       if (local) return [local.type];
     }
     return undefined;
+  }
+
+  // StringOp specialized handles
+  if (node.type === 'stringOp') {
+    if (targetHandle === 'data-in' || targetHandle === 'data-in-a' || targetHandle === 'data-in-b'
+      || targetHandle === 'data-in-target' || targetHandle === 'data-in-replacement') return ['String'];
+    if (targetHandle === 'data-in-start' || targetHandle === 'data-in-end' || targetHandle === 'data-in-index') return ['int'];
+    return ['String'];
+  }
+
+  // CastNode accepts any type as input
+  if (node.type === 'cast' && targetHandle === 'data-in') {
+    return ['int', 'float', 'double', 'String', 'boolean'];
+  }
+
+  // TernaryNode: condition must be boolean, true/false accept anything
+  if (node.type === 'ternary') {
+    if (targetHandle === 'data-in-condition') return ['boolean'];
+    if (targetHandle === 'data-in-true' || targetHandle === 'data-in-false') return ['int', 'float', 'double', 'String', 'boolean'];
+  }
+
+  // SwitchNode: value and case inputs accept int
+  if (node.type === 'switch') {
+    if (targetHandle === 'data-in' || targetHandle.startsWith('data-case-')) return ['int'];
   }
 
   return node.data.accepts as string[] | undefined;

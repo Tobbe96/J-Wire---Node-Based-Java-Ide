@@ -34,6 +34,9 @@ const StringOpNode = ({ data, selected }: NodeProps<Node<StringOpNodeData>>) => 
           </div>
         );
       case 'length':
+      case 'trim':
+      case 'toUpperCase':
+      case 'toLowerCase':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -59,12 +62,55 @@ const StringOpNode = ({ data, selected }: NodeProps<Node<StringOpNodeData>>) => 
             </div>
           </div>
         );
+      case 'charAt':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>String</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-index" style={handleStyle(INT_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Index</span>
+            </div>
+          </div>
+        );
+      case 'indexOf':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>String</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-target" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Search</span>
+            </div>
+          </div>
+        );
+      case 'replace':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>String</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-target" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Find</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-replacement" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Replace</span>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
   };
 
-  const outputColor = op === 'length' ? INT_COLOR : STRING_COLOR;
+  const outputColor = (op === 'length' || op === 'indexOf') ? INT_COLOR : STRING_COLOR;
   const headerLabel = `STRING: ${op.charAt(0).toUpperCase() + op.slice(1)}`;
 
   return (

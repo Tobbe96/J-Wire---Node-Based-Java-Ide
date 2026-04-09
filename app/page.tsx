@@ -20,6 +20,13 @@ import SetVariableNode from './components/Nodes/SetVariableNode';
 import VariableGetterNode from './components/Nodes/VariableGetterNode';
 import StringOpNode from './components/Nodes/StringOpNode';
 import ArrayOpNode from './components/Nodes/ArrayOpNode';
+import MathFuncNode from './components/Nodes/MathFuncNode';
+import CastNode from './components/Nodes/CastNode';
+import TernaryNode from './components/Nodes/TernaryNode';
+import DoWhileNode from './components/Nodes/DoWhileNode';
+import SwitchNode from './components/Nodes/SwitchNode';
+import BreakNode from './components/Nodes/BreakNode';
+import ContinueNode from './components/Nodes/ContinueNode';
 
 // Panels & UI
 import LeftSidebar from './components/Panels/LeftSidebar';
@@ -54,6 +61,13 @@ const nodeTypes = {
   setVar: SetVariableNode,
   stringOp: StringOpNode,
   arrayOp: ArrayOpNode,
+  mathFunc: MathFuncNode,
+  cast: CastNode,
+  ternary: TernaryNode,
+  doWhile: DoWhileNode,
+  switch: SwitchNode,
+  break: BreakNode,
+  continue: ContinueNode,
 };
 
 function JavaNodeEditor() {
