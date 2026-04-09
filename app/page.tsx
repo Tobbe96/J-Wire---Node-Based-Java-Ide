@@ -123,8 +123,13 @@ function JavaNodeEditor() {
 
       if (e.key === 'Tab' && !isInput) {
         e.preventDefault();
-        setMenuPosition(mousePos.current);
-        setMenuVisible(!menuVisible);
+        e.stopPropagation();
+        if (menuVisible) {
+          setMenuVisible(false);
+        } else {
+          setMenuPosition(mousePos.current);
+          setMenuVisible(true);
+        }
       }
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
@@ -135,10 +140,10 @@ function JavaNodeEditor() {
       if (e.key === 'Escape') { setMenuVisible(false); setSelectedSidebarNodeId(null); }
     };
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [menuVisible, setMenuPosition, setMenuVisible, undo, redo, saveNodeGraph, setSelectedSidebarNodeId]);
 
