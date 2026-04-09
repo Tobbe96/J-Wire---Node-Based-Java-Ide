@@ -4,16 +4,46 @@ import React, { memo } from 'react';
 interface TerminalProps {
   consoleOutput: string[];
   onRun: () => void;
+  onRunJava?: () => void;
+  onDebug?: () => void;
+  isCompiling?: boolean;
+  isDebugging?: boolean;
 }
 
-const Terminal = ({ consoleOutput, onRun }: TerminalProps) => {
+const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDebugging }: TerminalProps) => {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
         <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>TERMINAL</span>
-        <button onClick={onRun} style={runButtonStyle}>
-          ▶ RUN SCRIPT
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={onRun} style={runButtonStyle}>
+            ▶ RUN SCRIPT
+          </button>
+          {onRunJava && (
+            <button
+              onClick={onRunJava}
+              disabled={isCompiling}
+              style={{
+                ...runJavaButtonStyle,
+                opacity: isCompiling ? 0.6 : 1,
+                cursor: isCompiling ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isCompiling ? '⏳ COMPILING...' : '☕ RUN JAVA'}
+            </button>
+          )}
+          {onDebug && (
+            <button
+              onClick={onDebug}
+              style={{
+                ...debugButtonStyle,
+                background: isDebugging ? '#ef4444' : '#fbbf24',
+              }}
+            >
+              {isDebugging ? '⏹ STOP DEBUG' : '🐛 DEBUG'}
+            </button>
+          )}
+        </div>
       </div>
       <div style={outputStyle}>
         {consoleOutput.length === 0 && (
@@ -56,6 +86,28 @@ const headerStyle: React.CSSProperties = {
 
 const runButtonStyle: React.CSSProperties = {
   background: '#22c55e',
+  color: '#000',
+  border: 'none',
+  padding: '6px 14px',
+  borderRadius: '4px',
+  fontSize: '11px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+};
+
+const runJavaButtonStyle: React.CSSProperties = {
+  background: '#f97316',
+  color: '#000',
+  border: 'none',
+  padding: '6px 14px',
+  borderRadius: '4px',
+  fontSize: '11px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+};
+
+const debugButtonStyle: React.CSSProperties = {
+  background: '#fbbf24',
   color: '#000',
   border: 'none',
   padding: '6px 14px',

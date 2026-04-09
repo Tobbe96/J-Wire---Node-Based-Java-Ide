@@ -40,6 +40,9 @@ export interface EditorState {
   selectedSidebarNodeId: string | null;
   className: string;
 
+  // Compilation
+  isCompiling: boolean;
+
   // Context menu
   menuVisible: boolean;
   menuPosition: { x: number; y: number };
@@ -65,6 +68,7 @@ export interface EditorActions {
   // Code generation & execution
   getGeneratedCode: () => string;
   runScript: () => void;
+  compileAndRunJava: () => Promise<void>;
 
   // Node operations
   addNode: (nodeKind: string, position: { x: number; y: number }) => string;
@@ -115,6 +119,7 @@ export const useEditorStore = create<EditorStore>()(
       consoleOutput: [],
       selectedSidebarNodeId: null,
       className: 'VisualScript',
+      isCompiling: false,
       menuVisible: false,
       menuPosition: { x: 0, y: 0 },
       _rfInstance: null,
@@ -170,6 +175,53 @@ export const useEditorStore = create<EditorStore>()(
       runScript: () => {
         const { nodes, edges } = get();
         set({ consoleOutput: executeGraph(nodes, edges) });
+      },
+
+      compileAndRunJava: async () => {
+        const { nodes, edges, className } = get();
+        const code = generateJavaCode(nodes, edges, className);
+        const toast = useToastStore.getState();
+
+        set({
+          isCompiling: true,
+          consoleOutput: ['> Compiling and running Java...'],
+        });
+
+        try {
+          const res = await fetch('/api/compile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, className }),
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            const lines = (data.output || '').split('\n').filter((l: string) => l.length > 0);
+            set({ consoleOutput: ['> Compilation successful', '> Output:', ...lines] });
+            toast.addToast('Java program executed successfully', 'success');
+          } else if (data.compilationError) {
+            const errLines = data.compilationError.split('\n').filter((l: string) => l.length > 0);
+            set({ consoleOutput: ['> Compilation failed:', ...errLines] });
+            toast.addToast('Compilation error', 'error');
+          } else {
+            const errLines = (data.error || 'Unknown error').split('\n').filter((l: string) => l.length > 0);
+            const outLines = data.output ? data.output.split('\n').filter((l: string) => l.length > 0) : [];
+            set({
+              consoleOutput: [
+                '> Runtime error:',
+                ...errLines,
+                ...(outLines.length ? ['> Partial output:', ...outLines] : []),
+              ],
+            });
+            toast.addToast('Runtime error', 'error');
+          }
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ consoleOutput: ['> Failed to reach compile server:', message] });
+          toast.addToast('Failed to compile', 'error');
+        } finally {
+          set({ isCompiling: false });
+        }
       },
 
       // --- Node Operations ---

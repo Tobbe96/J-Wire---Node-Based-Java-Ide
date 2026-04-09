@@ -29,9 +29,12 @@ import NodeBrowser from './components/NodeBrowse';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toast } from './components/Toast';
 import ThemeToggle from './components/ThemeToggle';
+import DocsModal from './components/DocsModal';
+import DebugPanel from './components/DebugPanel';
 
 // Store
 import { useEditorStore } from './store/editorStore';
+import { useDebugStore } from './store/debugStore';
 import { getTypeColor } from './utils/theme';
 
 const nodeTypes = {
@@ -62,6 +65,7 @@ function JavaNodeEditor() {
     className,
     menuVisible,
     menuPosition,
+    isCompiling,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -83,7 +87,11 @@ function JavaNodeEditor() {
     autoLayout,
     addNodeAndConnect,
     getGeneratedCode,
+    compileAndRunJava,
   } = useEditorStore();
+
+  const { isDebugging, currentStepIndex, traceSteps, breakpoints, startDebug, stopDebug, toggleBreakpoint } = useDebugStore();
+  const activeDebugNodeId = isDebugging && currentStepIndex >= 0 ? traceSteps[currentStepIndex]?.nodeId : null;
 
   const { screenToFlowPosition, toObject } = useReactFlow();
 
@@ -132,6 +140,19 @@ function JavaNodeEditor() {
   const dragConnectStart = useRef<{ nodeId: string; handleId: string } | null>(null);
   const lastConnectEnd = useRef<number>(0);
   const [connectionLineColor, setConnectionLineColor] = useState('#fff');
+  const [showDocs, setShowDocs] = useState(false);
+
+  const handleDebugToggle = useCallback(() => {
+    if (isDebugging) {
+      stopDebug();
+    } else {
+      startDebug(nodes, edges);
+    }
+  }, [isDebugging, stopDebug, startDebug, nodes, edges]);
+
+  const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: { id: string }) => {
+    toggleBreakpoint(node.id);
+  }, [toggleBreakpoint]);
 
   const onConnectStart = useCallback((_: unknown, { nodeId, handleId }: { nodeId: string | null; handleId: string | null }) => {
     if (nodeId && handleId) {
@@ -177,7 +198,7 @@ function JavaNodeEditor() {
     }
   }, [addNodeAndConnect, screenToFlowPosition, setMenuVisible]);
 
-  // Enrich nodes with callbacks
+  // Enrich nodes with callbacks + debug state
   const enrichedNodes = useMemo(() => {
     const methodNodes = nodes.filter(n => n.type === 'method');
     return nodes.map(node => ({
@@ -188,8 +209,17 @@ function JavaNodeEditor() {
         isValidConnection: validateConnection,
         methodNodes,
       },
+      style: {
+        ...(node.style || {}),
+        ...(activeDebugNodeId === node.id
+          ? { boxShadow: '0 0 20px 6px #fbbf24', outline: '2px solid #fbbf24', borderRadius: 8, transition: 'box-shadow 0.2s' }
+          : {}),
+        ...(breakpoints.includes(node.id)
+          ? { outline: '2px solid #ef4444', borderRadius: 8 }
+          : {}),
+      },
     }));
-  }, [nodes, updateNodeData, validateConnection]);
+  }, [nodes, updateNodeData, validateConnection, activeDebugNodeId, breakpoints]);
 
   const generatedJavaCode = useMemo(() => getGeneratedCode(), [getGeneratedCode, nodes, edges, className]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -216,9 +246,16 @@ function JavaNodeEditor() {
         <ThemeToggle />
         <button
           onClick={autoLayout}
-          style={{ position: 'absolute', top: 10, right: 50, zIndex: 20, background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
+          style={{ position: 'absolute', top: 10, right: 90, zIndex: 20, background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
         >
           Auto Layout
+        </button>
+        <button
+          onClick={() => setShowDocs(true)}
+          title="Help / Documentation"
+          style={{ position: 'absolute', top: 10, right: 50, zIndex: 20, background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '6px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', fontWeight: 700, lineHeight: 1 }}
+        >
+          ?
         </button>
         <ErrorBoundary fallbackLabel="Canvas">
           <ReactFlow
@@ -232,6 +269,7 @@ function JavaNodeEditor() {
             onConnectEnd={onConnectEnd}
             onPaneClick={onPaneClick}
             onSelectionChange={onSelectionChange}
+            onNodeDoubleClick={onNodeDoubleClick}
             isValidConnection={validateConnection}
             connectionLineStyle={{ stroke: connectionLineColor, strokeWidth: 2 }}
             deleteKeyCode={['Backspace', 'Delete']}
@@ -260,6 +298,8 @@ function JavaNodeEditor() {
             onClose={() => setMenuVisible(false)}
           />
         )}
+
+        <DebugPanel />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', width: '350px', borderLeft: '1px solid #000', zIndex: 10 }}>
@@ -270,9 +310,18 @@ function JavaNodeEditor() {
         </div>
 
         <ErrorBoundary fallbackLabel="Terminal">
-          <Terminal consoleOutput={consoleOutput} onRun={runScript} />
+          <Terminal
+            consoleOutput={consoleOutput}
+            onRun={runScript}
+            onRunJava={compileAndRunJava}
+            onDebug={handleDebugToggle}
+            isCompiling={isCompiling}
+            isDebugging={isDebugging}
+          />
         </ErrorBoundary>
       </div>
+
+      {showDocs && <DocsModal onClose={() => setShowDocs(false)} />}
     </div>
   );
 }
