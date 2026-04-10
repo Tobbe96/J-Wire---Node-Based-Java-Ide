@@ -86,7 +86,8 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
         default: val = rawVal; break;
       }
       const modifier = v.data.modifier || 'public';
-      code += `  ${modifier} static ${v.data.type} ${v.data.label as string} = ${val};\n`;
+      const isStatic = v.data.isStatic !== false;
+      code += `  ${modifier}${isStatic ? ' static' : ''} ${v.data.type} ${v.data.label as string} = ${val};\n`;
     });
     code += "\n";
   }
@@ -417,6 +418,21 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
       }
       return 'null';
     }
+    if (node.type === 'newObject') {
+      const targetClass = node.data.targetClass as string;
+      if (targetClass) {
+        const targetFile = projectClasses.find(f => f.className === targetClass);
+        const ctorIndex = (node.data.constructorIndex as number) || 0;
+        const ctors = (targetFile as unknown as { constructors?: Array<{ index: number; parameters: Parameter[] }> })?.constructors || [];
+        const ctor = ctors[ctorIndex] || { parameters: [] };
+        const args = ctor.parameters.map((p: Parameter, index: number) => {
+          const argEdge = edges.find(e => e.target === nodeId && e.targetHandle === `arg-in-${index}`);
+          return argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : getDefaultLiteral(p.type);
+        });
+        return `new ${targetClass}(${args.join(', ')})`;
+      }
+      return 'null';
+    }
     if (node.type === 'customCode' && node.data.mode === 'expression') {
       let code = (node.data.code as string) || '0';
       const inputs = (node.data.inputs as Array<{id: string; name: string; type: string}>) || [];
@@ -497,6 +513,21 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
             return argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : getDefaultLiteral(p.type);
           });
           methodBody += `    ${targetClass}.${methodName}(${args.join(', ')});\n`;
+        }
+      }
+
+      if (nextNode.type === 'newObject') {
+        const targetClass = nextNode.data.targetClass as string;
+        if (targetClass) {
+          const targetFile = projectClasses.find(f => f.className === targetClass);
+          const ctorIndex = (nextNode.data.constructorIndex as number) || 0;
+          const ctors = (targetFile as unknown as { constructors?: Array<{ index: number; parameters: Parameter[] }> })?.constructors || [];
+          const ctor = ctors[ctorIndex] || { parameters: [] };
+          const args = ctor.parameters.map((p: Parameter, index: number) => {
+            const argEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === `arg-in-${index}`);
+            return argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : getDefaultLiteral(p.type);
+          });
+          methodBody += `    ${targetClass} obj${nextNode.id.replace(/-/g, '_')} = new ${targetClass}(${args.join(', ')});\n`;
         }
       }
 
@@ -797,7 +828,24 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
     body += buildMethodBody(m.id);
 
     const returnType = (m.data.returnType as string) || 'void';
-    code += `  public static ${returnType} ${m.data.label as string}(${paramSignature}) {\n${body}  }\n\n`;
+    const isStatic = m.data.isStatic !== false;
+    code += `  public${isStatic ? ' static' : ''} ${returnType} ${m.data.label as string}(${paramSignature}) {\n${body}  }\n\n`;
+  });
+
+  // Constructors
+  nodes.filter(n => n.type === 'constructor').forEach(c => {
+    const params = (c.data.parameters as Parameter[]) || [];
+    const locals = (c.data.localVariables as LocalVariable[]) || [];
+    const paramSignature = params.map((p: Parameter) => `${p.type} ${p.name}`).join(', ');
+
+    let body = '';
+    locals.forEach((l: LocalVariable) => {
+      const val = l.type === 'String' ? `"${l.value}"` : l.value;
+      body += `    ${l.type} ${l.name} = ${val};\n`;
+    });
+    body += buildMethodBody(c.id);
+
+    code += `  public ${className}(${paramSignature}) {\n${body}  }\n\n`;
   });
 
   // Main

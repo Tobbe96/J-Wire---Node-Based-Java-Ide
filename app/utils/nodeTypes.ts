@@ -22,6 +22,7 @@ export interface MethodNodeData extends Record<string, unknown> {
   label: string;
   type: string;
   returnType?: string;
+  isStatic?: boolean;
   parameters?: Parameter[];
   localVariables?: LocalVariable[];
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
@@ -218,6 +219,25 @@ export interface CustomCodeNodeData extends Record<string, unknown> {
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
 }
 
+export interface ConstructorNodeData extends Record<string, unknown> {
+  label: string;
+  parameters?: Parameter[];
+  localVariables?: LocalVariable[];
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface NewObjectNodeData extends Record<string, unknown> {
+  label: string;
+  targetClass: string;
+  constructorIndex?: number;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+  projectFiles?: Array<{
+    id: string;
+    className: string;
+    constructors: Array<{ index: number; parameters: Parameter[] }>;
+  }>;
+}
+
 // ─── Cross-class method info ───────────────────────────────────
 
 export interface ProjectMethodInfo {
@@ -226,10 +246,16 @@ export interface ProjectMethodInfo {
   parameters: Parameter[];
 }
 
+export interface ProjectConstructorInfo {
+  index: number;
+  parameters: Parameter[];
+}
+
 export interface ProjectClassInfo {
   id: string;
   className: string;
   methods: ProjectMethodInfo[];
+  constructors?: ProjectConstructorInfo[];
 }
 
 // ─── Enriched Data (injected at runtime by page.tsx) ───────────

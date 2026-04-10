@@ -170,6 +170,12 @@ function buildProjectClasses(files: ProjectFile[], activeFileId: string, activeN
         returnType: (m.data.returnType as string) || 'void',
         parameters: (m.data.parameters as Parameter[]) || [],
       })),
+    constructors: f.nodes
+      .filter(n => n.type === 'constructor')
+      .map((c, index) => ({
+        index,
+        parameters: (c.data.parameters as Parameter[]) || [],
+      })),
   }));
 }
 

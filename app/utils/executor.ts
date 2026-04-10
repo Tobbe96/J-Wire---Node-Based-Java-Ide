@@ -35,7 +35,7 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
     if (!node) return null;
 
     // Method node parameter/local variable output handles
-    if (node.type === 'method' && sourceHandle) {
+    if ((node.type === 'method' || node.type === 'constructor') && sourceHandle) {
       const paramMatch = sourceHandle.match(/^param-out-(\d+)$/);
       if (paramMatch && localScope) {
         const index = parseInt(paramMatch[1], 10);
@@ -402,6 +402,47 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
       return scannerValues.get(nodeId) ?? '';
     }
 
+    if (node.type === 'newObject') {
+      const targetClassName = node.data.targetClass as string;
+      if (targetClassName && projectFiles) {
+        const targetFile = projectFiles.find(f => f.className === targetClassName);
+        if (targetFile) {
+          const ctorIndex = (node.data.constructorIndex as number) || 0;
+          const ctorNodes = targetFile.nodes.filter((n: Node) => n.type === 'constructor');
+          const ctorNode = ctorNodes[ctorIndex] || ctorNodes[0];
+          // Init instance fields from target class's non-static variable nodes
+          const instanceFields: Record<string, unknown> = {};
+          targetFile.nodes.filter((n: Node) => n.type === 'java' && n.data.isStatic === false).forEach((n: Node) => {
+            const varType = n.data.type as string;
+            const varName = n.data.label as string;
+            if (varType === 'String') instanceFields[varName] = String(n.data.value ?? '');
+            else if (varType === 'boolean') instanceFields[varName] = n.data.value === 'true';
+            else instanceFields[varName] = Number(n.data.value ?? 0);
+          });
+          if (ctorNode) {
+            const ctorScope: Record<string, unknown> = { ...instanceFields };
+            const params = (ctorNode.data.parameters as Parameter[]) || [];
+            params.forEach((param: Parameter, index: number) => {
+              const argEdge = edges.find(e => e.target === nodeId && e.targetHandle === `arg-in-${index}`);
+              ctorScope[param.name] = argEdge
+                ? evaluateData(argEdge.source, argEdge.sourceHandle || undefined, localScope)
+                : getRuntimeDefault(param.type, param.defaultValue);
+            });
+            // Run constructor body — setLocalVar nodes inside will mutate ctorScope
+            const ctorOutput = executeCrossClassMethod(targetFile.nodes, targetFile.edges, ctorNode, ctorScope, projectFiles, inputProvider);
+            consoleOutput.push(...ctorOutput);
+            // Copy back instance field mutations (exclude param names)
+            const paramNames = new Set(params.map(p => p.name));
+            Object.keys(ctorScope).forEach(k => {
+              if (!paramNames.has(k)) instanceFields[k] = ctorScope[k];
+            });
+          }
+          return { __class__: targetClassName, fields: instanceFields };
+        }
+      }
+      return null;
+    }
+
     if (node.type === 'customCode' && node.data.mode === 'expression') {
       const code = (node.data.code as string) || '0';
       const inputs = (node.data.inputs as Array<{id: string; name: string; type: string}>) || [];
@@ -504,6 +545,18 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
           } else {
             consoleOutput.push(`> ERROR: Class '${targetClassName}' not found.`);
           }
+        }
+      }
+
+      if (nextNode.type === 'newObject') {
+        // As a statement, evaluate creates the object and stores it in runtime memory by nodeId key
+        const objRef = evaluateData(nextNode.id, 'data-out', localScope);
+        const targetClassName = nextNode.data.targetClass as string;
+        if (targetClassName && objRef != null) {
+          // Store as a local variable if in local scope, otherwise runtime memory
+          const varKey = `__obj_${nextNode.id.replace(/-/g, '_')}__`;
+          if (localScope) localScope[varKey] = objRef;
+          else runtimeMemory[varKey] = objRef;
         }
       }
 
@@ -873,7 +926,7 @@ function executeCrossClassMethod(
     const node = targetNodes.find(n => n.id === nodeId);
     if (!node) return null;
 
-    if (node.type === 'method' && sourceHandle) {
+    if ((node.type === 'method' || node.type === 'constructor') && sourceHandle) {
       const paramMatch = sourceHandle.match(/^param-out-(\d+)$/);
       if (paramMatch && localScope) {
         const index = parseInt(paramMatch[1], 10);

@@ -45,6 +45,36 @@ const JavaNode = ({ id, data, selected }: { id: string; data: Record<string, unk
           <span style={{ fontSize: '10px', color: '#666' }}>Value</span>
           <input className="nodrag" value={(data.value as string) || ''} onChange={(e) => updateNodeData(id, { value: e.target.value })} style={inputStyle} />
         </div>
+        {/* Static / Instance toggle */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#666' }}>Kind</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['static', 'instance'] as const).map((kind) => {
+              const active = kind === 'static' ? (data.isStatic !== false) : (data.isStatic === false);
+              return (
+                <button
+                  key={kind}
+                  className="nodrag"
+                  onClick={() => updateNodeData(id, { isStatic: kind === 'static' })}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '9px',
+                    fontWeight: active ? 'bold' : 'normal',
+                    background: active ? `${color}cc` : 'rgba(0,0,0,0.4)',
+                    border: active ? `1px solid ${color}` : '1px solid rgba(255,255,255,0.08)',
+                    color: active ? '#fff' : '#666',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    letterSpacing: '0.3px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {kind}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div style={{ padding: '0 10px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

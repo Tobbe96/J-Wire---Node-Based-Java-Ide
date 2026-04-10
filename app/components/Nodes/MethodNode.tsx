@@ -64,7 +64,7 @@ const MethodNode = ({ id, data, selected }: NodeProps<Node<MethodNodeData>>) => 
         </div>
 
         {/* Return Type */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '15px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '10px' }}>
           <span style={{ fontSize: '10px', color: '#888' }}>Return Type</span>
           <select
             className="nodrag"
@@ -82,6 +82,41 @@ const MethodNode = ({ id, data, selected }: NodeProps<Node<MethodNodeData>>) => 
             <option value="String">String</option>
             <option value="char">char</option>
           </select>
+        </div>
+
+        {/* Static / Instance toggle */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '15px' }}>
+          <span style={{ fontSize: '10px', color: '#888' }}>Kind</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['static', 'instance'] as const).map((kind) => {
+              const active = kind === 'static' ? (data.isStatic !== false) : (data.isStatic === false);
+              return (
+                <button
+                  key={kind}
+                  className="nodrag"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    data.updateNodeData?.(id, { isStatic: kind === 'static' });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '4px 8px',
+                    fontSize: '10px',
+                    fontWeight: active ? 'bold' : 'normal',
+                    background: active ? `${ACCENT}cc` : 'rgba(0,0,0,0.4)',
+                    border: active ? `1px solid ${ACCENT}` : '1px solid rgba(255,255,255,0.08)',
+                    color: active ? '#fff' : '#888',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.3px',
+                  }}
+                >
+                  {kind}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Parameters */}

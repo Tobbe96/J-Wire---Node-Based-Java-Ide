@@ -176,6 +176,12 @@ function JavaNodeEditor() {
             returnType: (m.data.returnType as string) || 'void',
             parameters: (m.data.parameters as Parameter[]) || [],
           })),
+        constructors: f.nodes
+          .filter((n: Node) => n.type === 'constructor')
+          .map((c: Node, index: number) => ({
+            index,
+            parameters: (c.data.parameters as Parameter[]) || [],
+          })),
       }));
 
     return nodes.map(node => ({

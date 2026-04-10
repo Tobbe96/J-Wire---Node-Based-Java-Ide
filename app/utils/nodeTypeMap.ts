@@ -39,6 +39,8 @@ import HashMapOpNode from '../components/Nodes/HashMapOpNode';
 import HashSetOpNode from '../components/Nodes/HashSetOpNode';
 import CallStaticMethodNode from '../components/Nodes/CallStaticMethodNode';
 import CustomCodeNode from '../components/Nodes/CustomCodeNode';
+import ConstructorNode from '../components/Nodes/ConstructorNode';
+import NewObjectNode from '../components/Nodes/NewObjectNode';
 
 // Edge Components
 import AnimatedEdge from '../components/AnimatedEdge';
@@ -82,6 +84,8 @@ export const nodeTypes = {
   hashSetOp: HashSetOpNode,
   callStaticMethod: CallStaticMethodNode,
   customCode: CustomCodeNode,
+  constructor: ConstructorNode,
+  newObject: NewObjectNode,
 };
 
 export const edgeTypes = {
