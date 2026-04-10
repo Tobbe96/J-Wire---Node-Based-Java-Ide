@@ -10,9 +10,10 @@ interface TerminalProps {
   onDebug?: () => void;
   isCompiling?: boolean;
   isDebugging?: boolean;
+  height?: number;
 }
 
-const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDebugging }: TerminalProps) => {
+const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDebugging, height }: TerminalProps) => {
   const vfxEnabled = useVfxStore((s) => s.vfxEnabled);
   const inputMode = useEditorStore((s) => s.inputMode);
   const pendingInputs = useEditorStore((s) => s.pendingInputs);
@@ -50,7 +51,7 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
   }, [pendingInputs.length, submitInputs, cancelInputs]);
 
   return (
-    <div style={containerStyle}>
+    <div style={{ ...containerStyle, ...(height != null ? { height } : {}) }}>
       <div style={headerStyle}>
         <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>TERMINAL</span>
         <div style={{ display: 'flex', gap: '6px' }}>

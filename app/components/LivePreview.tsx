@@ -105,7 +105,6 @@ export default function LivePreview({ code }: { code: string }) {
 }
 
 const codePanelStyle: React.CSSProperties = {
-  width: '350px',
   background: '#1a1a1a',
   borderLeftWidth: '1px',
   borderLeftStyle: 'solid',

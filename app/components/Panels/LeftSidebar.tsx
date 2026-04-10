@@ -27,6 +27,7 @@ interface LeftSidebarProps {
   onRemoveFile: (fileId: string) => void;
   onRenameFile: (fileId: string, newName: string) => void;
   onLoadTemplate: (nodes: Node[], edges: Edge[]) => void;
+  width?: number;
 }
 
 const LeftSidebar = ({
@@ -50,6 +51,7 @@ const LeftSidebar = ({
   onRemoveFile,
   onRenameFile,
   onLoadTemplate,
+  width,
 }: LeftSidebarProps) => {
   const selectedNode = nodes.find(n => n.id === selectedNodeId);
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,7 +71,7 @@ const LeftSidebar = ({
   }, [nodes, searchQuery]);
 
   return (
-    <div style={sidebarStyle}>
+    <div style={{ ...sidebarStyle, ...(width != null ? { width } : {}) }}>
       <div style={headerStyle}>
         <span style={headerTitleStyle}>PROJECT EXPLORER</span>
         <div style={toolbarStyle}>
