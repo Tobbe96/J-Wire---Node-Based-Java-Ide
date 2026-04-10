@@ -9,6 +9,7 @@ export default function LivePreview({ code }: { code: string }) {
   const [copyHover, setCopyHover] = useState(false);
   const [flashKey, setFlashKey] = useState(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const codeAreaRef = useRef<HTMLDivElement>(null);
   const vfxEnabled = useVfxStore((s) => s.vfxEnabled);
 
   useEffect(() => {
@@ -24,6 +25,24 @@ export default function LivePreview({ code }: { code: string }) {
     });
     return () => { cancelled = true; };
   }, [code, vfxEnabled]);
+
+  // Override Shiki's inline styles on <pre> so the parent div handles scrolling
+  useEffect(() => {
+    const el = codeAreaRef.current;
+    if (!el) return;
+    const pre = el.querySelector('pre');
+    if (pre) {
+      pre.style.margin = '0';
+      pre.style.padding = '0';
+      pre.style.background = 'transparent';
+      pre.style.overflow = 'visible';
+      pre.style.whiteSpace = 'pre';
+    }
+    const codeEl = el.querySelector('code');
+    if (codeEl) {
+      codeEl.style.whiteSpace = 'pre';
+    }
+  }, [highlightedHtml]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(code).then(() => {
@@ -73,6 +92,7 @@ export default function LivePreview({ code }: { code: string }) {
         </div>
       </div>
       <div
+        ref={codeAreaRef}
         key={vfxEnabled ? flashKey : undefined}
         style={{
           ...codeAreaStyle,
