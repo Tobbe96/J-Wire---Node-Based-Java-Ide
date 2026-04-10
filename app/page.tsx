@@ -205,21 +205,45 @@ function JavaNodeEditor() {
       </ErrorBoundary>
 
       <div ref={canvasContainerRef} style={{ flexGrow: 1, position: 'relative' }}>
-        <ThemeToggle />
-        <VfxToggle />
-        <button
-          onClick={autoLayout}
-          style={{ position: 'absolute', top: 10, right: 170, zIndex: 20, background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
-        >
-          Auto Layout
-        </button>
-        <button
-          onClick={() => setShowDocs(true)}
-          title="Help / Documentation"
-          style={{ position: 'absolute', top: 10, right: 50, zIndex: 20, background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '6px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', fontWeight: 700, lineHeight: 1 }}
-        >
-          ?
-        </button>
+        <div style={{
+          position: 'absolute', top: 10, right: 10, zIndex: 20,
+          display: 'flex', gap: 6, alignItems: 'center',
+          background: '#1a1a1acc', backdropFilter: 'blur(8px)',
+          borderRadius: 8, padding: '4px 6px',
+          border: '1px solid #333',
+        }}>
+          <button
+            onClick={autoLayout}
+            style={{
+              height: 28, borderRadius: 5, border: '1px solid #333',
+              cursor: 'pointer', fontSize: 11, fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '0 8px', backgroundColor: '#1e1e1e', color: '#3b82f6',
+              transition: 'background 0.15s ease, border-color 0.15s ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#2a2a2a'; e.currentTarget.style.borderColor = '#555'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1e1e1e'; e.currentTarget.style.borderColor = '#333'; }}
+          >
+            ⊞ Layout
+          </button>
+          <VfxToggle />
+          <ThemeToggle />
+          <button
+            onClick={() => setShowDocs(true)}
+            title="Help / Documentation"
+            style={{
+              height: 28, width: 28, borderRadius: 5, border: '1px solid #333',
+              cursor: 'pointer', fontSize: 11, fontWeight: 700,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 0, backgroundColor: '#1e1e1e', color: '#999',
+              transition: 'background 0.15s ease, border-color 0.15s ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#2a2a2a'; e.currentTarget.style.borderColor = '#555'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1e1e1e'; e.currentTarget.style.borderColor = '#333'; }}
+          >
+            ?
+          </button>
+        </div>
 
         <CanvasRipple containerRef={canvasContainerRef} />
 

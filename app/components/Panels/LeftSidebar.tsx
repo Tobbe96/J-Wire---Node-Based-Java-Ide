@@ -70,14 +70,43 @@ const LeftSidebar = ({
 
   return (
     <div style={sidebarStyle}>
-      <div style={{ padding: '15px', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', color: '#888' }}>PROJECT EXPLORER</span>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          <button onClick={onSave} style={btnStyleSave}>SAVE</button>
-          <button onClick={onLoad} style={btnStyleLoad}>LOAD</button>
-          <button onClick={onExport} style={btnStyleLoad}>EXPORT</button>
-          <label style={{ ...btnStyleLoad, display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
-            IMPORT
+      <div style={headerStyle}>
+        <span style={headerTitleStyle}>PROJECT EXPLORER</span>
+        <div style={toolbarStyle}>
+          <button
+            onClick={onSave}
+            style={btnSaveStyle}
+            title="Save project"
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#1a2a3a'; e.currentTarget.style.borderTopColor = '#3b82f6'; e.currentTarget.style.borderRightColor = '#3b82f6'; e.currentTarget.style.borderBottomColor = '#3b82f6'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#1e1e1e'; e.currentTarget.style.borderTopColor = '#2a3a5a'; e.currentTarget.style.borderRightColor = '#2a3a5a'; e.currentTarget.style.borderBottomColor = '#2a3a5a'; }}
+          >
+            Save
+          </button>
+          <button
+            onClick={onLoad}
+            style={btnNeutralStyle}
+            title="Load project"
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.borderColor = '#555'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#1e1e1e'; e.currentTarget.style.borderColor = '#333'; }}
+          >
+            Load
+          </button>
+          <button
+            onClick={onExport}
+            style={btnIconStyle}
+            title="Export"
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.borderColor = '#555'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#1e1e1e'; e.currentTarget.style.borderColor = '#333'; }}
+          >
+            ↗
+          </button>
+          <label
+            style={btnIconLabelStyle}
+            title="Import"
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.borderColor = '#555'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#1e1e1e'; e.currentTarget.style.borderColor = '#333'; }}
+          >
+            ↙
             <input type="file" accept=".json" onChange={(e) => { if (e.target.files?.[0]) onImport(e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
           </label>
           <TemplateGallery onLoadTemplate={onLoadTemplate} />
@@ -125,7 +154,15 @@ const LeftSidebar = ({
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getTypeColor(node.data.type as string) }} />
               <span>{node.data.label as string}</span>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); onAddGetter(node); }} style={addBtnStyle} title="Add getter">+</button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onAddGetter(node); }}
+              style={addBtnStyle}
+              title="Add getter"
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#22c55e'; e.currentTarget.style.color = '#22c55e'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.color = '#999'; }}
+            >
+              +
+            </button>
           </div>
         ))}
 
@@ -171,20 +208,81 @@ const sidebarItemStyle: React.CSSProperties = {
   transition: 'all 0.15s ease',
 };
 
+const headerStyle: React.CSSProperties = {
+  padding: '12px',
+  borderBottom: '1px solid #333',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+};
+
+const headerTitleStyle: React.CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 'bold',
+  letterSpacing: '1px',
+  color: '#888',
+};
+
+const toolbarStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '4px',
+  alignItems: 'center',
+};
+
+const btnBase: React.CSSProperties = {
+  height: '26px',
+  background: '#1e1e1e',
+  border: '1px solid #333',
+  borderRadius: '4px',
+  fontSize: '10px',
+  fontWeight: 700,
+  letterSpacing: '0.5px',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.15s ease',
+};
+
+const btnSaveStyle: React.CSSProperties = {
+  ...btnBase,
+  color: '#3b82f6',
+  border: '1px solid #2a3a5a',
+  borderLeft: '2px solid #3b82f6',
+  padding: '0 10px',
+};
+
+const btnNeutralStyle: React.CSSProperties = {
+  ...btnBase,
+  color: '#999',
+  padding: '0 10px',
+};
+
+const btnIconStyle: React.CSSProperties = {
+  ...btnBase,
+  color: '#999',
+  width: '26px',
+  padding: '0',
+  fontSize: '12px',
+};
+
+const btnIconLabelStyle: React.CSSProperties = {
+  ...btnIconStyle,
+  cursor: 'pointer',
+};
+
 const addBtnStyle: React.CSSProperties = {
-  background: '#333',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '3px',
-  width: '18px',
-  height: '18px',
+  background: '#1e1e1e',
+  color: '#999',
+  border: '1px solid #444',
+  borderRadius: '4px',
+  width: '20px',
+  height: '20px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: '14px',
+  fontSize: '13px',
   cursor: 'pointer',
   lineHeight: 0,
+  transition: 'all 0.15s ease',
 };
-
-const btnStyleSave = { background: '#2563eb', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', fontWeight: 700 };
-const btnStyleLoad = { background: '#3f3f46', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', fontWeight: 700 };

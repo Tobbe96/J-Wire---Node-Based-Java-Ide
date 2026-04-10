@@ -21,8 +21,14 @@ const TemplateGallery = ({ onLoadTemplate }: TemplateGalleryProps) => {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} style={triggerBtnStyle}>
-        TEMPLATES
+      <button
+        onClick={() => setOpen(true)}
+        style={triggerBtnStyle}
+        title="Templates"
+        onMouseEnter={(e) => { e.currentTarget.style.background = '#2a2a2a'; e.currentTarget.style.borderColor = '#555'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = '#1e1e1e'; e.currentTarget.style.borderColor = '#333'; }}
+      >
+        ◧
       </button>
 
       {open && (
@@ -32,32 +38,46 @@ const TemplateGallery = ({ onLoadTemplate }: TemplateGalleryProps) => {
               <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', color: '#ccc' }}>
                 STARTER TEMPLATES
               </span>
-              <button onClick={() => setOpen(false)} style={closeBtnStyle}>✕</button>
+              <button
+                onClick={() => setOpen(false)}
+                style={closeBtnStyle}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = '#333'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#888'; e.currentTarget.style.background = 'transparent'; }}
+              >
+                ✕
+              </button>
             </div>
 
             <div style={gridStyle}>
-              {TEMPLATES.map((t) => (
-                <div
-                  key={t.id}
-                  onClick={() => handleSelect(t.nodes, t.edges)}
-                  style={cardStyle}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = '#555';
-                    (e.currentTarget as HTMLDivElement).style.background = '#1e1e1e';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = '#333';
-                    (e.currentTarget as HTMLDivElement).style.background = '#161616';
-                  }}
-                >
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#ccc', marginBottom: '4px' }}>
-                    {t.name}
+              {TEMPLATES.map((t, i) => {
+                const accent = CARD_ACCENTS[i % CARD_ACCENTS.length];
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => handleSelect(t.nodes, t.edges)}
+                    style={{ ...cardStyle, borderLeft: `3px solid ${accent}` }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderTopColor = '#555';
+                      e.currentTarget.style.borderRightColor = '#555';
+                      e.currentTarget.style.borderBottomColor = '#555';
+                      e.currentTarget.style.background = '#1e1e1e';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderTopColor = '#333';
+                      e.currentTarget.style.borderRightColor = '#333';
+                      e.currentTarget.style.borderBottomColor = '#333';
+                      e.currentTarget.style.background = '#161616';
+                    }}
+                  >
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#ccc', marginBottom: '4px' }}>
+                      {t.name}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#777', lineHeight: '1.4' }}>
+                      {t.description}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '11px', color: '#777', lineHeight: '1.4' }}>
-                    {t.description}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -68,17 +88,28 @@ const TemplateGallery = ({ onLoadTemplate }: TemplateGalleryProps) => {
 
 export default memo(TemplateGallery);
 
+// ─── Constants ─────────────────────────────────────────────────
+
+const CARD_ACCENTS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
 // ─── Styles ────────────────────────────────────────────────────
 
 const triggerBtnStyle: React.CSSProperties = {
-  background: '#3f3f46',
-  color: '#fff',
-  border: 'none',
-  padding: '4px 8px',
+  height: '26px',
+  width: '26px',
+  background: '#1e1e1e',
+  border: '1px solid #333',
   borderRadius: '4px',
-  fontSize: '10px',
-  cursor: 'pointer',
+  fontSize: '12px',
   fontWeight: 700,
+  letterSpacing: '0.5px',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#999',
+  padding: '0',
+  transition: 'all 0.15s ease',
 };
 
 const overlayStyle: React.CSSProperties = {
@@ -116,6 +147,13 @@ const closeBtnStyle: React.CSSProperties = {
   color: '#888',
   fontSize: '14px',
   cursor: 'pointer',
+  width: '26px',
+  height: '26px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '4px',
+  transition: 'all 0.15s ease',
 };
 
 const gridStyle: React.CSSProperties = {

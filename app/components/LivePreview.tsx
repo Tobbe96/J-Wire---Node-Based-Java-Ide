@@ -6,6 +6,7 @@ import { useVfxStore } from '../store/vfxStore';
 export default function LivePreview({ code }: { code: string }) {
   const [highlightedHtml, setHighlightedHtml] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [copyHover, setCopyHover] = useState(false);
   const [flashKey, setFlashKey] = useState(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const vfxEnabled = useVfxStore((s) => s.vfxEnabled);
@@ -42,12 +43,28 @@ export default function LivePreview({ code }: { code: string }) {
       } : {}),
     }}>
       <div style={headerStyle}>
-        <span>LIVE JAVA PREVIEW</span>
+        <span style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#888', fontWeight: 600 }}>
+          LIVE JAVA PREVIEW
+        </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button onClick={handleCopy} style={copyButtonStyle} title="Copy code to clipboard">
+          <button
+            onClick={handleCopy}
+            onMouseEnter={() => setCopyHover(true)}
+            onMouseLeave={() => setCopyHover(false)}
+            style={{
+              ...copyButtonStyle,
+              ...(copied
+                ? { borderColor: '#22c55e', color: '#22c55e' }
+                : copyHover
+                  ? { borderColor: '#555', color: '#ccc' }
+                  : {}),
+            }}
+            title="Copy code to clipboard"
+          >
             {copied ? '✓ Copied' : '⎘ Copy'}
           </button>
           <span style={{
+            fontSize: '11px',
             color: '#22c55e',
             ...(vfxEnabled ? { animation: 'vfx-sync-pulse 2s ease-in-out infinite' } : {}),
           }}>
@@ -92,18 +109,20 @@ const headerStyle: React.CSSProperties = {
 };
 
 const copyButtonStyle: React.CSSProperties = {
-  background: '#333',
-  color: '#ccc',
-  border: '1px solid #555',
-  padding: '3px 10px',
+  background: '#1e1e1e',
+  color: '#999',
+  border: '1px solid #333',
+  padding: '4px 12px',
   borderRadius: '3px',
   fontSize: '11px',
   cursor: 'pointer',
   fontFamily: 'monospace',
+  transition: 'color 0.15s, border-color 0.15s',
 };
 
 const codeAreaStyle: React.CSSProperties = {
   padding: '15px',
+  overflowX: 'auto',
   overflowY: 'auto',
   flex: 1,
   background: '#0d0d0d',

@@ -1,5 +1,5 @@
 'use client';
-import React, { memo, useRef, useEffect, useCallback } from 'react';
+import React, { memo, useRef, useEffect, useCallback, useState } from 'react';
 import { useVfxStore } from '../../store/vfxStore';
 import { useEditorStore } from '../../store/editorStore';
 
@@ -22,6 +22,8 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const isCollecting = inputMode === 'collecting';
+
+  const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
 
   // Auto-focus first empty input when collecting starts
   useEffect(() => {
@@ -51,46 +53,61 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
     <div style={containerStyle}>
       <div style={headerStyle}>
         <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>TERMINAL</span>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px' }}>
           <button
             onClick={onRun}
             disabled={isCollecting}
+            onMouseEnter={() => setHoveredBtn('run')}
+            onMouseLeave={() => setHoveredBtn(null)}
             style={{
-              ...runButtonStyle,
-              ...(isCollecting ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
-              ...(vfxEnabled ? { boxShadow: '0 0 8px #22c55e44', transition: 'box-shadow 0.3s ease' } : {}),
+              ...toolbarBtnBase,
+              background: hoveredBtn === 'run' ? '#243824' : '#1a2e1a',
+              borderLeft: '2px solid #22c55e',
+              color: '#22c55e',
+              ...(isCollecting ? { opacity: 0.4, cursor: 'not-allowed' } : {}),
+              ...(vfxEnabled ? { boxShadow: '0 0 6px #22c55e22' } : {}),
             }}
           >
-            ▶ RUN SCRIPT
+            ▶ Run
           </button>
           {onRunJava && (
             <button
               onClick={onRunJava}
               disabled={isCompiling || isCollecting}
+              onMouseEnter={() => setHoveredBtn('java')}
+              onMouseLeave={() => setHoveredBtn(null)}
               style={{
-                ...runJavaButtonStyle,
-                opacity: isCompiling || isCollecting ? 0.6 : 1,
-                cursor: isCompiling || isCollecting ? 'not-allowed' : 'pointer',
+                ...toolbarBtnBase,
+                background: hoveredBtn === 'java' ? '#3d2a15' : '#2e1f0f',
+                borderLeft: '2px solid #f97316',
+                color: '#f97316',
+                ...(isCompiling || isCollecting ? { opacity: 0.4, cursor: 'not-allowed' } : {}),
                 ...(vfxEnabled && isCompiling
                   ? { animation: 'vfx-btn-glow 1s ease-in-out infinite', '--btn-glow-color': '#f9731688' } as React.CSSProperties
                   : {}),
               }}
             >
-              {isCompiling ? '⏳ COMPILING...' : '☕ RUN JAVA'}
+              {isCompiling ? '⟳ Compiling' : '▶ Java'}
             </button>
           )}
           {onDebug && (
             <button
               onClick={onDebug}
+              onMouseEnter={() => setHoveredBtn('debug')}
+              onMouseLeave={() => setHoveredBtn(null)}
               style={{
-                ...debugButtonStyle,
-                background: isDebugging ? '#ef4444' : '#fbbf24',
+                ...toolbarBtnBase,
+                background: isDebugging
+                  ? (hoveredBtn === 'debug' ? '#3d1a1a' : '#2e1010')
+                  : (hoveredBtn === 'debug' ? '#3d3215' : '#2e2508'),
+                borderLeft: isDebugging ? '2px solid #ef4444' : '2px solid #fbbf24',
+                color: isDebugging ? '#ef4444' : '#fbbf24',
                 ...(vfxEnabled && isDebugging
-                  ? { boxShadow: '0 0 12px #ef444488' }
+                  ? { boxShadow: '0 0 8px #ef444444' }
                   : {}),
               }}
             >
-              {isDebugging ? '⏹ STOP DEBUG' : '🐛 DEBUG'}
+              {isDebugging ? '■ Stop' : '● Debug'}
             </button>
           )}
         </div>
@@ -147,11 +164,33 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
               </div>
             ))}
             <div style={inputButtonRowStyle}>
-              <button onClick={submitInputs} style={submitButtonStyle}>
+              <button
+                onClick={submitInputs}
+                onMouseEnter={() => setHoveredBtn('submit')}
+                onMouseLeave={() => setHoveredBtn(null)}
+                style={{
+                  ...toolbarBtnBase,
+                  background: hoveredBtn === 'submit' ? '#243824' : '#1a2e1a',
+                  borderLeft: '2px solid #22c55e',
+                  color: '#22c55e',
+                  padding: '4px 10px',
+                }}
+              >
                 ▶ Submit
               </button>
-              <button onClick={cancelInputs} style={cancelButtonStyle}>
-                ✕ Cancel
+              <button
+                onClick={cancelInputs}
+                onMouseEnter={() => setHoveredBtn('cancel')}
+                onMouseLeave={() => setHoveredBtn(null)}
+                style={{
+                  ...toolbarBtnBase,
+                  background: hoveredBtn === 'cancel' ? '#252525' : '#1e1e1e',
+                  border: `1px solid ${hoveredBtn === 'cancel' ? '#666' : '#444'}`,
+                  color: '#888',
+                  padding: '4px 10px',
+                }}
+              >
+                Cancel
               </button>
               <span style={{ color: '#555', fontSize: '10px', marginLeft: '8px' }}>
                 Enter to advance • Esc to cancel
@@ -183,37 +222,21 @@ const headerStyle: React.CSSProperties = {
   borderBottom: '1px solid #333',
 };
 
-const runButtonStyle: React.CSSProperties = {
-  background: '#22c55e',
-  color: '#000',
-  border: 'none',
-  padding: '6px 14px',
+const toolbarBtnBase: React.CSSProperties = {
+  background: '#1e1e1e',
+  color: '#ccc',
+  border: '1px solid #333',
+  borderLeft: '2px solid #555',
+  padding: '5px 12px',
   borderRadius: '4px',
   fontSize: '11px',
   fontWeight: 'bold',
+  letterSpacing: '0.5px',
+  textTransform: 'uppercase',
+  fontFamily: 'inherit',
   cursor: 'pointer',
-};
-
-const runJavaButtonStyle: React.CSSProperties = {
-  background: '#f97316',
-  color: '#000',
-  border: 'none',
-  padding: '6px 14px',
-  borderRadius: '4px',
-  fontSize: '11px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-};
-
-const debugButtonStyle: React.CSSProperties = {
-  background: '#fbbf24',
-  color: '#000',
-  border: 'none',
-  padding: '6px 14px',
-  borderRadius: '4px',
-  fontSize: '11px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
+  transition: 'background 0.15s ease, border-color 0.15s ease',
+  lineHeight: '1.4',
 };
 
 const outputStyle: React.CSSProperties = {
@@ -263,25 +286,4 @@ const inputButtonRowStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: '6px',
   marginTop: '6px',
-};
-
-const submitButtonStyle: React.CSSProperties = {
-  background: '#22c55e',
-  color: '#000',
-  border: 'none',
-  padding: '5px 12px',
-  borderRadius: '4px',
-  fontSize: '11px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-};
-
-const cancelButtonStyle: React.CSSProperties = {
-  background: '#333',
-  color: '#aaa',
-  border: '1px solid #555',
-  padding: '5px 12px',
-  borderRadius: '4px',
-  fontSize: '11px',
-  cursor: 'pointer',
 };

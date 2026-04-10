@@ -10,23 +10,28 @@ export default function VfxToggle() {
       onClick={toggleVfx}
       title={vfxEnabled ? 'Disable VFX' : 'Enable VFX'}
       style={{
-        position: 'absolute',
-        top: 10,
-        right: 130,
-        zIndex: 20,
-        width: 36,
-        height: 36,
-        borderRadius: '50%',
-        border: vfxEnabled ? '2px solid #a855f7' : '2px solid #555',
+        height: 28,
+        borderRadius: 5,
+        border: vfxEnabled ? '1px solid #7c3aed' : '1px solid #333',
         cursor: 'pointer',
-        fontSize: 16,
+        fontSize: 11,
+        fontWeight: 700,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: vfxEnabled ? '#1e1e2e' : '#1e1e1e',
+        gap: 4,
+        padding: '0 8px',
+        backgroundColor: '#1e1e1e',
         color: vfxEnabled ? '#a855f7' : '#666',
-        boxShadow: vfxEnabled ? '0 0 12px #a855f766' : 'none',
-        transition: 'all 0.3s ease',
+        transition: 'background 0.15s ease, border-color 0.15s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = '#2a2a2a';
+        e.currentTarget.style.borderColor = vfxEnabled ? '#a855f7' : '#555';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = '#1e1e1e';
+        e.currentTarget.style.borderColor = vfxEnabled ? '#7c3aed' : '#333';
       }}
     >
       ✦
