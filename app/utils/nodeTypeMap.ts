@@ -37,6 +37,8 @@ import StringFormatNode from '../components/Nodes/StringFormatNode';
 import ArrayListOpNode from '../components/Nodes/ArrayListOpNode';
 import HashMapOpNode from '../components/Nodes/HashMapOpNode';
 import HashSetOpNode from '../components/Nodes/HashSetOpNode';
+import CallStaticMethodNode from '../components/Nodes/CallStaticMethodNode';
+import CustomCodeNode from '../components/Nodes/CustomCodeNode';
 
 // Edge Components
 import AnimatedEdge from '../components/AnimatedEdge';
@@ -78,6 +80,8 @@ export const nodeTypes = {
   arrayListOp: ArrayListOpNode,
   hashMapOp: HashMapOpNode,
   hashSetOp: HashSetOpNode,
+  callStaticMethod: CallStaticMethodNode,
+  customCode: CustomCodeNode,
 };
 
 export const edgeTypes = {

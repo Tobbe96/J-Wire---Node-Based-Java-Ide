@@ -197,6 +197,41 @@ export interface HashSetOpNodeData extends Record<string, unknown> {
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
 }
 
+export interface CallStaticMethodNodeData extends Record<string, unknown> {
+  label: string;
+  targetClass: string;
+  methodName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+  projectFiles?: Array<{
+    id: string;
+    className: string;
+    methods: Array<{ name: string; returnType: string; parameters: Parameter[] }>;
+  }>;
+}
+
+export interface CustomCodeNodeData extends Record<string, unknown> {
+  label: string;
+  code: string;
+  mode: 'statement' | 'expression';
+  inputs: Array<{ id: string; name: string; type: string }>;
+  outputType: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+// ─── Cross-class method info ───────────────────────────────────
+
+export interface ProjectMethodInfo {
+  name: string;
+  returnType: string;
+  parameters: Parameter[];
+}
+
+export interface ProjectClassInfo {
+  id: string;
+  className: string;
+  methods: ProjectMethodInfo[];
+}
+
 // ─── Enriched Data (injected at runtime by page.tsx) ───────────
 
 export type EnrichedData<T> = T & {

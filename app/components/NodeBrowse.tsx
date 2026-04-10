@@ -75,7 +75,7 @@ export default function NodeBrowser({ position, onAddNode, onClose }: NodeBrowse
                       onClick={() => { onAddNode(nodeKind); onClose(); }} 
                       style={buttonStyle}
                     >
-                      + {NODE_CONFIGS[nodeKind].data.label || nodeKind}
+                      + {NODE_CONFIGS[nodeKind]?.data.label || nodeKind}
                     </button>
                   ))}
                 </div>

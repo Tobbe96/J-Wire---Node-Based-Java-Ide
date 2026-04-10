@@ -18,6 +18,7 @@ import { generateJavaCode } from '../utils/compiler';
 import { executeGraph } from '../utils/executor';
 import { NODE_CONFIGS } from '../utils/nodeRegistry';
 import { isValidJavaConnection, resolveSourceType, resolveTargetAccepts, getAutoConvertType } from '../utils/validation';
+import type { ProjectClassInfo, Parameter } from '../utils/nodeTypes';
 import { useToastStore } from './toastStore';
 
 const STORAGE_KEY = 'java-nodegraph-save';
@@ -154,6 +155,24 @@ export type EditorStore = EditorState & EditorActions;
 const isTrackedKey = (key: string) =>
   key === 'nodes' || key === 'edges';
 
+/** Extract method metadata from all project files for cross-class references */
+function buildProjectClasses(files: ProjectFile[], activeFileId: string, activeNodes: Node[], activeEdges: Edge[], activeClassName: string): ProjectClassInfo[] {
+  const allFiles = files.map(f =>
+    f.id === activeFileId ? { ...f, nodes: activeNodes, edges: activeEdges, className: activeClassName } : f
+  );
+  return allFiles.map(f => ({
+    id: f.id,
+    className: f.className,
+    methods: f.nodes
+      .filter(n => n.type === 'method')
+      .map(m => ({
+        name: m.data.label as string,
+        returnType: (m.data.returnType as string) || 'void',
+        parameters: (m.data.parameters as Parameter[]) || [],
+      })),
+  }));
+}
+
 export const useEditorStore = create<EditorStore>()(
   temporal(
     (set, get) => ({
@@ -280,16 +299,19 @@ export const useEditorStore = create<EditorStore>()(
 
       // --- Code Generation & Execution ---
       getGeneratedCode: () => {
-        const { nodes, edges, className } = get();
-        return generateJavaCode(nodes, edges, className);
+        const { nodes, edges, className, files, activeFileId } = get();
+        const projectClasses = buildProjectClasses(files, activeFileId, nodes, edges, className);
+        return generateJavaCode(nodes, edges, className, projectClasses);
       },
 
       runScript: () => {
-        const { nodes, edges } = get();
+        const { nodes, edges, files, activeFileId, className } = get();
+        const syncedFiles = files.map(f =>
+          f.id === activeFileId ? { ...f, nodes, edges, className } : f
+        );
         const scannerNodes = nodes.filter(n => n.type === 'scanner');
 
         if (scannerNodes.length > 0) {
-          // Collect prompts from scanner node data
           const prompts: PendingInput[] = scannerNodes.map(sn => {
             const readType = (sn.data.readType as string) || 'nextLine';
             const inlinePrompt = (sn.data.inlinePrompt as string) || '';
@@ -305,13 +327,16 @@ export const useEditorStore = create<EditorStore>()(
           return;
         }
 
-        set({ consoleOutput: executeGraph(nodes, edges) });
+        set({ consoleOutput: executeGraph(nodes, edges, undefined, syncedFiles) });
       },
 
       compileAndRunJava: async () => {
-        const { nodes, edges, className } = get();
-        const code = generateJavaCode(nodes, edges, className);
+        const { nodes, edges, className, files, activeFileId } = get();
         const toast = useToastStore.getState();
+        const syncedFiles = files.map(f =>
+          f.id === activeFileId ? { ...f, nodes, edges, className } : f
+        );
+        const projectClasses = buildProjectClasses(files, activeFileId, nodes, edges, className);
 
         // Collect inputs for scanner nodes before running
         const scannerNodes = nodes.filter(n => n.type === 'scanner');
@@ -333,6 +358,12 @@ export const useEditorStore = create<EditorStore>()(
           ? get().pendingInputs.map(p => p.value)
           : undefined;
 
+        // Generate code for all files in the project
+        const javaFiles = syncedFiles.map(f => ({
+          code: generateJavaCode(f.nodes, f.edges, f.className, projectClasses),
+          className: f.className,
+        }));
+
         set({
           isCompiling: true,
           consoleOutput: ['> Compiling and running Java...'],
@@ -344,7 +375,7 @@ export const useEditorStore = create<EditorStore>()(
           const res = await fetch('/api/compile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, className, inputs }),
+            body: JSON.stringify({ files: javaFiles, mainClass: className, inputs }),
           });
           const data = await res.json();
 
@@ -387,9 +418,12 @@ export const useEditorStore = create<EditorStore>()(
       },
 
       submitInputs: () => {
-        const { _inputTarget, pendingInputs, nodes, edges, className } = get();
+        const { _inputTarget, pendingInputs, nodes, edges, className, files, activeFileId } = get();
 
         if (_inputTarget === 'script') {
+          const syncedFiles = files.map(f =>
+            f.id === activeFileId ? { ...f, nodes, edges, className } : f
+          );
           let inputIndex = 0;
           const inputProvider = () => {
             const val = pendingInputs[inputIndex]?.value ?? '';
@@ -398,7 +432,7 @@ export const useEditorStore = create<EditorStore>()(
           };
           set({
             inputMode: 'running' as InputMode,
-            consoleOutput: executeGraph(nodes, edges, inputProvider),
+            consoleOutput: executeGraph(nodes, edges, inputProvider, syncedFiles),
             pendingInputs: [],
           });
           set({ inputMode: 'idle' as InputMode });

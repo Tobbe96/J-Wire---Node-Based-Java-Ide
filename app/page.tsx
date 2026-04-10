@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow, SelectionMode } from '@xyflow/react';
 import type { Node, Edge } from '@xyflow/react';
+import type { Parameter } from './utils/nodeTypes';
 import '@xyflow/react/dist/style.css';
 
 // Panels & UI
@@ -155,9 +156,28 @@ function JavaNodeEditor() {
     }
   }, [addNodeAndConnect, screenToFlowPosition, setMenuVisible]);
 
-  // Enrich nodes with callbacks + debug state
+  // Enrich nodes with callbacks + debug state + cross-class info
   const enrichedNodes = useMemo(() => {
     const methodNodes = nodes.filter(n => n.type === 'method');
+
+    // Build projectFiles for cross-class method calls (sync current file state)
+    const allFilesSync = files.map(f =>
+      f.id === activeFileId ? { ...f, nodes, edges, className } : f
+    );
+    const projectFiles = allFilesSync
+      .filter(f => f.id !== activeFileId)
+      .map(f => ({
+        id: f.id,
+        className: f.className,
+        methods: f.nodes
+          .filter((n: Node) => n.type === 'method')
+          .map((m: Node) => ({
+            name: m.data.label as string,
+            returnType: (m.data.returnType as string) || 'void',
+            parameters: (m.data.parameters as Parameter[]) || [],
+          })),
+      }));
+
     return nodes.map(node => ({
       ...node,
       data: {
@@ -165,6 +185,7 @@ function JavaNodeEditor() {
         updateNodeData,
         isValidConnection: validateConnection,
         methodNodes,
+        projectFiles,
       },
       style: {
         ...(node.style || {}),
@@ -176,7 +197,7 @@ function JavaNodeEditor() {
           : {}),
       },
     }));
-  }, [nodes, updateNodeData, validateConnection, activeDebugNodeId, breakpoints]);
+  }, [nodes, edges, updateNodeData, validateConnection, activeDebugNodeId, breakpoints, files, activeFileId, className]);
 
   // Enrich edges with animated type when VFX enabled
   const enrichedEdges = useMemo(() => {

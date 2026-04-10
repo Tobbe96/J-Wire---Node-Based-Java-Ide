@@ -2,7 +2,7 @@ import { ALL_NUMERIC, ALL_TYPES } from './theme';
 
 export const NODE_CATEGORIES = {
   Variables: ['int', 'float', 'double', 'long', 'short', 'byte', 'char', 'String', 'boolean'],
-  Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'doWhile', 'switch', 'tryCatchFinally', 'throw', 'break', 'continue', 'setVar', 'setLocalVar', 'print', 'return', 'increment', 'compoundAssign'],
+  Logic: ['main', 'method', 'callMethod', 'callStaticMethod', 'branch', 'while', 'for', 'doWhile', 'switch', 'tryCatchFinally', 'throw', 'break', 'continue', 'setVar', 'setLocalVar', 'print', 'return', 'increment', 'compoundAssign'],
   Input: ['scanner-nextLine', 'scanner-nextInt', 'scanner-nextFloat', 'scanner-nextDouble', 'scanner-nextLong', 'scanner-nextBoolean'],
   Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-mod', 'math-gt', 'math-lt', 'math-lte', 'math-gte', 'math-eq', 'math-neq', 'math-and', 'math-or', 'math-not', 'math-bitand', 'math-bitor', 'math-bitxor', 'math-bitnot', 'math-shl', 'math-shr'],
   'Math Functions': ['math-abs', 'math-min', 'math-max', 'math-pow', 'math-sqrt', 'math-random', 'math-ceil', 'math-floor', 'math-round', 'math-log', 'math-log10', 'math-sin', 'math-cos', 'math-tan', 'math-asin', 'math-acos', 'math-atan'],
@@ -10,7 +10,7 @@ export const NODE_CATEGORIES = {
   Strings: ['string-concat', 'string-length', 'string-substring', 'string-charAt', 'string-indexOf', 'string-replace', 'string-trim', 'string-toUpperCase', 'string-toLowerCase', 'string-split', 'string-contains', 'string-startsWith', 'string-endsWith', 'stringFormat'],
   Arrays: ['array-literal', 'array-new', 'array-access', 'array-set', 'array-length', 'forEach'],
   Collections: ['arrayList-create', 'arrayList-add', 'arrayList-get', 'arrayList-set', 'arrayList-remove', 'arrayList-size', 'arrayList-contains', 'arrayList-clear', 'arrayList-sort', 'arrayList-reverse', 'hashSet-create', 'hashSet-add', 'hashSet-remove', 'hashSet-contains', 'hashSet-size', 'hashSet-clear', 'hashMap-create', 'hashMap-put', 'hashMap-get', 'hashMap-remove', 'hashMap-containsKey', 'hashMap-size', 'hashMap-keySet'],
-  Utility: ['comment'],
+  Utility: ['comment', 'customCode'],
 };
 
 export const NODE_CONFIGS: Record<string, any> = {
@@ -40,6 +40,10 @@ export const NODE_CONFIGS: Record<string, any> = {
   callMethod: { 
     type: 'callMethod', 
     data: { methodName: 'newMethod' } 
+  },
+  callStaticMethod: {
+    type: 'callStaticMethod',
+    data: { label: 'Call Static', targetClass: '', methodName: '' }
   },
   setVar: {
     type: 'setVar', 
@@ -267,6 +271,18 @@ export const NODE_CONFIGS: Record<string, any> = {
     data: {
       label: 'Comment',
       text: 'Add your notes here...'
+    }
+  },
+
+  // --- CUSTOM CODE ---
+  customCode: {
+    type: 'customCode',
+    data: {
+      label: 'Custom Code',
+      code: '',
+      mode: 'statement',
+      inputs: [],
+      outputType: 'int',
     }
   },
 

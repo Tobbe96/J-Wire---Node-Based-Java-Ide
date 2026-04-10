@@ -1,8 +1,9 @@
 import { Node, Edge } from '@xyflow/react';
 import { getRuntimeDefault } from './theme';
 import type { Parameter, LocalVariable } from './nodeTypes';
+import type { ProjectFile } from '../store/editorStore';
 
-export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prompt: string) => string | null): string[] {
+export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prompt: string) => string | null, projectFiles?: ProjectFile[]): string[] {
   const consoleOutput: string[] = [];
   const runtimeMemory: Record<string, unknown> = {};
   const scannerValues = new Map<string, unknown>();
@@ -401,6 +402,26 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
       return scannerValues.get(nodeId) ?? '';
     }
 
+    if (node.type === 'customCode' && node.data.mode === 'expression') {
+      const code = (node.data.code as string) || '0';
+      const inputs = (node.data.inputs as Array<{id: string; name: string; type: string}>) || [];
+      const inputValues: Record<string, unknown> = {};
+      inputs.forEach((input, index) => {
+        const inputEdge = edges.find(e => e.target === nodeId && e.targetHandle === `custom-in-${index}`);
+        inputValues[input.name] = inputEdge
+          ? evaluateData(inputEdge.source, inputEdge.sourceHandle || undefined, localScope)
+          : getRuntimeDefault(input.type);
+      });
+      try {
+        const paramNames = Object.keys(inputValues);
+        const paramVals = Object.values(inputValues);
+        const fn = new Function(...paramNames, `return (${code});`);
+        return fn(...paramVals);
+      } catch {
+        return null;
+      }
+    }
+
     return "";
   };
 
@@ -453,6 +474,57 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
           runLogicChain(methodDef.id, 'exec-out', methodScope);
         } else {
           consoleOutput.push(`> ERROR: Method '${targetMethodName}' not found.`);
+        }
+      }
+
+      if (nextNode.type === 'callStaticMethod') {
+        const targetClassName = nextNode.data.targetClass as string;
+        const targetMethodName = nextNode.data.methodName as string;
+        if (targetClassName && targetMethodName && projectFiles) {
+          const targetFile = projectFiles.find(f => f.className === targetClassName);
+          if (targetFile) {
+            const methodDef = targetFile.nodes.find((n: Node) => n.type === 'method' && n.data.label === targetMethodName);
+            if (methodDef) {
+              const methodScope: Record<string, unknown> = {};
+              const params = (methodDef.data.parameters as Parameter[]) || [];
+              params.forEach((param: Parameter, index: number) => {
+                const argEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === `arg-in-${index}`);
+                if (argEdge) {
+                  methodScope[param.name] = evaluateData(argEdge.source, argEdge.sourceHandle || undefined, localScope);
+                } else {
+                  methodScope[param.name] = getRuntimeDefault(param.type, param.defaultValue);
+                }
+              });
+
+              const subOutput = executeCrossClassMethod(targetFile.nodes, targetFile.edges, methodDef, methodScope, projectFiles, inputProvider);
+              consoleOutput.push(...subOutput);
+            } else {
+              consoleOutput.push(`> ERROR: Method '${targetMethodName}' not found in ${targetClassName}.`);
+            }
+          } else {
+            consoleOutput.push(`> ERROR: Class '${targetClassName}' not found.`);
+          }
+        }
+      }
+
+      if (nextNode.type === 'customCode' && nextNode.data.mode === 'statement') {
+        const code = (nextNode.data.code as string) || '';
+        const inputs = (nextNode.data.inputs as Array<{id: string; name: string; type: string}>) || [];
+        const inputValues: Record<string, unknown> = {};
+        inputs.forEach((input, index) => {
+          const inputEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === `custom-in-${index}`);
+          inputValues[input.name] = inputEdge
+            ? evaluateData(inputEdge.source, inputEdge.sourceHandle || undefined, localScope)
+            : getRuntimeDefault(input.type);
+        });
+        try {
+          const paramNames = Object.keys(inputValues);
+          const paramVals = Object.values(inputValues);
+          // Provide console output capture and runtime memory access
+          const fn = new Function(...paramNames, '__print__', '__mem__', code);
+          fn(...paramVals, (msg: unknown) => consoleOutput.push(String(msg)), runtimeMemory);
+        } catch (err) {
+          consoleOutput.push(`> CUSTOM CODE ERROR: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
 
@@ -760,5 +832,196 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
   consoleOutput.push(`> Starting JVM...`);
   runLogicChain(mainNode.id);
   consoleOutput.push("> Process finished.");
+  return consoleOutput;
+}
+
+/**
+ * Execute a single method from another class's graph context.
+ * Used for cross-class static method calls in the script executor.
+ */
+function executeCrossClassMethod(
+  targetNodes: Node[],
+  targetEdges: Edge[],
+  methodNode: Node,
+  methodScope: Record<string, unknown>,
+  projectFiles?: ProjectFile[],
+  inputProvider?: (prompt: string) => string | null
+): string[] {
+  const consoleOutput: string[] = [];
+  const runtimeMemory: Record<string, unknown> = {};
+  const arrayListMemory: Record<string, unknown[]> = {};
+  const hashMapMemory: Record<string, Map<unknown, unknown>> = {};
+  const hashSetMemory: Record<string, Set<unknown>> = {};
+
+  // Initialize target class variables
+  targetNodes.filter(n => n.type === 'java').forEach(n => {
+    const varName = n.data.label as string;
+    const varType = n.data.type as string;
+    if (varType === 'String') runtimeMemory[varName] = String(n.data.value);
+    else if (varType === 'boolean') runtimeMemory[varName] = n.data.value === 'true';
+    else if (varType === 'char') runtimeMemory[varName] = String(n.data.value).charAt(0) || '\0';
+    else runtimeMemory[varName] = Number(n.data.value);
+  });
+
+  // Initialize method local variables
+  const locals = (methodNode.data.localVariables as LocalVariable[]) || [];
+  locals.forEach((local: LocalVariable) => {
+    methodScope[local.name] = getRuntimeDefault(local.type, local.value);
+  });
+
+  const evaluateData = (nodeId: string, sourceHandle?: string, localScope?: Record<string, unknown>): unknown => {
+    const node = targetNodes.find(n => n.id === nodeId);
+    if (!node) return null;
+
+    if (node.type === 'method' && sourceHandle) {
+      const paramMatch = sourceHandle.match(/^param-out-(\d+)$/);
+      if (paramMatch && localScope) {
+        const index = parseInt(paramMatch[1], 10);
+        const params = (node.data.parameters as Parameter[]) || [];
+        const paramName = params[index]?.name;
+        if (paramName && paramName in localScope) return localScope[paramName];
+        return null;
+      }
+      const localMatch = sourceHandle.match(/^local-out-(\d+)$/);
+      if (localMatch && localScope) {
+        const index = parseInt(localMatch[1], 10);
+        const locs = (node.data.localVariables as LocalVariable[]) || [];
+        const localName = locs[index]?.name;
+        if (localName && localName in localScope) return localScope[localName];
+        return null;
+      }
+    }
+
+    if (node.type === 'java') return runtimeMemory[node.data.label as string];
+    if (node.type === 'literal') {
+      const litType = (node.data.literalType as string) || 'String';
+      const rawVal = (node.data.value as string) || '';
+      if (litType === 'String') return rawVal;
+      if (litType === 'boolean') return rawVal === 'true';
+      return Number(rawVal) || 0;
+    }
+    if (node.type === 'getter') return runtimeMemory[node.data.label as string];
+    if (node.type === 'math') {
+      const edgeA = targetEdges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
+      const edgeB = targetEdges.find(e => e.target === nodeId && e.targetHandle === 'data-in-b');
+      const a = edgeA ? evaluateData(edgeA.source, edgeA.sourceHandle || undefined, localScope) : 0;
+      const b = edgeB ? evaluateData(edgeB.source, edgeB.sourceHandle || undefined, localScope) : 0;
+      const op = node.data.operation as string;
+      const na = Number(a), nb = Number(b);
+      switch (op) {
+        case '+': return na + nb;
+        case '-': return na - nb;
+        case '*': return na * nb;
+        case '/': return nb !== 0 ? na / nb : 0;
+        case '%': return nb !== 0 ? na % nb : 0;
+        case '>': return na > nb;
+        case '<': return na < nb;
+        case '>=': return na >= nb;
+        case '<=': return na <= nb;
+        case '==': return a === b || na === nb;
+        case '!=': return a !== b && na !== nb;
+        case '&&': return Boolean(a) && Boolean(b);
+        case '||': return Boolean(a) || Boolean(b);
+        default: return 0;
+      }
+    }
+    if (node.type === 'stringOp') {
+      const op = node.data.operation as string;
+      const edgeIn = targetEdges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+      const val = String(edgeIn ? evaluateData(edgeIn.source, edgeIn.sourceHandle || undefined, localScope) : '');
+      if (op === 'length') return val.length;
+      if (op === 'toUpperCase') return val.toUpperCase();
+      if (op === 'toLowerCase') return val.toLowerCase();
+      if (op === 'trim') return val.trim();
+      const edgeB = targetEdges.find(e => e.target === nodeId && (e.targetHandle === 'data-in-b' || e.targetHandle === 'data-in-target'));
+      const valB = String(edgeB ? evaluateData(edgeB.source, edgeB.sourceHandle || undefined, localScope) : '');
+      if (op === 'concat') return val + valB;
+      if (op === 'contains') return val.includes(valB);
+      if (op === 'indexOf') return val.indexOf(valB);
+      if (op === 'startsWith') return val.startsWith(valB);
+      if (op === 'endsWith') return val.endsWith(valB);
+      return val;
+    }
+
+    return '';
+  };
+
+  const runLogicChain = (startNodeId: string, startHandle: string = 'exec', localScope?: Record<string, unknown>): void => {
+    let currentNodeId = startNodeId;
+    let currentHandle = startHandle;
+    let steps = 0;
+
+    while (steps < 1000) {
+      steps++;
+      const execEdge = targetEdges.find(e =>
+        e.source === currentNodeId && e.sourceHandle?.includes(currentHandle)
+      );
+      if (!execEdge) break;
+      const nextNode = targetNodes.find(n => n.id === execEdge.target);
+      if (!nextNode) break;
+
+      if (nextNode.type === 'print') {
+        const dataEdge = targetEdges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
+        const val = dataEdge
+          ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+          : '';
+        consoleOutput.push(`> ${val}`);
+      }
+
+      if (nextNode.type === 'callMethod') {
+        const name = nextNode.data.methodName as string;
+        const def = targetNodes.find(n => n.type === 'method' && n.data.label === name);
+        if (def) {
+          const scope: Record<string, unknown> = {};
+          const params = (def.data.parameters as Parameter[]) || [];
+          params.forEach((p: Parameter, i: number) => {
+            const argEdge = targetEdges.find(e => e.target === nextNode.id && e.targetHandle === `arg-in-${i}`);
+            scope[p.name] = argEdge ? evaluateData(argEdge.source, argEdge.sourceHandle || undefined, localScope) : getRuntimeDefault(p.type, p.defaultValue);
+          });
+          const locs = (def.data.localVariables as LocalVariable[]) || [];
+          locs.forEach((l: LocalVariable) => { scope[l.name] = getRuntimeDefault(l.type, l.value); });
+          runLogicChain(def.id, 'exec-out', scope);
+        }
+      }
+
+      if (nextNode.type === 'callStaticMethod') {
+        const cls = nextNode.data.targetClass as string;
+        const mName = nextNode.data.methodName as string;
+        if (cls && mName && projectFiles) {
+          const tf = projectFiles.find(f => f.className === cls);
+          if (tf) {
+            const md = tf.nodes.find((n: Node) => n.type === 'method' && n.data.label === mName);
+            if (md) {
+              const scope: Record<string, unknown> = {};
+              const params = (md.data.parameters as Parameter[]) || [];
+              params.forEach((p: Parameter, i: number) => {
+                const argEdge = targetEdges.find(e => e.target === nextNode.id && e.targetHandle === `arg-in-${i}`);
+                scope[p.name] = argEdge ? evaluateData(argEdge.source, argEdge.sourceHandle || undefined, localScope) : getRuntimeDefault(p.type, p.defaultValue);
+              });
+              const subOutput = executeCrossClassMethod(tf.nodes, tf.edges, md, scope, projectFiles, inputProvider);
+              consoleOutput.push(...subOutput);
+            }
+          }
+        }
+      }
+
+      if (nextNode.type === 'setVar') {
+        const varName = nextNode.data.variableName as string;
+        const dataEdge = targetEdges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
+        if (varName) {
+          runtimeMemory[varName] = dataEdge
+            ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+            : 0;
+        }
+      }
+
+      if (nextNode.type === 'return') break;
+
+      currentNodeId = nextNode.id;
+      currentHandle = 'exec';
+    }
+  };
+
+  runLogicChain(methodNode.id, 'exec-out', methodScope);
   return consoleOutput;
 }

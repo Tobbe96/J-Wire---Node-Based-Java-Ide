@@ -1,6 +1,6 @@
 import { Node, Edge } from '@xyflow/react';
 import { getDefaultLiteral } from './theme';
-import type { Parameter, LocalVariable } from './nodeTypes';
+import type { Parameter, LocalVariable, ProjectClassInfo } from './nodeTypes';
 
 const SCANNER_JAVA_TYPES: Record<string, string> = {
   nextLine: 'String',
@@ -21,7 +21,7 @@ function boxedType(t: string): string {
   return map[t] || t;
 }
 
-export function generateJavaCode(nodes: Node[], edges: Edge[], className: string = 'VisualScript'): string {
+export function generateJavaCode(nodes: Node[], edges: Edge[], className: string = 'VisualScript', projectClasses: ProjectClassInfo[] = []): string {
   const hasScannerNodes = nodes.some(n => n.type === 'scanner');
   const hasArrayListNodes = nodes.some(n => n.type === 'arrayListOp');
   const hasHashMapNodes = nodes.some(n => n.type === 'hashMapOp');
@@ -402,6 +402,31 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
     if (node.type === 'scanner') {
       return scannerVarMap.get(nodeId) || 'null';
     }
+    if (node.type === 'callStaticMethod') {
+      const targetClass = node.data.targetClass as string;
+      const methodName = node.data.methodName as string;
+      if (targetClass && methodName) {
+        const targetFile = projectClasses.find(f => f.className === targetClass);
+        const targetMethod = targetFile?.methods.find(m => m.name === methodName);
+        const targetParams = targetMethod?.parameters || [];
+        const args = targetParams.map((p: Parameter, index: number) => {
+          const argEdge = edges.find(e => e.target === nodeId && e.targetHandle === `arg-in-${index}`);
+          return argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : getDefaultLiteral(p.type);
+        });
+        return `${targetClass}.${methodName}(${args.join(', ')})`;
+      }
+      return 'null';
+    }
+    if (node.type === 'customCode' && node.data.mode === 'expression') {
+      let code = (node.data.code as string) || '0';
+      const inputs = (node.data.inputs as Array<{id: string; name: string; type: string}>) || [];
+      inputs.forEach((input, index) => {
+        const inputEdge = edges.find(e => e.target === nodeId && e.targetHandle === `custom-in-${index}`);
+        const val = inputEdge ? evaluateDataNode(inputEdge.source, inputEdge.sourceHandle || undefined) : getDefaultLiteral(input.type);
+        code = code.replaceAll(input.name, `(${val})`);
+      });
+      return `(${code})`;
+    }
     return '""';
   };
 
@@ -457,6 +482,21 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
           methodBody += `    ${methodName}(${args.join(', ')});\n`;
         } else {
           methodBody += `    ${methodName}();\n`;
+        }
+      }
+
+      if (nextNode.type === 'callStaticMethod') {
+        const targetClass = nextNode.data.targetClass as string;
+        const methodName = nextNode.data.methodName as string;
+        if (targetClass && methodName) {
+          const targetFile = projectClasses.find(f => f.className === targetClass);
+          const targetMethod = targetFile?.methods.find(m => m.name === methodName);
+          const targetParams = targetMethod?.parameters || [];
+          const args = targetParams.map((p: Parameter, index: number) => {
+            const argEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === `arg-in-${index}`);
+            return argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : getDefaultLiteral(p.type);
+          });
+          methodBody += `    ${targetClass}.${methodName}(${args.join(', ')});\n`;
         }
       }
 
@@ -522,6 +562,20 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
         const lines = text.split('\n');
         lines.forEach(line => {
           methodBody += `    // ${line}\n`;
+        });
+      }
+
+      if (nextNode.type === 'customCode' && nextNode.data.mode === 'statement') {
+        let code = (nextNode.data.code as string) || '';
+        const inputs = (nextNode.data.inputs as Array<{id: string; name: string; type: string}>) || [];
+        inputs.forEach((input, index) => {
+          const inputEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === `custom-in-${index}`);
+          const val = inputEdge ? evaluateDataNode(inputEdge.source, inputEdge.sourceHandle || undefined) : getDefaultLiteral(input.type);
+          code = code.replaceAll(input.name, val);
+        });
+        const codeLines = code.split('\n');
+        codeLines.forEach(line => {
+          methodBody += `    ${line}\n`;
         });
       }
 

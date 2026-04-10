@@ -8,9 +8,18 @@ export const dynamic = 'force-dynamic';
 
 const EXECUTION_TIMEOUT_MS = 10_000;
 
-interface CompileRequest {
+interface JavaFile {
   code: string;
   className: string;
+}
+
+interface CompileRequest {
+  /** Multi-file mode */
+  files?: JavaFile[];
+  mainClass?: string;
+  /** Legacy single-file mode */
+  code?: string;
+  className?: string;
   inputs?: string[];
 }
 
@@ -21,25 +30,38 @@ interface CompileResponse {
   compilationError?: string;
 }
 
+function sanitizeClassName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_]/g, '');
+}
+
 export async function POST(request: Request): Promise<Response> {
   let workDir: string | null = null;
 
   try {
     const body = (await request.json()) as CompileRequest;
-    const { code, className, inputs } = body;
+    const { inputs } = body;
 
-    if (!code || !className) {
+    // Normalize to multi-file format (support legacy single-file requests)
+    let javaFiles: JavaFile[];
+    let mainClass: string;
+
+    if (body.files && body.files.length > 0) {
+      javaFiles = body.files;
+      mainClass = body.mainClass || body.files[0].className;
+    } else if (body.code && body.className) {
+      javaFiles = [{ code: body.code, className: body.className }];
+      mainClass = body.className;
+    } else {
       return Response.json(
-        { success: false, error: 'Missing code or className' } satisfies CompileResponse,
+        { success: false, error: 'Missing code/className or files array' } satisfies CompileResponse,
         { status: 400 }
       );
     }
 
-    // Sanitise className to prevent path traversal
-    const safeClassName = className.replace(/[^a-zA-Z0-9_]/g, '');
-    if (!safeClassName) {
+    const safeMainClass = sanitizeClassName(mainClass);
+    if (!safeMainClass) {
       return Response.json(
-        { success: false, error: 'Invalid className' } satisfies CompileResponse,
+        { success: false, error: 'Invalid main class name' } satisfies CompileResponse,
         { status: 400 }
       );
     }
@@ -48,12 +70,27 @@ export async function POST(request: Request): Promise<Response> {
     workDir = join(tmpdir(), `jflow-${randomUUID()}`);
     mkdirSync(workDir, { recursive: true });
 
-    const javaFile = join(workDir, `${safeClassName}.java`);
-    writeFileSync(javaFile, code, 'utf-8');
+    // Write all Java source files
+    const fileNames: string[] = [];
+    for (const file of javaFiles) {
+      const safeName = sanitizeClassName(file.className);
+      if (!safeName) continue;
+      const fileName = `${safeName}.java`;
+      writeFileSync(join(workDir, fileName), file.code, 'utf-8');
+      fileNames.push(fileName);
+    }
 
-    // --- Compile ---
+    if (fileNames.length === 0) {
+      return Response.json(
+        { success: false, error: 'No valid Java files to compile' } satisfies CompileResponse,
+        { status: 400 }
+      );
+    }
+
+    // --- Compile all files together ---
     try {
-      execSync(`javac "${safeClassName}.java"`, {
+      const fileArgs = fileNames.map(f => `"${f}"`).join(' ');
+      execSync(`javac ${fileArgs}`, {
         cwd: workDir,
         timeout: EXECUTION_TIMEOUT_MS,
         stdio: 'pipe',
@@ -69,10 +106,10 @@ export async function POST(request: Request): Promise<Response> {
       } satisfies CompileResponse);
     }
 
-    // --- Execute ---
+    // --- Execute main class ---
     try {
       const stdinInput = inputs && inputs.length > 0 ? inputs.join('\n') + '\n' : undefined;
-      const stdout = execSync(`java "${safeClassName}"`, {
+      const stdout = execSync(`java "${safeMainClass}"`, {
         cwd: workDir,
         timeout: EXECUTION_TIMEOUT_MS,
         stdio: 'pipe',
