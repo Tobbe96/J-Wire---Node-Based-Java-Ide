@@ -1,11 +1,14 @@
 import React, { memo, useState, useMemo } from 'react';
-import { Node } from '@xyflow/react';
+import { Node, Edge } from '@xyflow/react';
 import DetailsPanel from './DetailsPanel';
+import ValidationPanel from './ValidationPanel';
+import TemplateGallery from './TemplateGallery';
 import FileTree, { type ProjectFile } from '../FileTree';
 import { getTypeColor } from '../../utils/theme';
 
 interface LeftSidebarProps {
   nodes: Node[];
+  edges: Edge[];
   selectedNodeId: string | null;
   onSelectNode: (id: string) => void;
   onSave: () => void;
@@ -23,10 +26,12 @@ interface LeftSidebarProps {
   onAddFile: () => void;
   onRemoveFile: (fileId: string) => void;
   onRenameFile: (fileId: string, newName: string) => void;
+  onLoadTemplate: (nodes: Node[], edges: Edge[]) => void;
 }
 
 const LeftSidebar = ({
   nodes,
+  edges,
   selectedNodeId,
   onSelectNode,
   onSave,
@@ -44,6 +49,7 @@ const LeftSidebar = ({
   onAddFile,
   onRemoveFile,
   onRenameFile,
+  onLoadTemplate,
 }: LeftSidebarProps) => {
   const selectedNode = nodes.find(n => n.id === selectedNodeId);
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,6 +80,7 @@ const LeftSidebar = ({
             IMPORT
             <input type="file" accept=".json" onChange={(e) => { if (e.target.files?.[0]) onImport(e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
           </label>
+          <TemplateGallery onLoadTemplate={onLoadTemplate} />
         </div>
       </div>
 
@@ -135,6 +142,7 @@ const LeftSidebar = ({
       </div>
 
       <DetailsPanel selectedNode={selectedNode} updateNodeModifier={updateNodeModifier} updateNodeData={updateNodeData} />
+      <ValidationPanel nodes={nodes} edges={edges} onSelectNode={onSelectNode} />
     </div>
   );
 };

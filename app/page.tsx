@@ -1,44 +1,8 @@
 'use client';
 import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow, SelectionMode } from '@xyflow/react';
+import type { Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-
-// Node Components
-import JavaNode from './components/JavaNode';
-import PrintNode from './components/Nodes/PrintNode';
-import MethodNode from './components/Nodes/MethodNode';
-import MathNode from './components/Nodes/MathNode';
-import MainNode from './components/Nodes/MainNode';
-import CallMethodNode from './components/Nodes/CallMethodNode';
-import BranchNode from './components/Nodes/BranchNode';
-import WhileNode from './components/Nodes/WhileNode';
-import ForNode from './components/Nodes/ForNode';
-import NotNode from './components/Nodes/NotNode';
-import ReturnNode from './components/Nodes/ReturnNode';
-import SetLocalVarNode from './components/Nodes/SetLocalVarNode';
-import SetVariableNode from './components/Nodes/SetVariableNode';
-import VariableGetterNode from './components/Nodes/VariableGetterNode';
-import StringOpNode from './components/Nodes/StringOpNode';
-import ArrayOpNode from './components/Nodes/ArrayOpNode';
-import MathFuncNode from './components/Nodes/MathFuncNode';
-import CastNode from './components/Nodes/CastNode';
-import TernaryNode from './components/Nodes/TernaryNode';
-import DoWhileNode from './components/Nodes/DoWhileNode';
-import SwitchNode from './components/Nodes/SwitchNode';
-import BreakNode from './components/Nodes/BreakNode';
-import ContinueNode from './components/Nodes/ContinueNode';
-import TryCatchFinallyNode from './components/Nodes/TryCatchFinallyNode';
-import ThrowNode from './components/Nodes/ThrowNode';
-import ForEachNode from './components/Nodes/ForEachNode';
-import GroupNode from './components/Nodes/GroupNode';
-import ScannerNode from './components/Nodes/ScannerNode';
-import LiteralNode from './components/Nodes/LiteralNode';
-import IncrementNode from './components/Nodes/IncrementNode';
-import CompoundAssignNode from './components/Nodes/CompoundAssignNode';
-import CommentNode from './components/Nodes/CommentNode';
-import StringFormatNode from './components/Nodes/StringFormatNode';
-import ArrayListOpNode from './components/Nodes/ArrayListOpNode';
-import HashMapOpNode from './components/Nodes/HashMapOpNode';
 
 // Panels & UI
 import LeftSidebar from './components/Panels/LeftSidebar';
@@ -53,9 +17,8 @@ import DocsModal from './components/DocsModal';
 import DebugPanel from './components/DebugPanel';
 
 // VFX
-import AnimatedEdge from './components/AnimatedEdge';
 import AmbientParticles from './components/vfx/AmbientParticles';
-import ConnectionSpark, { triggerConnectionSpark } from './components/vfx/ConnectionSpark';
+import ConnectionSpark from './components/vfx/ConnectionSpark';
 import CanvasRipple from './components/vfx/CanvasRipple';
 
 // Store
@@ -64,47 +27,10 @@ import { useDebugStore } from './store/debugStore';
 import { useVfxStore } from './store/vfxStore';
 import { getTypeColor } from './utils/theme';
 
-const nodeTypes = {
-  java: JavaNode,
-  print: PrintNode,
-  method: MethodNode,
-  math: MathNode,
-  main: MainNode,
-  callMethod: CallMethodNode,
-  branch: BranchNode,
-  while: WhileNode,
-  for: ForNode,
-  not: NotNode,
-  return: ReturnNode,
-  getter: VariableGetterNode,
-  setLocalVar: SetLocalVarNode,
-  setVar: SetVariableNode,
-  stringOp: StringOpNode,
-  arrayOp: ArrayOpNode,
-  mathFunc: MathFuncNode,
-  cast: CastNode,
-  ternary: TernaryNode,
-  doWhile: DoWhileNode,
-  switch: SwitchNode,
-  break: BreakNode,
-  continue: ContinueNode,
-  tryCatchFinally: TryCatchFinallyNode,
-  throw: ThrowNode,
-  forEach: ForEachNode,
-  group: GroupNode,
-  scanner: ScannerNode,
-  literal: LiteralNode,
-  increment: IncrementNode,
-  compoundAssign: CompoundAssignNode,
-  comment: CommentNode,
-  stringFormat: StringFormatNode,
-  arrayListOp: ArrayListOpNode,
-  hashMapOp: HashMapOpNode,
-};
-
-const edgeTypes = {
-  animated: AnimatedEdge,
-};
+// Extracted modules
+import { nodeTypes, edgeTypes } from './utils/nodeTypeMap';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useConnectionHandlers } from './hooks/useConnectionHandlers';
 
 function JavaNodeEditor() {
   const {
@@ -169,49 +95,19 @@ function JavaNodeEditor() {
   // Load on mount
   useEffect(() => { loadNodeGraph(); hydrateVfx(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keyboard shortcuts
-  const mousePos = useRef({ x: 0, y: 0 });
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => { mousePos.current = { x: e.clientX, y: e.clientY }; };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isInput = (e.target as HTMLElement).tagName === 'INPUT' ||
-                      (e.target as HTMLElement).tagName === 'TEXTAREA' ||
-                      (e.target as HTMLElement).tagName === 'SELECT';
+  // Keyboard shortcuts (extracted hook)
+  useKeyboardShortcuts({
+    menuVisible, setMenuVisible, setMenuPosition, setSelectedSidebarNodeId,
+    undo, redo, saveNodeGraph, copySelection, pasteClipboard, duplicateSelection, groupSelection,
+  });
 
-      if (e.key === 'Tab' && !isInput) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (menuVisible) {
-          setMenuVisible(false);
-        } else {
-          setMenuPosition(mousePos.current);
-          setMenuVisible(true);
-        }
-      }
-      if (e.ctrlKey || e.metaKey) {
-        if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-        if (e.key === 'z' && e.shiftKey) { e.preventDefault(); redo(); }
-        if (e.key === 'y') { e.preventDefault(); redo(); }
-        if (e.key === 's') { e.preventDefault(); saveNodeGraph(); }
-        if (e.key === 'c' && !isInput) { e.preventDefault(); copySelection(); }
-        if (e.key === 'v' && !isInput) { e.preventDefault(); pasteClipboard(); }
-        if (e.key === 'd' && !isInput) { e.preventDefault(); duplicateSelection(); }
-        if (e.key === 'g' && !isInput) { e.preventDefault(); groupSelection(); }
-      }
-      if (e.key === 'Escape') { setMenuVisible(false); setSelectedSidebarNodeId(null); }
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('keydown', handleKeyDown, true);
-    };
-  }, [menuVisible, setMenuPosition, setMenuVisible, undo, redo, saveNodeGraph, setSelectedSidebarNodeId, copySelection, pasteClipboard, duplicateSelection, groupSelection]);
+  // Connection handling (extracted hook)
+  const {
+    connectionLineColor, onConnectStart, onConnectEnd, onPaneClick, handleConnect, dragConnectStart,
+  } = useConnectionHandlers({
+    nodes, onConnect, vfxEnabled, setMenuPosition, setMenuVisible, setSelectedSidebarNodeId,
+  });
 
-  // Connection drag state
-  const dragConnectStart = useRef<{ nodeId: string; handleId: string } | null>(null);
-  const lastConnectEnd = useRef<number>(0);
-  const [connectionLineColor, setConnectionLineColor] = useState('#fff');
   const [showDocs, setShowDocs] = useState(false);
 
   const handleDebugToggle = useCallback(() => {
@@ -222,57 +118,13 @@ function JavaNodeEditor() {
     }
   }, [isDebugging, stopDebug, startDebug, nodes, edges]);
 
-  // Wrap onConnect to trigger spark VFX
-  const handleConnect = useCallback((...args: Parameters<typeof onConnect>) => {
-    onConnect(...args);
-    const connection = args[0];
-    if (vfxEnabled && connection.target) {
-      const targetEl = document.querySelector(`[data-handleid="${connection.targetHandle}"][data-nodeid="${connection.target}"]`);
-      if (targetEl) {
-        const rect = targetEl.getBoundingClientRect();
-        const sourceNode = nodes.find((n) => n.id === connection.source);
-        const color = connection.sourceHandle?.includes('exec')
-          ? '#ffffff'
-          : getTypeColor((sourceNode?.data?.type as string) || '');
-        triggerConnectionSpark(rect.left + rect.width / 2, rect.top + rect.height / 2, color);
-      }
-    }
-  }, [onConnect, vfxEnabled, nodes]);
+  const handleLoadTemplate = useCallback((tplNodes: Node[], tplEdges: Edge[]) => {
+    useEditorStore.setState({ nodes: tplNodes, edges: tplEdges });
+  }, []);
 
   const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: { id: string }) => {
     toggleBreakpoint(node.id);
   }, [toggleBreakpoint]);
-
-  const onConnectStart = useCallback((_: unknown, { nodeId, handleId }: { nodeId: string | null; handleId: string | null }) => {
-    if (nodeId && handleId) {
-      dragConnectStart.current = { nodeId, handleId };
-      if (handleId.includes('exec')) {
-        setConnectionLineColor('#fff');
-      } else {
-        const sourceNode = nodes.find(n => n.id === nodeId);
-        const type = sourceNode?.data?.type as string | undefined;
-        setConnectionLineColor(type ? getTypeColor(type) : '#888');
-      }
-    }
-  }, [nodes]);
-
-  const onConnectEnd = useCallback((event: MouseEvent | TouchEvent) => {
-    if (!dragConnectStart.current) return;
-    const target = event.target as HTMLElement;
-    if (target.closest('.react-flow__node')) { dragConnectStart.current = null; return; }
-    lastConnectEnd.current = Date.now();
-    const x = 'clientX' in event ? event.clientX : event.touches?.[0]?.clientX ?? 0;
-    const y = 'clientY' in event ? event.clientY : event.touches?.[0]?.clientY ?? 0;
-    setMenuPosition({ x, y });
-    setMenuVisible(true);
-  }, [setMenuPosition, setMenuVisible]);
-
-  const onPaneClick = useCallback(() => {
-    if (Date.now() - lastConnectEnd.current < 100) return;
-    setMenuVisible(false);
-    dragConnectStart.current = null;
-    setSelectedSidebarNodeId(null);
-  }, [setMenuVisible, setSelectedSidebarNodeId]);
 
   const handleAddNodeAndConnect = useCallback((nodeKind: string) => {
     if (dragConnectStart.current) {
@@ -330,6 +182,7 @@ function JavaNodeEditor() {
       <ErrorBoundary fallbackLabel="Sidebar">
         <LeftSidebar
           nodes={nodes}
+          edges={edges}
           selectedNodeId={selectedSidebarNodeId}
           onSelectNode={setSelectedSidebarNodeId}
           onSave={saveNodeGraph}
@@ -347,6 +200,7 @@ function JavaNodeEditor() {
           onAddFile={addFile}
           onRemoveFile={removeFile}
           onRenameFile={renameFile}
+          onLoadTemplate={handleLoadTemplate}
         />
       </ErrorBoundary>
 

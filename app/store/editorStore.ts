@@ -37,6 +37,13 @@ function getEdgeStyle(sourceNode: Node | undefined, sourceHandle: string | null)
 
 // --- State Types ---
 
+export interface PendingInput {
+  prompt: string;
+  value: string;
+}
+
+export type InputMode = 'idle' | 'collecting' | 'running';
+
 export interface EditorState {
   // Graph state
   nodes: Node[];
@@ -49,6 +56,12 @@ export interface EditorState {
 
   // Compilation
   isCompiling: boolean;
+
+  // Scanner input collection
+  pendingInputs: PendingInput[];
+  inputMode: InputMode;
+  /** 'script' for runScript, 'java' for compileAndRunJava */
+  _inputTarget: 'script' | 'java';
 
   // Multi-file
   files: ProjectFile[];
@@ -83,6 +96,11 @@ export interface EditorActions {
   getGeneratedCode: () => string;
   runScript: () => void;
   compileAndRunJava: () => Promise<void>;
+
+  // Scanner input collection
+  submitInputs: () => void;
+  cancelInputs: () => void;
+  updatePendingInput: (index: number, value: string) => void;
 
   // Node operations
   addNode: (nodeKind: string, position: { x: number; y: number }) => string;
@@ -146,6 +164,9 @@ export const useEditorStore = create<EditorStore>()(
       selectedSidebarNodeId: null,
       className: 'VisualScript',
       isCompiling: false,
+      pendingInputs: [],
+      inputMode: 'idle' as InputMode,
+      _inputTarget: 'script' as const,
       files: [{ id: 'main', className: 'VisualScript', nodes: [], edges: [] }],
       activeFileId: 'main',
       menuVisible: false,
@@ -265,11 +286,26 @@ export const useEditorStore = create<EditorStore>()(
 
       runScript: () => {
         const { nodes, edges } = get();
-        const hasScannerNodes = nodes.some(n => n.type === 'scanner');
-        const inputProvider = hasScannerNodes
-          ? (prompt: string) => window.prompt(prompt) ?? ''
-          : undefined;
-        set({ consoleOutput: executeGraph(nodes, edges, inputProvider) });
+        const scannerNodes = nodes.filter(n => n.type === 'scanner');
+
+        if (scannerNodes.length > 0) {
+          // Collect prompts from scanner node data
+          const prompts: PendingInput[] = scannerNodes.map(sn => {
+            const readType = (sn.data.readType as string) || 'nextLine';
+            const inlinePrompt = (sn.data.inlinePrompt as string) || '';
+            const prompt = inlinePrompt || `Enter value for ${readType}:`;
+            return { prompt, value: '' };
+          });
+          set({
+            pendingInputs: prompts,
+            inputMode: 'collecting' as InputMode,
+            _inputTarget: 'script' as const,
+            consoleOutput: ['> Waiting for input...'],
+          });
+          return;
+        }
+
+        set({ consoleOutput: executeGraph(nodes, edges) });
       },
 
       compileAndRunJava: async () => {
@@ -279,19 +315,29 @@ export const useEditorStore = create<EditorStore>()(
 
         // Collect inputs for scanner nodes before running
         const scannerNodes = nodes.filter(n => n.type === 'scanner');
-        let inputs: string[] | undefined;
-        if (scannerNodes.length > 0) {
-          inputs = [];
-          for (const sn of scannerNodes) {
+        if (scannerNodes.length > 0 && get().inputMode !== 'running') {
+          const prompts: PendingInput[] = scannerNodes.map(sn => {
             const readType = (sn.data.readType as string) || 'nextLine';
-            const val = window.prompt(`[Scanner] Enter value for ${readType}:`) ?? '';
-            inputs.push(val);
-          }
+            return { prompt: `[Scanner] Enter value for ${readType}:`, value: '' };
+          });
+          set({
+            pendingInputs: prompts,
+            inputMode: 'collecting' as InputMode,
+            _inputTarget: 'java' as const,
+            consoleOutput: ['> Waiting for input...'],
+          });
+          return;
         }
+
+        const inputs = scannerNodes.length > 0
+          ? get().pendingInputs.map(p => p.value)
+          : undefined;
 
         set({
           isCompiling: true,
           consoleOutput: ['> Compiling and running Java...'],
+          inputMode: 'idle' as InputMode,
+          pendingInputs: [],
         });
 
         try {
@@ -329,6 +375,46 @@ export const useEditorStore = create<EditorStore>()(
         } finally {
           set({ isCompiling: false });
         }
+      },
+
+      // --- Scanner Input Collection ---
+      updatePendingInput: (index, value) => {
+        set((state) => ({
+          pendingInputs: state.pendingInputs.map((p, i) =>
+            i === index ? { ...p, value } : p
+          ),
+        }));
+      },
+
+      submitInputs: () => {
+        const { _inputTarget, pendingInputs, nodes, edges, className } = get();
+
+        if (_inputTarget === 'script') {
+          let inputIndex = 0;
+          const inputProvider = () => {
+            const val = pendingInputs[inputIndex]?.value ?? '';
+            inputIndex++;
+            return val;
+          };
+          set({
+            inputMode: 'running' as InputMode,
+            consoleOutput: executeGraph(nodes, edges, inputProvider),
+            pendingInputs: [],
+          });
+          set({ inputMode: 'idle' as InputMode });
+        } else {
+          // Java compile path — re-enter compileAndRunJava with inputMode='running'
+          set({ inputMode: 'running' as InputMode });
+          get().compileAndRunJava();
+        }
+      },
+
+      cancelInputs: () => {
+        set({
+          pendingInputs: [],
+          inputMode: 'idle' as InputMode,
+          consoleOutput: ['> Input cancelled.'],
+        });
       },
 
       // --- Node Operations ---
