@@ -41,6 +41,7 @@ import CallStaticMethodNode from '../components/Nodes/CallStaticMethodNode';
 import CustomCodeNode from '../components/Nodes/CustomCodeNode';
 import ConstructorNode from '../components/Nodes/ConstructorNode';
 import NewObjectNode from '../components/Nodes/NewObjectNode';
+import CallInstanceMethodNode from '../components/Nodes/CallInstanceMethodNode';
 
 // Edge Components
 import AnimatedEdge from '../components/AnimatedEdge';
@@ -86,6 +87,7 @@ export const nodeTypes = {
   customCode: CustomCodeNode,
   constructor: ConstructorNode,
   newObject: NewObjectNode,
+  callInstanceMethod: CallInstanceMethodNode,
 };
 
 export const edgeTypes = {

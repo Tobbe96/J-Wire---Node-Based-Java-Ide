@@ -54,6 +54,25 @@ export function resolveSourceType(node: Node, sourceHandle: string): string | un
   // StringFormat always outputs String
   if (node.type === 'stringFormat') return 'String';
 
+  // NewObjectNode outputs the target class name as type
+  if (node.type === 'newObject') return (node.data.targetClass as string) || undefined;
+
+  // CallInstanceMethodNode outputs its method return type
+  if (node.type === 'callInstanceMethod') {
+    const fullName = node.data.methodName as string;
+    if (fullName && fullName.includes('.')) {
+      const methodName = fullName.split('.')[1];
+      const projectFiles = node.data.projectFiles as Array<{ methods: Array<{ name: string; returnType: string }> }> | undefined;
+      if (projectFiles) {
+        for (const f of projectFiles) {
+          const m = f.methods.find(m => m.name === methodName);
+          if (m) return m.returnType !== 'void' ? m.returnType : undefined;
+        }
+      }
+    }
+    return undefined;
+  }
+
   // ArrayListOp output types
   if (node.type === 'arrayListOp') {
     const op = node.data.operation as string;
@@ -206,6 +225,21 @@ export function resolveTargetAccepts(node: Node, targetHandle: string, allNodes:
   // ScannerNode: prompt accepts String
   if (node.type === 'scanner') {
     if (targetHandle === 'data-in-prompt') return ['String'];
+  }
+
+  // CallInstanceMethodNode: obj-in accepts any type (object reference), arg-in-* accepts param type
+  if (node.type === 'callInstanceMethod') {
+    if (targetHandle === 'obj-in') return ALL_TYPES;
+    const argMatch = targetHandle.match(/^arg-in-(\d+)$/);
+    if (argMatch) {
+      // Accept any type — we can't easily lookup instance method params without project context
+      return ALL_TYPES;
+    }
+  }
+
+  // NewObjectNode: arg-in-* accepts any type
+  if (node.type === 'newObject') {
+    if (targetHandle.startsWith('arg-in-')) return ALL_TYPES;
   }
 
   return node.data.accepts as string[] | undefined;

@@ -169,6 +169,7 @@ function buildProjectClasses(files: ProjectFile[], activeFileId: string, activeN
         name: m.data.label as string,
         returnType: (m.data.returnType as string) || 'void',
         parameters: (m.data.parameters as Parameter[]) || [],
+        isStatic: m.data.isStatic !== false,
       })),
     constructors: f.nodes
       .filter(n => n.type === 'constructor')

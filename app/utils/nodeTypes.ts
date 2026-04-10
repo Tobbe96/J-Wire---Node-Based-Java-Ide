@@ -238,12 +238,24 @@ export interface NewObjectNodeData extends Record<string, unknown> {
   }>;
 }
 
+export interface CallInstanceMethodNodeData extends Record<string, unknown> {
+  label: string;
+  methodName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+  projectFiles?: Array<{
+    id: string;
+    className: string;
+    methods: Array<{ name: string; returnType: string; parameters: Parameter[]; isStatic?: boolean }>;
+  }>;
+}
+
 // ─── Cross-class method info ───────────────────────────────────
 
 export interface ProjectMethodInfo {
   name: string;
   returnType: string;
   parameters: Parameter[];
+  isStatic?: boolean;
 }
 
 export interface ProjectConstructorInfo {

@@ -1070,4 +1070,85 @@ describe('generateJavaCode', () => {
     expect(code).toContain('import java.util.Collections;');
     expect(code).toContain('Collections.reverse(items);');
   });
+
+  // --- OOP: instance fields/methods, constructors, new objects ---
+
+  it('generates instance field (isStatic=false) without static keyword', () => {
+    const nodes: Node[] = [
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '0', modifier: 'public', isStatic: false }),
+    ];
+    const code = generateJavaCode(nodes, []);
+    expect(code).toContain('public int x = 0;');
+    expect(code).not.toContain('static int x');
+  });
+
+  it('generates static field (isStatic=true) with static keyword', () => {
+    const nodes: Node[] = [
+      makeNode('v1', 'java', { label: 'count', type: 'int', value: '5', modifier: 'public', isStatic: true }),
+    ];
+    const code = generateJavaCode(nodes, []);
+    expect(code).toContain('public static int count = 5;');
+  });
+
+  it('generates instance method (isStatic=false) without static keyword', () => {
+    const nodes: Node[] = [
+      makeNode('m1', 'method', { label: 'greet', returnType: 'void', parameters: [], localVariables: [], isStatic: false }),
+    ];
+    const code = generateJavaCode(nodes, []);
+    expect(code).toContain('public void greet()');
+    expect(code).not.toContain('static void greet');
+  });
+
+  it('generates constructor node', () => {
+    const nodes: Node[] = [
+      makeNode('c1', 'constructor', {
+        label: 'Constructor',
+        parameters: [{ id: 'p1', name: 'x', type: 'int', defaultValue: '0' }],
+        localVariables: [],
+      }),
+    ];
+    const code = generateJavaCode(nodes, [], 'MyClass');
+    expect(code).toContain('public MyClass(int x)');
+  });
+
+  it('generates new object expression', () => {
+    const projectClasses = [{
+      id: 'f1', className: 'Dog',
+      methods: [],
+      constructors: [{ index: 0, parameters: [{ id: 'p1', name: 'name', type: 'String', defaultValue: '' }] }],
+    }];
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('n1', 'newObject', { label: 'New Object', targetClass: 'Dog', constructorIndex: 0 }),
+      makeNode('p1', 'print', { label: 'Print' }),
+      makeNode('str1', 'java', { label: 'dogName', type: 'String', value: 'Rex' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'n1', 'exec-out', 'exec-in'),
+      makeEdge('n1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('str1', 'n1', 'data-out', 'arg-in-0'),
+    ];
+    const code = generateJavaCode(nodes, edges, 'Main', projectClasses);
+    expect(code).toContain('new Dog(dogName)');
+  });
+
+  it('generates callInstanceMethod as statement (void method)', () => {
+    const projectClasses = [{
+      id: 'f1', className: 'Dog',
+      methods: [{ name: 'bark', returnType: 'void', parameters: [], isStatic: false }],
+      constructors: [],
+    }];
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('n1', 'newObject', { label: 'New Object', targetClass: 'Dog', constructorIndex: 0 }),
+      makeNode('call1', 'callInstanceMethod', { label: 'Call', methodName: 'Dog.bark' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'n1', 'exec-out', 'exec-in'),
+      makeEdge('n1', 'call1', 'exec-out', 'exec-in'),
+      makeEdge('n1', 'call1', 'data-out', 'obj-in'),
+    ];
+    const code = generateJavaCode(nodes, edges, 'Main', projectClasses);
+    expect(code).toContain('.bark()');
+  });
 });

@@ -433,6 +433,23 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
       }
       return 'null';
     }
+    if (node.type === 'callInstanceMethod') {
+      const fullMethodName = node.data.methodName as string; // "ClassName.methodName"
+      if (fullMethodName && fullMethodName.includes('.')) {
+        const [targetClass, methodName] = fullMethodName.split('.');
+        const targetFile = projectClasses.find(f => f.className === targetClass);
+        const targetMethod = targetFile?.methods.find(m => m.name === methodName);
+        const targetParams = targetMethod?.parameters || [];
+        const objEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'obj-in');
+        const objExpr = objEdge ? evaluateDataNode(objEdge.source, objEdge.sourceHandle || undefined) : 'null';
+        const args = targetParams.map((p: Parameter, index: number) => {
+          const argEdge = edges.find(e => e.target === nodeId && e.targetHandle === `arg-in-${index}`);
+          return argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : getDefaultLiteral(p.type);
+        });
+        return `(${objExpr}).${methodName}(${args.join(', ')})`;
+      }
+      return 'null';
+    }
     if (node.type === 'customCode' && node.data.mode === 'expression') {
       let code = (node.data.code as string) || '0';
       const inputs = (node.data.inputs as Array<{id: string; name: string; type: string}>) || [];
@@ -528,6 +545,28 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
             return argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : getDefaultLiteral(p.type);
           });
           methodBody += `    ${targetClass} obj${nextNode.id.replace(/-/g, '_')} = new ${targetClass}(${args.join(', ')});\n`;
+        }
+      }
+
+      if (nextNode.type === 'callInstanceMethod') {
+        const fullMethodName = nextNode.data.methodName as string; // "ClassName.methodName"
+        if (fullMethodName && fullMethodName.includes('.')) {
+          const [targetClass, methodName] = fullMethodName.split('.');
+          const targetFile = projectClasses.find(f => f.className === targetClass);
+          const targetMethod = targetFile?.methods.find(m => m.name === methodName);
+          const targetParams = targetMethod?.parameters || [];
+          const objEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'obj-in');
+          const objExpr = objEdge ? evaluateDataNode(objEdge.source, objEdge.sourceHandle || undefined) : 'null';
+          const args = targetParams.map((p: Parameter, index: number) => {
+            const argEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === `arg-in-${index}`);
+            return argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : getDefaultLiteral(p.type);
+          });
+          const returnType = targetMethod?.returnType || 'void';
+          if (returnType === 'void') {
+            methodBody += `    (${objExpr}).${methodName}(${args.join(', ')});\n`;
+          } else {
+            methodBody += `    ${returnType} result_${nextNode.id.replace(/-/g, '_')} = (${objExpr}).${methodName}(${args.join(', ')});\n`;
+          }
         }
       }
 

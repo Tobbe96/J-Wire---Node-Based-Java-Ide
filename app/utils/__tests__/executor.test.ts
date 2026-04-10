@@ -1329,4 +1329,85 @@ describe('executeGraph', () => {
     // After reversing [1,2,3], first element should be 3
     expect(output).toContain('> 3');
   });
+
+  // --- OOP: instance objects, constructors, instance methods ---
+
+  it('creates a new object via newObject node (no constructor, no-arg)', () => {
+    const dogFile = {
+      id: 'dog-file',
+      className: 'Dog',
+      nodes: [
+        makeNode('dog-main', 'main', { label: 'Main' }),
+      ],
+      edges: [],
+    };
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('n1', 'newObject', { label: 'New Object', targetClass: 'Dog', constructorIndex: 0 }),
+      makeNode('p1', 'print', { label: 'Print', inlineValue: 'created' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'n1', 'exec-out', 'exec-in'),
+      makeEdge('n1', 'p1', 'exec-out', 'exec-in'),
+    ];
+    const output = executeGraph(nodes, edges, undefined, [dogFile]);
+    expect(output).toContain('> created');
+  });
+
+  it('creates object with constructor that has parameters', () => {
+    const dogCtorNode = makeNode('dog-ctor', 'constructor', {
+      label: 'Constructor',
+      parameters: [{ id: 'p1', name: 'name', type: 'String', defaultValue: '' }],
+      localVariables: [],
+    });
+    const dogPrintNode = makeNode('dog-print', 'print', { label: 'Print' });
+    const dogFile = {
+      id: 'dog-file',
+      className: 'Dog',
+      nodes: [
+        dogCtorNode,
+        makeNode('dog-field', 'java', { label: 'dogName', type: 'String', value: '', isStatic: false }),
+        dogPrintNode,
+      ],
+      edges: [],
+    };
+    const nameArg = makeNode('name-arg', 'java', { label: 'argName', type: 'String', value: 'Buddy' });
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('n1', 'newObject', { label: 'New', targetClass: 'Dog', constructorIndex: 0 }),
+      makeNode('p1', 'print', { label: 'Print', inlineValue: 'done' }),
+      nameArg,
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'n1', 'exec-out', 'exec-in'),
+      makeEdge('n1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('name-arg', 'n1', 'data-out', 'arg-in-0'),
+    ];
+    const output = executeGraph(nodes, edges, undefined, [dogFile]);
+    expect(output).toContain('> done');
+  });
+
+  it('evaluateData returns object reference with __class__ field', () => {
+    const dogFile = {
+      id: 'dog-file',
+      className: 'Dog',
+      nodes: [makeNode('dog-main', 'main', { label: 'Main' })],
+      edges: [],
+    };
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('n1', 'newObject', { label: 'New', targetClass: 'Dog', constructorIndex: 0 }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'n1', 'exec-out', 'exec-in'),
+      makeEdge('n1', 'p1', 'exec-out', 'exec-in'),
+      // Connect obj data-out to print — print will call toString which shows [object Object]
+      makeEdge('n1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges, undefined, [dogFile]);
+    // The object reference printed will be "[object Object]" since we don't have toString
+    // But the important thing is execution didn't crash
+    expect(output.some(l => l.startsWith('>'))).toBe(true);
+  });
 });

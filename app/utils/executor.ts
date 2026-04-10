@@ -443,6 +443,40 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
       return null;
     }
 
+    if (node.type === 'callInstanceMethod') {
+      const fullMethodName = node.data.methodName as string; // "ClassName.methodName"
+      if (fullMethodName && fullMethodName.includes('.') && projectFiles) {
+        const [targetClass, methodName] = fullMethodName.split('.');
+        const objEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'obj-in');
+        const objRef = objEdge ? evaluateData(objEdge.source, objEdge.sourceHandle || undefined, localScope) as { __class__: string; fields: Record<string, unknown> } | null : null;
+        if (objRef && objRef.__class__ === targetClass) {
+          const targetFile = projectFiles.find(f => f.className === targetClass);
+          if (targetFile) {
+            const methodDef = targetFile.nodes.find((n: Node) => n.type === 'method' && n.data.label === methodName);
+            if (methodDef) {
+              const methodScope: Record<string, unknown> = { ...objRef.fields };
+              const params = (methodDef.data.parameters as Parameter[]) || [];
+              params.forEach((param: Parameter, index: number) => {
+                const argEdge = edges.find(e => e.target === nodeId && e.targetHandle === `arg-in-${index}`);
+                methodScope[param.name] = argEdge
+                  ? evaluateData(argEdge.source, argEdge.sourceHandle || undefined, localScope)
+                  : getRuntimeDefault(param.type, param.defaultValue);
+              });
+              const subOutput = executeCrossClassMethod(targetFile.nodes, targetFile.edges, methodDef, methodScope, projectFiles, inputProvider);
+              consoleOutput.push(...subOutput);
+              // Return value: look for return node's data-in in the target graph (simplified)
+              const returnNode = targetFile.nodes.find((n: Node) => n.type === 'return');
+              if (returnNode) {
+                const retEdge = targetFile.edges.find(e => e.target === returnNode.id && e.targetHandle === 'data-in');
+                if (retEdge) return methodScope['__return__'] ?? null;
+              }
+            }
+          }
+        }
+      }
+      return null;
+    }
+
     if (node.type === 'customCode' && node.data.mode === 'expression') {
       const code = (node.data.code as string) || '0';
       const inputs = (node.data.inputs as Array<{id: string; name: string; type: string}>) || [];
@@ -558,6 +592,13 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
           if (localScope) localScope[varKey] = objRef;
           else runtimeMemory[varKey] = objRef;
         }
+      }
+
+      if (nextNode.type === 'callInstanceMethod') {
+        const result = evaluateData(nextNode.id, 'data-out', localScope);
+        // Store return value for any downstream data-out reads
+        if (localScope) localScope[`__result_${nextNode.id}__`] = result;
+        else runtimeMemory[`__result_${nextNode.id}__`] = result;
       }
 
       if (nextNode.type === 'customCode' && nextNode.data.mode === 'statement') {
