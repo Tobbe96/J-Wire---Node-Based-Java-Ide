@@ -298,7 +298,7 @@ function JavaNodeEditor() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', width: '350px', borderLeft: '1px solid #000' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
           <ErrorBoundary fallbackLabel="Preview">
             <LivePreview code={generatedJavaCode} />
           </ErrorBoundary>

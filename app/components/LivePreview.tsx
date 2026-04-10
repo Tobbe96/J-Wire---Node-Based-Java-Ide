@@ -94,6 +94,7 @@ const codePanelStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   flex: 1,
+  minHeight: 0,
   zIndex: 10,
 };
 
@@ -125,6 +126,7 @@ const codeAreaStyle: React.CSSProperties = {
   overflowX: 'auto',
   overflowY: 'auto',
   flex: 1,
+  minHeight: 0,
   background: '#0d0d0d',
   fontSize: '13px',
 };
