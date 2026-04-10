@@ -65,6 +65,9 @@ const DetailsPanel = ({ selectedNode, updateNodeModifier, updateNodeData }: Deta
                 <option value="public">public</option>
                 <option value="private">private</option>
                 <option value="protected">protected</option>
+                <option value="public final">public final</option>
+                <option value="private final">private final</option>
+                <option value="protected final">protected final</option>
               </select>
             </div>
           </>

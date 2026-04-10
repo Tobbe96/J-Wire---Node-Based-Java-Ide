@@ -1,14 +1,16 @@
 import { ALL_NUMERIC, ALL_TYPES } from './theme';
 
 export const NODE_CATEGORIES = {
-  Variables: ['int', 'float', 'double', 'long', 'short', 'byte', 'String', 'boolean'],
-  Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'doWhile', 'switch', 'tryCatchFinally', 'throw', 'break', 'continue', 'setVar', 'setLocalVar', 'print', 'return'],
+  Variables: ['int', 'float', 'double', 'long', 'short', 'byte', 'char', 'String', 'boolean'],
+  Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'doWhile', 'switch', 'tryCatchFinally', 'throw', 'break', 'continue', 'setVar', 'setLocalVar', 'print', 'return', 'increment', 'compoundAssign'],
   Input: ['scanner-nextLine', 'scanner-nextInt', 'scanner-nextFloat', 'scanner-nextDouble', 'scanner-nextLong', 'scanner-nextBoolean'],
   Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-mod', 'math-gt', 'math-lt', 'math-lte', 'math-gte', 'math-eq', 'math-neq', 'math-and', 'math-or', 'math-not'],
-  'Math Functions': ['math-abs', 'math-min', 'math-max', 'math-pow'],
+  'Math Functions': ['math-abs', 'math-min', 'math-max', 'math-pow', 'math-sqrt', 'math-random', 'math-ceil', 'math-floor', 'math-round', 'math-log', 'math-log10'],
   Conversion: ['cast', 'ternary', 'literal'],
-  Strings: ['string-concat', 'string-length', 'string-substring', 'string-charAt', 'string-indexOf', 'string-replace', 'string-trim', 'string-toUpperCase', 'string-toLowerCase'],
-  Arrays: ['array-literal', 'array-new', 'array-access', 'array-set', 'array-length', 'forEach']
+  Strings: ['string-concat', 'string-length', 'string-substring', 'string-charAt', 'string-indexOf', 'string-replace', 'string-trim', 'string-toUpperCase', 'string-toLowerCase', 'stringFormat'],
+  Arrays: ['array-literal', 'array-new', 'array-access', 'array-set', 'array-length', 'forEach'],
+  Collections: ['arrayList-create', 'arrayList-add', 'arrayList-get', 'arrayList-set', 'arrayList-remove', 'arrayList-size', 'arrayList-contains', 'arrayList-clear', 'hashMap-create', 'hashMap-put', 'hashMap-get', 'hashMap-remove', 'hashMap-containsKey', 'hashMap-size', 'hashMap-keySet'],
+  Utility: ['comment'],
 };
 
 export const NODE_CONFIGS: Record<string, any> = {
@@ -213,6 +215,74 @@ export const NODE_CONFIGS: Record<string, any> = {
   long: { type: 'java', data: { type: 'long', value: '0', label: 'NewLong' } },
   short: { type: 'java', data: { type: 'short', value: '0', label: 'NewShort' } },
   byte: { type: 'java', data: { type: 'byte', value: '0', label: 'NewByte' } },
+  char: { type: 'java', data: { type: 'char', value: 'A', label: 'NewChar' } },
   String: { type: 'java', data: { type: 'String', value: '', label: 'NewString' } },
   boolean: { type: 'java', data: { type: 'boolean', value: 'true', label: 'NewBool' } },
+
+  // --- INCREMENT / DECREMENT ---
+  increment: {
+    type: 'increment',
+    data: {
+      label: 'Increment',
+      variableName: 'myVar',
+      mode: 'post-increment'
+    }
+  },
+
+  // --- COMPOUND ASSIGNMENT ---
+  compoundAssign: {
+    type: 'compoundAssign',
+    data: {
+      label: 'Compound Assign',
+      variableName: 'myVar',
+      operator: '+='
+    }
+  },
+
+  // --- STRING FORMAT ---
+  stringFormat: {
+    type: 'stringFormat',
+    data: {
+      label: 'String.format',
+      formatString: 'Hello %s, you are %d years old',
+      argCount: 2
+    }
+  },
+
+  // --- COMMENT ---
+  comment: {
+    type: 'comment',
+    data: {
+      label: 'Comment',
+      text: 'Add your notes here...'
+    }
+  },
+
+  // --- ADDITIONAL MATH FUNCTIONS ---
+  'math-sqrt': { type: 'mathFunc', data: { type: 'double', label: 'SQRT', operation: 'sqrt', accepts: ALL_NUMERIC } },
+  'math-random': { type: 'mathFunc', data: { type: 'double', label: 'RANDOM', operation: 'random', accepts: [] } },
+  'math-ceil': { type: 'mathFunc', data: { type: 'int', label: 'CEIL', operation: 'ceil', accepts: ALL_NUMERIC } },
+  'math-floor': { type: 'mathFunc', data: { type: 'int', label: 'FLOOR', operation: 'floor', accepts: ALL_NUMERIC } },
+  'math-round': { type: 'mathFunc', data: { type: 'int', label: 'ROUND', operation: 'round', accepts: ALL_NUMERIC } },
+  'math-log': { type: 'mathFunc', data: { type: 'double', label: 'LOG', operation: 'log', accepts: ALL_NUMERIC } },
+  'math-log10': { type: 'mathFunc', data: { type: 'double', label: 'LOG10', operation: 'log10', accepts: ALL_NUMERIC } },
+
+  // --- ARRAYLIST OPERATIONS ---
+  'arrayList-create': { type: 'arrayListOp', data: { label: 'ArrayList: Create', operation: 'create', elementType: 'int', variableName: 'myList' } },
+  'arrayList-add': { type: 'arrayListOp', data: { label: 'ArrayList: Add', operation: 'add', elementType: 'int', variableName: 'myList' } },
+  'arrayList-get': { type: 'arrayListOp', data: { label: 'ArrayList: Get', operation: 'get', elementType: 'int', variableName: 'myList' } },
+  'arrayList-set': { type: 'arrayListOp', data: { label: 'ArrayList: Set', operation: 'set', elementType: 'int', variableName: 'myList' } },
+  'arrayList-remove': { type: 'arrayListOp', data: { label: 'ArrayList: Remove', operation: 'remove', elementType: 'int', variableName: 'myList' } },
+  'arrayList-size': { type: 'arrayListOp', data: { label: 'ArrayList: Size', operation: 'size', elementType: 'int', variableName: 'myList' } },
+  'arrayList-contains': { type: 'arrayListOp', data: { label: 'ArrayList: Contains', operation: 'contains', elementType: 'int', variableName: 'myList' } },
+  'arrayList-clear': { type: 'arrayListOp', data: { label: 'ArrayList: Clear', operation: 'clear', elementType: 'int', variableName: 'myList' } },
+
+  // --- HASHMAP OPERATIONS ---
+  'hashMap-create': { type: 'hashMapOp', data: { label: 'HashMap: Create', operation: 'create', keyType: 'String', valueType: 'int', variableName: 'myMap' } },
+  'hashMap-put': { type: 'hashMapOp', data: { label: 'HashMap: Put', operation: 'put', keyType: 'String', valueType: 'int', variableName: 'myMap' } },
+  'hashMap-get': { type: 'hashMapOp', data: { label: 'HashMap: Get', operation: 'get', keyType: 'String', valueType: 'int', variableName: 'myMap' } },
+  'hashMap-remove': { type: 'hashMapOp', data: { label: 'HashMap: Remove', operation: 'remove', keyType: 'String', valueType: 'int', variableName: 'myMap' } },
+  'hashMap-containsKey': { type: 'hashMapOp', data: { label: 'HashMap: ContainsKey', operation: 'containsKey', keyType: 'String', valueType: 'int', variableName: 'myMap' } },
+  'hashMap-size': { type: 'hashMapOp', data: { label: 'HashMap: Size', operation: 'size', keyType: 'String', valueType: 'int', variableName: 'myMap' } },
+  'hashMap-keySet': { type: 'hashMapOp', data: { label: 'HashMap: KeySet', operation: 'keySet', keyType: 'String', valueType: 'int', variableName: 'myMap' } },
 };

@@ -7,6 +7,7 @@ export const TYPE_COLORS: Record<string, string> = {
   long: '#00ccaa',
   short: '#66ddff',
   byte: '#88ccee',
+  char: '#ff8800',
   String: '#ff00d4',
   boolean: '#ff0000',
   void: '#9b59b6',
@@ -33,6 +34,7 @@ export function getDefaultLiteral(type: string): string {
     case 'long': return '0L';
     case 'short': return '(short)0';
     case 'byte': return '(byte)0';
+    case 'char': return "'\\u0000'";
     case 'String': return '""';
     case 'boolean': return 'false';
     default: return 'null';
@@ -49,6 +51,8 @@ export function getRuntimeDefault(type: string, defaultValue?: string): unknown 
     case 'short':
     case 'byte':
       return Number(defaultValue ?? 0);
+    case 'char':
+      return defaultValue ?? '\0';
     case 'boolean':
       return defaultValue === 'true';
     case 'String':
@@ -59,7 +63,7 @@ export function getRuntimeDefault(type: string, defaultValue?: string): unknown 
 }
 
 /** All supported Java types for dropdowns */
-export const JAVA_TYPES = ['int', 'float', 'double', 'long', 'short', 'byte', 'String', 'boolean'] as const;
+export const JAVA_TYPES = ['int', 'float', 'double', 'long', 'short', 'byte', 'char', 'String', 'boolean'] as const;
 
 /** Numeric Java types for dropdowns that support number input */
 export const NUMERIC_TYPES = ['int', 'float', 'double', 'long', 'short', 'byte'] as const;

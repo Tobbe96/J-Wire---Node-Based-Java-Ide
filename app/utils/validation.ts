@@ -49,6 +49,36 @@ export function resolveSourceType(node: Node, sourceHandle: string): string | un
   // LiteralNode output type is the selected literal type
   if (node.type === 'literal') return (node.data.literalType as string) || 'String';
 
+  // StringFormat always outputs String
+  if (node.type === 'stringFormat') return 'String';
+
+  // ArrayListOp output types
+  if (node.type === 'arrayListOp') {
+    const op = node.data.operation as string;
+    if (op === 'size') return 'int';
+    if (op === 'contains') return 'boolean';
+    if (op === 'get') return (node.data.elementType as string) || 'int';
+    return undefined;
+  }
+
+  // HashMapOp output types
+  if (node.type === 'hashMapOp') {
+    const op = node.data.operation as string;
+    if (op === 'size') return 'int';
+    if (op === 'containsKey') return 'boolean';
+    if (op === 'get') return (node.data.valueType as string) || 'String';
+    if (op === 'keySet') return 'String';
+    return undefined;
+  }
+
+  // MathFunc output type
+  if (node.type === 'mathFunc') {
+    const op = node.data.operation as string;
+    if (op === 'round') return 'long';
+    if (op === 'random') return 'double';
+    return 'double';
+  }
+
   // ScannerNode output type depends on readType
   if (node.type === 'scanner') {
     const readType = (node.data.readType as string) || 'nextLine';
@@ -128,6 +158,33 @@ export function resolveTargetAccepts(node: Node, targetHandle: string, allNodes:
   // ForEach: array input accepts anything (we can't validate array-ness via type system)
   if (node.type === 'forEach') {
     if (targetHandle === 'data-in-array') return ALL_TYPES;
+  }
+
+  // StringFormat: all args accept any type
+  if (node.type === 'stringFormat') {
+    if (targetHandle.startsWith('data-in-arg-')) return ALL_TYPES;
+  }
+
+  // ArrayListOp handles
+  if (node.type === 'arrayListOp') {
+    if (targetHandle === 'data-in-index') return ['int'];
+    if (targetHandle === 'data-in-value') return ALL_TYPES;
+  }
+
+  // HashMapOp handles
+  if (node.type === 'hashMapOp') {
+    if (targetHandle === 'data-in-key') return ALL_TYPES;
+    if (targetHandle === 'data-in-value') return ALL_TYPES;
+  }
+
+  // Increment: variable name data-in accepts any
+  if (node.type === 'increment') {
+    if (targetHandle === 'data-in') return ALL_TYPES;
+  }
+
+  // CompoundAssign: value input accepts numeric
+  if (node.type === 'compoundAssign') {
+    if (targetHandle === 'data-in') return ALL_NUMERIC;
   }
 
   // ScannerNode: prompt accepts String

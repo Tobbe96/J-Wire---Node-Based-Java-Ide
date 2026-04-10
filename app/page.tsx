@@ -33,6 +33,12 @@ import ForEachNode from './components/Nodes/ForEachNode';
 import GroupNode from './components/Nodes/GroupNode';
 import ScannerNode from './components/Nodes/ScannerNode';
 import LiteralNode from './components/Nodes/LiteralNode';
+import IncrementNode from './components/Nodes/IncrementNode';
+import CompoundAssignNode from './components/Nodes/CompoundAssignNode';
+import CommentNode from './components/Nodes/CommentNode';
+import StringFormatNode from './components/Nodes/StringFormatNode';
+import ArrayListOpNode from './components/Nodes/ArrayListOpNode';
+import HashMapOpNode from './components/Nodes/HashMapOpNode';
 
 // Panels & UI
 import LeftSidebar from './components/Panels/LeftSidebar';
@@ -88,6 +94,12 @@ const nodeTypes = {
   group: GroupNode,
   scanner: ScannerNode,
   literal: LiteralNode,
+  increment: IncrementNode,
+  compoundAssign: CompoundAssignNode,
+  comment: CommentNode,
+  stringFormat: StringFormatNode,
+  arrayListOp: ArrayListOpNode,
+  hashMapOp: HashMapOpNode,
 };
 
 const edgeTypes = {

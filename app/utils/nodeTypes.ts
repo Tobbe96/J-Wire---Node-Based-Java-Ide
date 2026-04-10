@@ -145,6 +145,50 @@ export interface LiteralNodeData extends Record<string, unknown> {
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
 }
 
+export interface CommentNodeData extends Record<string, unknown> {
+  label: string;
+  text: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface IncrementNodeData extends Record<string, unknown> {
+  label: string;
+  variableName: string;
+  mode: 'post-increment' | 'post-decrement' | 'pre-increment' | 'pre-decrement';
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface CompoundAssignNodeData extends Record<string, unknown> {
+  label: string;
+  variableName: string;
+  operator: '+=' | '-=' | '*=' | '/=' | '%=';
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface StringFormatNodeData extends Record<string, unknown> {
+  label: string;
+  formatString: string;
+  argCount: number;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface ArrayListOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'create' | 'add' | 'get' | 'set' | 'remove' | 'size' | 'contains' | 'clear';
+  elementType: string;
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface HashMapOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'create' | 'put' | 'get' | 'remove' | 'containsKey' | 'size' | 'keySet';
+  keyType: string;
+  valueType: string;
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
 // ─── Enriched Data (injected at runtime by page.tsx) ───────────
 
 export type EnrichedData<T> = T & {

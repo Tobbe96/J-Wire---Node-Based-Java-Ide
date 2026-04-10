@@ -11,8 +11,20 @@ const SCANNER_JAVA_TYPES: Record<string, string> = {
   nextBoolean: 'boolean',
 };
 
+/** Wrapper type for Java's boxed type names (needed for generics) */
+function boxedType(t: string): string {
+  const map: Record<string, string> = {
+    int: 'Integer', float: 'Float', double: 'Double',
+    long: 'Long', short: 'Short', byte: 'Byte',
+    char: 'Character', boolean: 'Boolean',
+  };
+  return map[t] || t;
+}
+
 export function generateJavaCode(nodes: Node[], edges: Edge[], className: string = 'VisualScript'): string {
   const hasScannerNodes = nodes.some(n => n.type === 'scanner');
+  const hasArrayListNodes = nodes.some(n => n.type === 'arrayListOp');
+  const hasHashMapNodes = nodes.some(n => n.type === 'hashMapOp');
 
   // Helper to resolve a node's output type for a given handle
   const resolveNodeOutputType = (node: Node, sourceHandle?: string): string | null => {
@@ -43,9 +55,10 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
   };
 
   let code = '';
-  if (hasScannerNodes) {
-    code += 'import java.util.Scanner;\n\n';
-  }
+  if (hasScannerNodes) code += 'import java.util.Scanner;\n';
+  if (hasArrayListNodes) code += 'import java.util.ArrayList;\n';
+  if (hasHashMapNodes) code += 'import java.util.HashMap;\n';
+  if (hasScannerNodes || hasArrayListNodes || hasHashMapNodes) code += '\n';
   code += `public class ${className} {\n\n`;
 
   if (hasScannerNodes) {
@@ -61,6 +74,7 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
       const rawVal = v.data.value as string;
       switch (v.data.type) {
         case 'String': val = `"${rawVal}"`; break;
+        case 'char': val = `'${rawVal.charAt(0) || '\\u0000'}'`; break;
         case 'float': val = rawVal.includes('f') ? rawVal : `${rawVal}f`; break;
         case 'long': val = rawVal.endsWith('L') ? rawVal : `${rawVal}L`; break;
         default: val = rawVal; break;
@@ -194,11 +208,19 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
     }
     if (node.type === 'mathFunc') {
       const op = node.data.operation as string;
-      if (op === 'abs') {
+      // Single-input functions
+      if (['abs', 'sqrt', 'ceil', 'floor', 'round', 'log', 'log10'].includes(op)) {
         const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
         const val = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : '0';
-        return `Math.abs(${val})`;
+        if (op === 'abs') return `Math.abs(${val})`;
+        if (op === 'sqrt') return `Math.sqrt(${val})`;
+        if (op === 'ceil') return `(int)Math.ceil(${val})`;
+        if (op === 'floor') return `(int)Math.floor(${val})`;
+        if (op === 'round') return `(int)Math.round(${val})`;
+        if (op === 'log') return `Math.log(${val})`;
+        if (op === 'log10') return `Math.log10(${val})`;
       }
+      if (op === 'random') return 'Math.random()';
       const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
       const edgeB = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-b');
       const valA = edgeA ? evaluateDataNode(edgeA.source, edgeA.sourceHandle || undefined) : '0';
@@ -268,6 +290,51 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
         }
         default: return 'null';
       }
+    }
+    if (node.type === 'stringFormat') {
+      const fmt = (node.data.formatString as string) || '';
+      const argCount = (node.data.argCount as number) || 0;
+      const args: string[] = [];
+      for (let i = 0; i < argCount; i++) {
+        const argEdge = edges.find(e => e.target === nodeId && e.targetHandle === `data-in-arg-${i}`);
+        args.push(argEdge ? evaluateDataNode(argEdge.source, argEdge.sourceHandle || undefined) : '""');
+      }
+      return args.length > 0
+        ? `String.format("${fmt}", ${args.join(', ')})`
+        : `String.format("${fmt}")`;
+    }
+    if (node.type === 'arrayListOp') {
+      const op = node.data.operation as string;
+      const varName = (node.data.variableName as string) || 'list';
+      if (op === 'get') {
+        const idxEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-index');
+        const idx = idxEdge ? evaluateDataNode(idxEdge.source, idxEdge.sourceHandle || undefined) : '0';
+        return `${varName}.get(${idx})`;
+      }
+      if (op === 'size') return `${varName}.size()`;
+      if (op === 'contains') {
+        const valEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-value');
+        const val = valEdge ? evaluateDataNode(valEdge.source, valEdge.sourceHandle || undefined) : 'null';
+        return `${varName}.contains(${val})`;
+      }
+      return 'null';
+    }
+    if (node.type === 'hashMapOp') {
+      const op = node.data.operation as string;
+      const varName = (node.data.variableName as string) || 'map';
+      if (op === 'get') {
+        const keyEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-key');
+        const key = keyEdge ? evaluateDataNode(keyEdge.source, keyEdge.sourceHandle || undefined) : 'null';
+        return `${varName}.get(${key})`;
+      }
+      if (op === 'containsKey') {
+        const keyEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-key');
+        const key = keyEdge ? evaluateDataNode(keyEdge.source, keyEdge.sourceHandle || undefined) : 'null';
+        return `${varName}.containsKey(${key})`;
+      }
+      if (op === 'size') return `${varName}.size()`;
+      if (op === 'keySet') return `${varName}.keySet()`;
+      return 'null';
     }
     if (node.type === 'forEach') {
       if (sourceHandle === 'data-out-element') return '__elem__';
@@ -374,6 +441,80 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
           : (getInlineValue(nextNode, 'inlineValue', 'raw') ?? '0');
         if (localVarName) {
           methodBody += `    ${localVarName} = ${newValue};\n`;
+        }
+      }
+
+      if (nextNode.type === 'increment') {
+        const varName = (nextNode.data.variableName as string) || 'x';
+        const mode = (nextNode.data.mode as string) || 'post-increment';
+        switch (mode) {
+          case 'post-increment': methodBody += `    ${varName}++;\n`; break;
+          case 'post-decrement': methodBody += `    ${varName}--;\n`; break;
+          case 'pre-increment': methodBody += `    ++${varName};\n`; break;
+          case 'pre-decrement': methodBody += `    --${varName};\n`; break;
+        }
+      }
+
+      if (nextNode.type === 'compoundAssign') {
+        const varName = (nextNode.data.variableName as string) || 'x';
+        const operator = (nextNode.data.operator as string) || '+=';
+        const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
+        const value = dataEdge
+          ? evaluateDataNode(dataEdge.source, dataEdge.sourceHandle || undefined)
+          : (getInlineValue(nextNode, 'inlineValue', 'raw') ?? '0');
+        methodBody += `    ${varName} ${operator} ${value};\n`;
+      }
+
+      if (nextNode.type === 'comment') {
+        const text = (nextNode.data.text as string) || '';
+        const lines = text.split('\n');
+        lines.forEach(line => {
+          methodBody += `    // ${line}\n`;
+        });
+      }
+
+      if (nextNode.type === 'arrayListOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'list';
+        const elemType = (nextNode.data.elementType as string) || 'int';
+        if (op === 'create') {
+          methodBody += `    ArrayList<${boxedType(elemType)}> ${varName} = new ArrayList<>();\n`;
+        } else if (op === 'add') {
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const val = valEdge ? evaluateDataNode(valEdge.source, valEdge.sourceHandle || undefined) : getDefaultLiteral(elemType);
+          methodBody += `    ${varName}.add(${val});\n`;
+        } else if (op === 'set') {
+          const idxEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-index');
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const idx = idxEdge ? evaluateDataNode(idxEdge.source, idxEdge.sourceHandle || undefined) : '0';
+          const val = valEdge ? evaluateDataNode(valEdge.source, valEdge.sourceHandle || undefined) : getDefaultLiteral(elemType);
+          methodBody += `    ${varName}.set(${idx}, ${val});\n`;
+        } else if (op === 'remove') {
+          const idxEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-index');
+          const idx = idxEdge ? evaluateDataNode(idxEdge.source, idxEdge.sourceHandle || undefined) : '0';
+          methodBody += `    ${varName}.remove(${idx});\n`;
+        } else if (op === 'clear') {
+          methodBody += `    ${varName}.clear();\n`;
+        }
+      }
+
+      if (nextNode.type === 'hashMapOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'map';
+        const keyType = (nextNode.data.keyType as string) || 'String';
+        const valType = (nextNode.data.valueType as string) || 'int';
+        if (op === 'create') {
+          methodBody += `    HashMap<${boxedType(keyType)}, ${boxedType(valType)}> ${varName} = new HashMap<>();\n`;
+        } else if (op === 'put') {
+          const keyEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-key');
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const key = keyEdge ? evaluateDataNode(keyEdge.source, keyEdge.sourceHandle || undefined) : getDefaultLiteral(keyType);
+          const val = valEdge ? evaluateDataNode(valEdge.source, valEdge.sourceHandle || undefined) : getDefaultLiteral(valType);
+          methodBody += `    ${varName}.put(${key}, ${val});\n`;
+        } else if (op === 'remove') {
+          const keyEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-key');
+          const key = keyEdge ? evaluateDataNode(keyEdge.source, keyEdge.sourceHandle || undefined) : getDefaultLiteral(keyType);
+          methodBody += `    ${varName}.remove(${key});\n`;
         }
       }
 

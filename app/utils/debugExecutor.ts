@@ -21,11 +21,22 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
   const consoleOutput: string[] = [];
   const runtimeMemory: Record<string, unknown> = {};
   const scannerValues = new Map<string, unknown>();
+  const arrayListMemory: Record<string, unknown[]> = {};
+  const hashMapMemory: Record<string, Map<unknown, unknown>> = {};
 
   // Initialize variables
   nodes.filter(n => n.type === 'java').forEach(n => {
     const varName = n.data.label as string;
-    runtimeMemory[varName] = n.data.type === 'int' ? Number(n.data.value) : String(n.data.value);
+    const varType = n.data.type as string;
+    if (varType === 'char') {
+      runtimeMemory[varName] = String(n.data.value).charAt(0) || '\0';
+    } else if (varType === 'String') {
+      runtimeMemory[varName] = String(n.data.value);
+    } else if (varType === 'boolean') {
+      runtimeMemory[varName] = n.data.value === 'true';
+    } else {
+      runtimeMemory[varName] = Number(n.data.value);
+    }
   });
 
   const mainNode = nodes.find(n => n.type === 'main');
@@ -135,6 +146,34 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
       return !val;
     }
 
+    if (node.type === 'mathFunc') {
+      const op = node.data.operation as string;
+      if (['abs', 'sqrt', 'ceil', 'floor', 'round', 'log', 'log10'].includes(op)) {
+        const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+        const val = evaluateData(edgeIn?.source || '', edgeIn?.sourceHandle || undefined, localScope);
+        switch (op) {
+          case 'abs': return Math.abs(Number(val));
+          case 'sqrt': return Math.sqrt(Number(val));
+          case 'ceil': return Math.ceil(Number(val));
+          case 'floor': return Math.floor(Number(val));
+          case 'round': return Math.round(Number(val));
+          case 'log': return Math.log(Number(val));
+          case 'log10': return Math.log10(Number(val));
+        }
+      }
+      if (op === 'random') return Math.random();
+      const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
+      const edgeB = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-b');
+      const valA = Number(evaluateData(edgeA?.source || '', edgeA?.sourceHandle || undefined, localScope));
+      const valB = Number(evaluateData(edgeB?.source || '', edgeB?.sourceHandle || undefined, localScope));
+      switch (op) {
+        case 'min': return Math.min(valA, valB);
+        case 'max': return Math.max(valA, valB);
+        case 'pow': return Math.floor(Math.pow(valA, valB));
+        default: return 0;
+      }
+    }
+
     if (node.type === 'stringOp') {
       switch (node.data.operation) {
         case 'concat': {
@@ -186,6 +225,65 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
         }
         default: return null;
       }
+    }
+
+    if (node.type === 'stringFormat') {
+      const fmt = (node.data.formatString as string) || '';
+      const argCount = (node.data.argCount as number) || 0;
+      const args: unknown[] = [];
+      for (let i = 0; i < argCount; i++) {
+        const argEdge = edges.find(e => e.target === nodeId && e.targetHandle === `data-in-arg-${i}`);
+        args.push(argEdge ? evaluateData(argEdge.source, argEdge.sourceHandle || undefined, localScope) : '');
+      }
+      let result = fmt;
+      let argIdx = 0;
+      result = result.replace(/%[sdfiblc%]/g, (match) => {
+        if (match === '%%') return '%';
+        if (argIdx < args.length) {
+          const arg = args[argIdx++];
+          if (match === '%d' || match === '%i' || match === '%l') return String(Math.floor(Number(arg)));
+          if (match === '%f') return String(Number(arg));
+          return String(arg);
+        }
+        return match;
+      });
+      return result;
+    }
+
+    if (node.type === 'arrayListOp') {
+      const op = node.data.operation as string;
+      const varName = (node.data.variableName as string) || 'list';
+      if (op === 'get') {
+        const idxEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-index');
+        const idx = Number(evaluateData(idxEdge?.source || '', idxEdge?.sourceHandle || undefined, localScope));
+        return arrayListMemory[varName]?.[idx] ?? null;
+      }
+      if (op === 'size') return arrayListMemory[varName]?.length ?? 0;
+      if (op === 'contains') {
+        const valEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-value');
+        const val = evaluateData(valEdge?.source || '', valEdge?.sourceHandle || undefined, localScope);
+        return arrayListMemory[varName]?.includes(val) ?? false;
+      }
+      return null;
+    }
+
+    if (node.type === 'hashMapOp') {
+      const op = node.data.operation as string;
+      const varName = (node.data.variableName as string) || 'map';
+      const map = hashMapMemory[varName];
+      if (op === 'get') {
+        const keyEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-key');
+        const key = evaluateData(keyEdge?.source || '', keyEdge?.sourceHandle || undefined, localScope);
+        return map?.get(key) ?? null;
+      }
+      if (op === 'containsKey') {
+        const keyEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-key');
+        const key = evaluateData(keyEdge?.source || '', keyEdge?.sourceHandle || undefined, localScope);
+        return map?.has(key) ?? false;
+      }
+      if (op === 'size') return map?.size ?? 0;
+      if (op === 'keySet') return map ? Array.from(map.keys()) : [];
+      return null;
     }
 
     if (node.type === 'for') {
@@ -279,6 +377,90 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
             : ((nextNode.data.inlineValue as string) ?? 0);
         }
         pushStep(nextNode.id, 'setLocalVar', `Set local ${localVarName} = ${localScope[localVarName]}`, localScope, callStack);
+      }
+
+      if (nextNode.type === 'increment') {
+        const varName = (nextNode.data.variableName as string) || 'x';
+        const mode = (nextNode.data.mode as string) || 'post-increment';
+        const current = Number(runtimeMemory[varName] ?? 0);
+        if (mode === 'post-increment' || mode === 'pre-increment') {
+          runtimeMemory[varName] = current + 1;
+        } else {
+          runtimeMemory[varName] = current - 1;
+        }
+        pushStep(nextNode.id, 'increment', `${varName} ${mode}: ${current} → ${runtimeMemory[varName]}`, localScope, callStack);
+      }
+
+      if (nextNode.type === 'compoundAssign') {
+        const varName = (nextNode.data.variableName as string) || 'x';
+        const operator = (nextNode.data.operator as string) || '+=';
+        const dataEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in');
+        const value = dataEdge
+          ? evaluateData(dataEdge.source, dataEdge.sourceHandle || undefined, localScope)
+          : Number((nextNode.data.inlineValue as string) ?? 0);
+        const current = Number(runtimeMemory[varName] ?? 0);
+        switch (operator) {
+          case '+=': runtimeMemory[varName] = current + Number(value); break;
+          case '-=': runtimeMemory[varName] = current - Number(value); break;
+          case '*=': runtimeMemory[varName] = current * Number(value); break;
+          case '/=': runtimeMemory[varName] = current / Number(value); break;
+          case '%=': runtimeMemory[varName] = current % Number(value); break;
+        }
+        pushStep(nextNode.id, 'compoundAssign', `${varName} ${operator} ${value} → ${runtimeMemory[varName]}`, localScope, callStack);
+      }
+
+      if (nextNode.type === 'arrayListOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'list';
+        if (op === 'create') {
+          arrayListMemory[varName] = [];
+          pushStep(nextNode.id, 'arrayListOp', `Create ArrayList ${varName}`, localScope, callStack);
+        } else if (op === 'add') {
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const val = evaluateData(valEdge?.source || '', valEdge?.sourceHandle || undefined, localScope);
+          if (!arrayListMemory[varName]) arrayListMemory[varName] = [];
+          arrayListMemory[varName].push(val);
+          pushStep(nextNode.id, 'arrayListOp', `${varName}.add(${val})`, localScope, callStack);
+        } else if (op === 'set') {
+          const idxEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-index');
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const idx = Number(evaluateData(idxEdge?.source || '', idxEdge?.sourceHandle || undefined, localScope));
+          const val = evaluateData(valEdge?.source || '', valEdge?.sourceHandle || undefined, localScope);
+          if (arrayListMemory[varName] && idx >= 0 && idx < arrayListMemory[varName].length) {
+            arrayListMemory[varName][idx] = val;
+          }
+          pushStep(nextNode.id, 'arrayListOp', `${varName}.set(${idx}, ${val})`, localScope, callStack);
+        } else if (op === 'remove') {
+          const idxEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-index');
+          const idx = Number(evaluateData(idxEdge?.source || '', idxEdge?.sourceHandle || undefined, localScope));
+          if (arrayListMemory[varName]) arrayListMemory[varName].splice(idx, 1);
+          pushStep(nextNode.id, 'arrayListOp', `${varName}.remove(${idx})`, localScope, callStack);
+        } else if (op === 'clear') {
+          arrayListMemory[varName] = [];
+          pushStep(nextNode.id, 'arrayListOp', `${varName}.clear()`, localScope, callStack);
+        }
+      }
+
+      if (nextNode.type === 'hashMapOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'map';
+        if (op === 'create') {
+          hashMapMemory[varName] = new Map();
+          pushStep(nextNode.id, 'hashMapOp', `Create HashMap ${varName}`, localScope, callStack);
+        } else if (op === 'put') {
+          const keyEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-key');
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const key = evaluateData(keyEdge?.source || '', keyEdge?.sourceHandle || undefined, localScope);
+          const val = evaluateData(valEdge?.source || '', valEdge?.sourceHandle || undefined, localScope);
+          if (!hashMapMemory[varName]) hashMapMemory[varName] = new Map();
+          hashMapMemory[varName].set(key, val);
+          pushStep(nextNode.id, 'hashMapOp', `${varName}.put(${key}, ${val})`, localScope, callStack);
+        } else if (op === 'remove') {
+          const keyEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-key');
+          const key = evaluateData(keyEdge?.source || '', keyEdge?.sourceHandle || undefined, localScope);
+          hashMapMemory[varName]?.delete(key);
+          pushStep(nextNode.id, 'hashMapOp', `${varName}.remove(${key})`, localScope, callStack);
+        }
       }
 
       if (nextNode.type === 'branch') {
