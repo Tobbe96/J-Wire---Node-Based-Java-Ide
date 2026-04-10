@@ -26,6 +26,8 @@ export function resolveSourceType(node: Node, sourceHandle: string): string | un
   if (node.type === 'stringOp') {
     const op = node.data.operation as string;
     if (op === 'length' || op === 'indexOf') return 'int';
+    if (op === 'contains' || op === 'startsWith' || op === 'endsWith') return 'boolean';
+    if (op === 'split') return 'String[]';
     return 'String';
   }
 
@@ -68,6 +70,14 @@ export function resolveSourceType(node: Node, sourceHandle: string): string | un
     if (op === 'containsKey') return 'boolean';
     if (op === 'get') return (node.data.valueType as string) || 'String';
     if (op === 'keySet') return 'String';
+    return undefined;
+  }
+
+  // HashSetOp output types
+  if (node.type === 'hashSetOp') {
+    const op = node.data.operation as string;
+    if (op === 'size') return 'int';
+    if (op === 'contains') return 'boolean';
     return undefined;
   }
 
@@ -127,7 +137,8 @@ export function resolveTargetAccepts(node: Node, targetHandle: string, allNodes:
   // StringOp specialized handles
   if (node.type === 'stringOp') {
     if (targetHandle === 'data-in' || targetHandle === 'data-in-a' || targetHandle === 'data-in-b'
-      || targetHandle === 'data-in-target' || targetHandle === 'data-in-replacement') return ['String'];
+      || targetHandle === 'data-in-target' || targetHandle === 'data-in-replacement'
+      || targetHandle === 'data-in-delimiter') return ['String'];
     if (targetHandle === 'data-in-start' || targetHandle === 'data-in-end' || targetHandle === 'data-in-index') return ['int'];
     return ['String'];
   }
@@ -174,6 +185,11 @@ export function resolveTargetAccepts(node: Node, targetHandle: string, allNodes:
   // HashMapOp handles
   if (node.type === 'hashMapOp') {
     if (targetHandle === 'data-in-key') return ALL_TYPES;
+    if (targetHandle === 'data-in-value') return ALL_TYPES;
+  }
+
+  // HashSetOp handles
+  if (node.type === 'hashSetOp') {
     if (targetHandle === 'data-in-value') return ALL_TYPES;
   }
 

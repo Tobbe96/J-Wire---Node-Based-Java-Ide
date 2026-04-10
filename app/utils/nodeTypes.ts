@@ -189,6 +189,14 @@ export interface HashMapOpNodeData extends Record<string, unknown> {
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
 }
 
+export interface HashSetOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'create' | 'add' | 'remove' | 'contains' | 'size' | 'clear';
+  elementType: string;
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
 // ─── Enriched Data (injected at runtime by page.tsx) ───────────
 
 export type EnrichedData<T> = T & {

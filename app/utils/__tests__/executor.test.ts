@@ -885,4 +885,448 @@ describe('executeGraph', () => {
     const output = executeGraph(nodes, edges);
     expect(output).toContain('> 2');
   });
+
+  // --- Extended String Operations ---
+  it('split returns array from split', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'csv', type: 'String', value: 'a,b,c' }),
+      makeNode('v2', 'java', { label: 'delim', type: 'String', value: ',' }),
+      makeNode('so', 'stringOp', { label: 'Split', operation: 'split' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-delimiter'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> a,b,c');
+  });
+
+  it('contains returns true when substring found', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'msg', type: 'String', value: 'hello world' }),
+      makeNode('v2', 'java', { label: 'sub', type: 'String', value: 'world' }),
+      makeNode('so', 'stringOp', { label: 'Contains', operation: 'contains' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> true');
+  });
+
+  it('contains returns false when substring not found', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'msg', type: 'String', value: 'hello world' }),
+      makeNode('v2', 'java', { label: 'sub', type: 'String', value: 'xyz' }),
+      makeNode('so', 'stringOp', { label: 'Contains', operation: 'contains' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> false');
+  });
+
+  it('startsWith returns true when string starts with prefix', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'word', type: 'String', value: 'hello' }),
+      makeNode('v2', 'java', { label: 'prefix', type: 'String', value: 'hel' }),
+      makeNode('so', 'stringOp', { label: 'StartsWith', operation: 'startsWith' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> true');
+  });
+
+  it('startsWith returns false when string does not start with prefix', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'word', type: 'String', value: 'hello' }),
+      makeNode('v2', 'java', { label: 'prefix', type: 'String', value: 'world' }),
+      makeNode('so', 'stringOp', { label: 'StartsWith', operation: 'startsWith' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> false');
+  });
+
+  it('endsWith returns true when string ends with suffix', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'file', type: 'String', value: 'test.java' }),
+      makeNode('v2', 'java', { label: 'suffix', type: 'String', value: '.java' }),
+      makeNode('so', 'stringOp', { label: 'EndsWith', operation: 'endsWith' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> true');
+  });
+
+  it('endsWith returns false when string does not end with suffix', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'file', type: 'String', value: 'test.java' }),
+      makeNode('v2', 'java', { label: 'suffix', type: 'String', value: '.py' }),
+      makeNode('so', 'stringOp', { label: 'EndsWith', operation: 'endsWith' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> false');
+  });
+
+  // --- Trig Math Functions ---
+  it('evaluates Math.sin', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'double', value: '0' }),
+      makeNode('mf', 'mathFunc', { label: 'Sin', operation: 'sin', type: 'double' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'mf', 'data-out', 'data-in'),
+      makeEdge('mf', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${Math.sin(0)}`);
+  });
+
+  it('evaluates Math.cos', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'double', value: '0' }),
+      makeNode('mf', 'mathFunc', { label: 'Cos', operation: 'cos', type: 'double' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'mf', 'data-out', 'data-in'),
+      makeEdge('mf', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${Math.cos(0)}`);
+  });
+
+  it('evaluates Math.tan', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'double', value: '0' }),
+      makeNode('mf', 'mathFunc', { label: 'Tan', operation: 'tan', type: 'double' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'mf', 'data-out', 'data-in'),
+      makeEdge('mf', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${Math.tan(0)}`);
+  });
+
+  it('evaluates Math.asin', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'double', value: '0.5' }),
+      makeNode('mf', 'mathFunc', { label: 'Asin', operation: 'asin', type: 'double' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'mf', 'data-out', 'data-in'),
+      makeEdge('mf', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${Math.asin(0.5)}`);
+  });
+
+  it('evaluates Math.acos', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'double', value: '0.5' }),
+      makeNode('mf', 'mathFunc', { label: 'Acos', operation: 'acos', type: 'double' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'mf', 'data-out', 'data-in'),
+      makeEdge('mf', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${Math.acos(0.5)}`);
+  });
+
+  it('evaluates Math.atan', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'double', value: '1' }),
+      makeNode('mf', 'mathFunc', { label: 'Atan', operation: 'atan', type: 'double' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'mf', 'data-out', 'data-in'),
+      makeEdge('mf', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${Math.atan(1)}`);
+  });
+
+  // --- Bitwise Operations ---
+  it('evaluates bitwise AND', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'a', type: 'int', value: '6' }),
+      makeNode('v2', 'java', { label: 'b', type: 'int', value: '3' }),
+      makeNode('m1', 'math', { label: 'AND', operation: '&', type: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'm1', 'data-out', 'data-in-a'),
+      makeEdge('v2', 'm1', 'data-out', 'data-in-b'),
+      makeEdge('m1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${6 & 3}`);
+  });
+
+  it('evaluates bitwise OR', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'a', type: 'int', value: '6' }),
+      makeNode('v2', 'java', { label: 'b', type: 'int', value: '3' }),
+      makeNode('m1', 'math', { label: 'OR', operation: '|', type: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'm1', 'data-out', 'data-in-a'),
+      makeEdge('v2', 'm1', 'data-out', 'data-in-b'),
+      makeEdge('m1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${6 | 3}`);
+  });
+
+  it('evaluates bitwise XOR', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'a', type: 'int', value: '6' }),
+      makeNode('v2', 'java', { label: 'b', type: 'int', value: '3' }),
+      makeNode('m1', 'math', { label: 'XOR', operation: '^', type: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'm1', 'data-out', 'data-in-a'),
+      makeEdge('v2', 'm1', 'data-out', 'data-in-b'),
+      makeEdge('m1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${6 ^ 3}`);
+  });
+
+  it('evaluates left shift', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'a', type: 'int', value: '1' }),
+      makeNode('v2', 'java', { label: 'b', type: 'int', value: '4' }),
+      makeNode('m1', 'math', { label: 'Shl', operation: '<<', type: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'm1', 'data-out', 'data-in-a'),
+      makeEdge('v2', 'm1', 'data-out', 'data-in-b'),
+      makeEdge('m1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${1 << 4}`);
+  });
+
+  it('evaluates right shift', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'a', type: 'int', value: '16' }),
+      makeNode('v2', 'java', { label: 'b', type: 'int', value: '2' }),
+      makeNode('m1', 'math', { label: 'Shr', operation: '>>', type: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'm1', 'data-out', 'data-in-a'),
+      makeEdge('v2', 'm1', 'data-out', 'data-in-b'),
+      makeEdge('m1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${16 >> 2}`);
+  });
+
+  it('evaluates bitwise NOT (~)', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '5' }),
+      makeNode('n1', 'not', { label: 'BitNot', operation: '~' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'n1', 'data-out', 'data-in'),
+      makeEdge('n1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain(`> ${~5}`);
+  });
+
+  // --- HashSet Operations ---
+  it('creates hashset, adds element, and contains returns true', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '42' }),
+      makeNode('hs_create', 'hashSetOp', { label: 'Create', operation: 'create', variableName: 'mySet', elementType: 'int' }),
+      makeNode('hs_add', 'hashSetOp', { label: 'Add', operation: 'add', variableName: 'mySet' }),
+      makeNode('hs_contains', 'hashSetOp', { label: 'Contains', operation: 'contains', variableName: 'mySet' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'hs_create', 'exec-out', 'exec-in'),
+      makeEdge('hs_create', 'hs_add', 'exec-out', 'exec-in'),
+      makeEdge('hs_add', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'hs_add', 'data-out', 'data-in-value'),
+      makeEdge('v1', 'hs_contains', 'data-out', 'data-in-value'),
+      makeEdge('hs_contains', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> true');
+  });
+
+  it('hashset size returns count of elements', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'a', type: 'int', value: '1' }),
+      makeNode('v2', 'java', { label: 'b', type: 'int', value: '2' }),
+      makeNode('hs_create', 'hashSetOp', { label: 'Create', operation: 'create', variableName: 'mySet', elementType: 'int' }),
+      makeNode('hs_add1', 'hashSetOp', { label: 'Add1', operation: 'add', variableName: 'mySet' }),
+      makeNode('hs_add2', 'hashSetOp', { label: 'Add2', operation: 'add', variableName: 'mySet' }),
+      makeNode('hs_size', 'hashSetOp', { label: 'Size', operation: 'size', variableName: 'mySet' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'hs_create', 'exec-out', 'exec-in'),
+      makeEdge('hs_create', 'hs_add1', 'exec-out', 'exec-in'),
+      makeEdge('hs_add1', 'hs_add2', 'exec-out', 'exec-in'),
+      makeEdge('hs_add2', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'hs_add1', 'data-out', 'data-in-value'),
+      makeEdge('v2', 'hs_add2', 'data-out', 'data-in-value'),
+      makeEdge('hs_size', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 2');
+  });
+
+  // --- Sort / Reverse (arrayListOp) ---
+  it('sorts an arraylist and prints sorted order', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'c', type: 'int', value: '3' }),
+      makeNode('v2', 'java', { label: 'a', type: 'int', value: '1' }),
+      makeNode('v3', 'java', { label: 'b', type: 'int', value: '2' }),
+      makeNode('idx0', 'java', { label: 'i0', type: 'int', value: '0' }),
+      makeNode('al_create', 'arrayListOp', { label: 'Create', operation: 'create', variableName: 'nums', elementType: 'int' }),
+      makeNode('al_add1', 'arrayListOp', { label: 'Add1', operation: 'add', variableName: 'nums' }),
+      makeNode('al_add2', 'arrayListOp', { label: 'Add2', operation: 'add', variableName: 'nums' }),
+      makeNode('al_add3', 'arrayListOp', { label: 'Add3', operation: 'add', variableName: 'nums' }),
+      makeNode('al_sort', 'arrayListOp', { label: 'Sort', operation: 'sort', variableName: 'nums' }),
+      makeNode('al_get', 'arrayListOp', { label: 'Get', operation: 'get', variableName: 'nums' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'al_create', 'exec-out', 'exec-in'),
+      makeEdge('al_create', 'al_add1', 'exec-out', 'exec-in'),
+      makeEdge('al_add1', 'al_add2', 'exec-out', 'exec-in'),
+      makeEdge('al_add2', 'al_add3', 'exec-out', 'exec-in'),
+      makeEdge('al_add3', 'al_sort', 'exec-out', 'exec-in'),
+      makeEdge('al_sort', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'al_add1', 'data-out', 'data-in-value'),
+      makeEdge('v2', 'al_add2', 'data-out', 'data-in-value'),
+      makeEdge('v3', 'al_add3', 'data-out', 'data-in-value'),
+      makeEdge('idx0', 'al_get', 'data-out', 'data-in-index'),
+      makeEdge('al_get', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    // After sorting [3,1,2], first element should be 1
+    expect(output).toContain('> 1');
+  });
+
+  it('reverses an arraylist and prints first element', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'a', type: 'int', value: '1' }),
+      makeNode('v2', 'java', { label: 'b', type: 'int', value: '2' }),
+      makeNode('v3', 'java', { label: 'c', type: 'int', value: '3' }),
+      makeNode('idx0', 'java', { label: 'i0', type: 'int', value: '0' }),
+      makeNode('al_create', 'arrayListOp', { label: 'Create', operation: 'create', variableName: 'nums', elementType: 'int' }),
+      makeNode('al_add1', 'arrayListOp', { label: 'Add1', operation: 'add', variableName: 'nums' }),
+      makeNode('al_add2', 'arrayListOp', { label: 'Add2', operation: 'add', variableName: 'nums' }),
+      makeNode('al_add3', 'arrayListOp', { label: 'Add3', operation: 'add', variableName: 'nums' }),
+      makeNode('al_rev', 'arrayListOp', { label: 'Reverse', operation: 'reverse', variableName: 'nums' }),
+      makeNode('al_get', 'arrayListOp', { label: 'Get', operation: 'get', variableName: 'nums' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'al_create', 'exec-out', 'exec-in'),
+      makeEdge('al_create', 'al_add1', 'exec-out', 'exec-in'),
+      makeEdge('al_add1', 'al_add2', 'exec-out', 'exec-in'),
+      makeEdge('al_add2', 'al_add3', 'exec-out', 'exec-in'),
+      makeEdge('al_add3', 'al_rev', 'exec-out', 'exec-in'),
+      makeEdge('al_rev', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'al_add1', 'data-out', 'data-in-value'),
+      makeEdge('v2', 'al_add2', 'data-out', 'data-in-value'),
+      makeEdge('v3', 'al_add3', 'data-out', 'data-in-value'),
+      makeEdge('idx0', 'al_get', 'data-out', 'data-in-index'),
+      makeEdge('al_get', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    // After reversing [1,2,3], first element should be 3
+    expect(output).toContain('> 3');
+  });
 });

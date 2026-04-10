@@ -4,12 +4,12 @@ export const NODE_CATEGORIES = {
   Variables: ['int', 'float', 'double', 'long', 'short', 'byte', 'char', 'String', 'boolean'],
   Logic: ['main', 'method', 'callMethod', 'branch', 'while', 'for', 'doWhile', 'switch', 'tryCatchFinally', 'throw', 'break', 'continue', 'setVar', 'setLocalVar', 'print', 'return', 'increment', 'compoundAssign'],
   Input: ['scanner-nextLine', 'scanner-nextInt', 'scanner-nextFloat', 'scanner-nextDouble', 'scanner-nextLong', 'scanner-nextBoolean'],
-  Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-mod', 'math-gt', 'math-lt', 'math-lte', 'math-gte', 'math-eq', 'math-neq', 'math-and', 'math-or', 'math-not'],
-  'Math Functions': ['math-abs', 'math-min', 'math-max', 'math-pow', 'math-sqrt', 'math-random', 'math-ceil', 'math-floor', 'math-round', 'math-log', 'math-log10'],
+  Math: ['math-add', 'math-sub', 'math-mul', 'math-div', 'math-mod', 'math-gt', 'math-lt', 'math-lte', 'math-gte', 'math-eq', 'math-neq', 'math-and', 'math-or', 'math-not', 'math-bitand', 'math-bitor', 'math-bitxor', 'math-bitnot', 'math-shl', 'math-shr'],
+  'Math Functions': ['math-abs', 'math-min', 'math-max', 'math-pow', 'math-sqrt', 'math-random', 'math-ceil', 'math-floor', 'math-round', 'math-log', 'math-log10', 'math-sin', 'math-cos', 'math-tan', 'math-asin', 'math-acos', 'math-atan'],
   Conversion: ['cast', 'ternary', 'literal'],
-  Strings: ['string-concat', 'string-length', 'string-substring', 'string-charAt', 'string-indexOf', 'string-replace', 'string-trim', 'string-toUpperCase', 'string-toLowerCase', 'stringFormat'],
+  Strings: ['string-concat', 'string-length', 'string-substring', 'string-charAt', 'string-indexOf', 'string-replace', 'string-trim', 'string-toUpperCase', 'string-toLowerCase', 'string-split', 'string-contains', 'string-startsWith', 'string-endsWith', 'stringFormat'],
   Arrays: ['array-literal', 'array-new', 'array-access', 'array-set', 'array-length', 'forEach'],
-  Collections: ['arrayList-create', 'arrayList-add', 'arrayList-get', 'arrayList-set', 'arrayList-remove', 'arrayList-size', 'arrayList-contains', 'arrayList-clear', 'hashMap-create', 'hashMap-put', 'hashMap-get', 'hashMap-remove', 'hashMap-containsKey', 'hashMap-size', 'hashMap-keySet'],
+  Collections: ['arrayList-create', 'arrayList-add', 'arrayList-get', 'arrayList-set', 'arrayList-remove', 'arrayList-size', 'arrayList-contains', 'arrayList-clear', 'arrayList-sort', 'arrayList-reverse', 'hashSet-create', 'hashSet-add', 'hashSet-remove', 'hashSet-contains', 'hashSet-size', 'hashSet-clear', 'hashMap-create', 'hashMap-put', 'hashMap-get', 'hashMap-remove', 'hashMap-containsKey', 'hashMap-size', 'hashMap-keySet'],
   Utility: ['comment'],
 };
 
@@ -168,6 +168,14 @@ export const NODE_CONFIGS: Record<string, any> = {
   'math-and': { type: 'math', data: { type: 'boolean', label: 'AND', symbol: '&&', operation: '&&', accepts: ['boolean'] } },
   'math-or':  { type: 'math', data: { type: 'boolean', label: 'OR', symbol: '||', operation: '||', accepts: ['boolean'] } },
   'math-not': { type: 'not', data: { type: 'boolean', label: 'NOT', symbol: '!', operation: '!', accepts: ['boolean'] } },
+
+  // --- BITWISE OPERATORS ---
+  'math-bitand': { type: 'math', data: { type: 'int', label: 'BIT AND', symbol: '&', operation: '&', accepts: ALL_NUMERIC } },
+  'math-bitor': { type: 'math', data: { type: 'int', label: 'BIT OR', symbol: '|', operation: '|', accepts: ALL_NUMERIC } },
+  'math-bitxor': { type: 'math', data: { type: 'int', label: 'BIT XOR', symbol: '^', operation: '^', accepts: ALL_NUMERIC } },
+  'math-bitnot': { type: 'not', data: { type: 'int', label: 'BIT NOT', symbol: '~', operation: '~', accepts: ALL_NUMERIC } },
+  'math-shl': { type: 'math', data: { type: 'int', label: 'SHIFT LEFT', symbol: '<<', operation: '<<', accepts: ALL_NUMERIC } },
+  'math-shr': { type: 'math', data: { type: 'int', label: 'SHIFT RIGHT', symbol: '>>', operation: '>>', accepts: ALL_NUMERIC } },
   
   // --- MATH FUNCTIONS ---
   'math-abs': { type: 'mathFunc', data: { type: 'int', label: 'ABS', operation: 'abs', accepts: ALL_NUMERIC } },
@@ -185,6 +193,10 @@ export const NODE_CONFIGS: Record<string, any> = {
   'string-trim': { type: 'stringOp', data: { label: 'STRING: Trim', operation: 'trim' } },
   'string-toUpperCase': { type: 'stringOp', data: { label: 'STRING: ToUpperCase', operation: 'toUpperCase' } },
   'string-toLowerCase': { type: 'stringOp', data: { label: 'STRING: ToLowerCase', operation: 'toLowerCase' } },
+  'string-split': { type: 'stringOp', data: { label: 'STRING: Split', operation: 'split' } },
+  'string-contains': { type: 'stringOp', data: { label: 'STRING: Contains', operation: 'contains' } },
+  'string-startsWith': { type: 'stringOp', data: { label: 'STRING: StartsWith', operation: 'startsWith' } },
+  'string-endsWith': { type: 'stringOp', data: { label: 'STRING: EndsWith', operation: 'endsWith' } },
 
   // --- ARRAY OPERATIONS ---
   'array-literal': { type: 'arrayOp', data: { label: 'Array Literal', operation: 'literal', arrayType: 'int', values: '1,2,3' } },
@@ -266,6 +278,12 @@ export const NODE_CONFIGS: Record<string, any> = {
   'math-round': { type: 'mathFunc', data: { type: 'int', label: 'ROUND', operation: 'round', accepts: ALL_NUMERIC } },
   'math-log': { type: 'mathFunc', data: { type: 'double', label: 'LOG', operation: 'log', accepts: ALL_NUMERIC } },
   'math-log10': { type: 'mathFunc', data: { type: 'double', label: 'LOG10', operation: 'log10', accepts: ALL_NUMERIC } },
+  'math-sin': { type: 'mathFunc', data: { type: 'double', label: 'SIN', operation: 'sin', accepts: ALL_NUMERIC } },
+  'math-cos': { type: 'mathFunc', data: { type: 'double', label: 'COS', operation: 'cos', accepts: ALL_NUMERIC } },
+  'math-tan': { type: 'mathFunc', data: { type: 'double', label: 'TAN', operation: 'tan', accepts: ALL_NUMERIC } },
+  'math-asin': { type: 'mathFunc', data: { type: 'double', label: 'ASIN', operation: 'asin', accepts: ALL_NUMERIC } },
+  'math-acos': { type: 'mathFunc', data: { type: 'double', label: 'ACOS', operation: 'acos', accepts: ALL_NUMERIC } },
+  'math-atan': { type: 'mathFunc', data: { type: 'double', label: 'ATAN', operation: 'atan', accepts: ALL_NUMERIC } },
 
   // --- ARRAYLIST OPERATIONS ---
   'arrayList-create': { type: 'arrayListOp', data: { label: 'ArrayList: Create', operation: 'create', elementType: 'int', variableName: 'myList' } },
@@ -276,6 +294,16 @@ export const NODE_CONFIGS: Record<string, any> = {
   'arrayList-size': { type: 'arrayListOp', data: { label: 'ArrayList: Size', operation: 'size', elementType: 'int', variableName: 'myList' } },
   'arrayList-contains': { type: 'arrayListOp', data: { label: 'ArrayList: Contains', operation: 'contains', elementType: 'int', variableName: 'myList' } },
   'arrayList-clear': { type: 'arrayListOp', data: { label: 'ArrayList: Clear', operation: 'clear', elementType: 'int', variableName: 'myList' } },
+  'arrayList-sort': { type: 'arrayListOp', data: { label: 'ArrayList: Sort', operation: 'sort', elementType: 'int', variableName: 'myList' } },
+  'arrayList-reverse': { type: 'arrayListOp', data: { label: 'ArrayList: Reverse', operation: 'reverse', elementType: 'int', variableName: 'myList' } },
+
+  // --- HASHSET OPERATIONS ---
+  'hashSet-create': { type: 'hashSetOp', data: { label: 'HashSet: Create', operation: 'create', elementType: 'int', variableName: 'mySet' } },
+  'hashSet-add': { type: 'hashSetOp', data: { label: 'HashSet: Add', operation: 'add', elementType: 'int', variableName: 'mySet' } },
+  'hashSet-remove': { type: 'hashSetOp', data: { label: 'HashSet: Remove', operation: 'remove', elementType: 'int', variableName: 'mySet' } },
+  'hashSet-contains': { type: 'hashSetOp', data: { label: 'HashSet: Contains', operation: 'contains', elementType: 'int', variableName: 'mySet' } },
+  'hashSet-size': { type: 'hashSetOp', data: { label: 'HashSet: Size', operation: 'size', elementType: 'int', variableName: 'mySet' } },
+  'hashSet-clear': { type: 'hashSetOp', data: { label: 'HashSet: Clear', operation: 'clear', elementType: 'int', variableName: 'mySet' } },
 
   // --- HASHMAP OPERATIONS ---
   'hashMap-create': { type: 'hashMapOp', data: { label: 'HashMap: Create', operation: 'create', keyType: 'String', valueType: 'int', variableName: 'myMap' } },

@@ -8,6 +8,7 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
   const scannerValues = new Map<string, unknown>();
   const arrayListMemory: Record<string, unknown[]> = {};
   const hashMapMemory: Record<string, Map<unknown, unknown>> = {};
+  const hashSetMemory: Record<string, Set<unknown>> = {};
   
   // 1. Initialize Memory (Variables)
   nodes.filter(n => n.type === 'java').forEach(n => {
@@ -93,13 +94,20 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
         case '!=': return valA != valB;
         case '&&': return Boolean(valA) && Boolean(valB);
         case '||': return Boolean(valA) || Boolean(valB);
+        case '&': return Number(valA) & Number(valB);
+        case '|': return Number(valA) | Number(valB);
+        case '^': return Number(valA) ^ Number(valB);
+        case '<<': return Number(valA) << Number(valB);
+        case '>>': return Number(valA) >> Number(valB);
         default: return 0;
       }
     }
 
     if (node.type === 'not') {
+      const op = (node.data.operation as string) || '!';
       const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
       const val = evaluateData(edgeA?.source || "", edgeA?.sourceHandle || undefined, localScope);
+      if (op === '~') return ~Number(val);
       return !val;
     }
 
@@ -166,13 +174,41 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
           const val = evaluateData(edgeIn?.source || "", edgeIn?.sourceHandle || undefined, localScope);
           return String(val).toLowerCase();
         }
+        case 'split': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeDelim = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-delimiter');
+          const val = evaluateData(edgeStr?.source || "", edgeStr?.sourceHandle || undefined, localScope);
+          const delim = evaluateData(edgeDelim?.source || "", edgeDelim?.sourceHandle || undefined, localScope);
+          return String(val).split(String(delim));
+        }
+        case 'contains': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeTarget = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = evaluateData(edgeStr?.source || "", edgeStr?.sourceHandle || undefined, localScope);
+          const target = evaluateData(edgeTarget?.source || "", edgeTarget?.sourceHandle || undefined, localScope);
+          return String(val).includes(String(target));
+        }
+        case 'startsWith': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeTarget = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = evaluateData(edgeStr?.source || "", edgeStr?.sourceHandle || undefined, localScope);
+          const target = evaluateData(edgeTarget?.source || "", edgeTarget?.sourceHandle || undefined, localScope);
+          return String(val).startsWith(String(target));
+        }
+        case 'endsWith': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeTarget = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = evaluateData(edgeStr?.source || "", edgeStr?.sourceHandle || undefined, localScope);
+          const target = evaluateData(edgeTarget?.source || "", edgeTarget?.sourceHandle || undefined, localScope);
+          return String(val).endsWith(String(target));
+        }
         default: return "";
       }
     }
 
     if (node.type === 'mathFunc') {
       const op = node.data.operation as string;
-      if (['abs', 'sqrt', 'ceil', 'floor', 'round', 'log', 'log10'].includes(op)) {
+      if (['abs', 'sqrt', 'ceil', 'floor', 'round', 'log', 'log10', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan'].includes(op)) {
         const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
         const val = evaluateData(edgeIn?.source || "", edgeIn?.sourceHandle || undefined, localScope);
         switch (op) {
@@ -183,6 +219,12 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
           case 'round': return Math.round(Number(val));
           case 'log': return Math.log(Number(val));
           case 'log10': return Math.log10(Number(val));
+          case 'sin': return Math.sin(Number(val));
+          case 'cos': return Math.cos(Number(val));
+          case 'tan': return Math.tan(Number(val));
+          case 'asin': return Math.asin(Number(val));
+          case 'acos': return Math.acos(Number(val));
+          case 'atan': return Math.atan(Number(val));
         }
       }
       if (op === 'random') return Math.random();
@@ -326,6 +368,19 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
       }
       if (op === 'size') return map?.size ?? 0;
       if (op === 'keySet') return map ? Array.from(map.keys()) : [];
+      return null;
+    }
+
+    if (node.type === 'hashSetOp') {
+      const op = node.data.operation as string;
+      const varName = (node.data.variableName as string) || 'set';
+      const set = hashSetMemory[varName];
+      if (op === 'contains') {
+        const valEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-value');
+        const val = evaluateData(valEdge?.source || "", valEdge?.sourceHandle || undefined, localScope);
+        return set?.has(val) ?? false;
+      }
+      if (op === 'size') return set?.size ?? 0;
       return null;
     }
 
@@ -475,6 +530,36 @@ export function executeGraph(nodes: Node[], edges: Edge[], inputProvider?: (prom
           }
         } else if (op === 'clear') {
           arrayListMemory[varName] = [];
+        } else if (op === 'sort') {
+          if (arrayListMemory[varName]) {
+            arrayListMemory[varName].sort((a, b) => {
+              if (typeof a === 'number' && typeof b === 'number') return a - b;
+              return String(a).localeCompare(String(b));
+            });
+          }
+        } else if (op === 'reverse') {
+          if (arrayListMemory[varName]) {
+            arrayListMemory[varName].reverse();
+          }
+        }
+      }
+
+      if (nextNode.type === 'hashSetOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'set';
+        if (op === 'create') {
+          hashSetMemory[varName] = new Set();
+        } else if (op === 'add') {
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const val = evaluateData(valEdge?.source || "", valEdge?.sourceHandle || undefined, localScope);
+          if (!hashSetMemory[varName]) hashSetMemory[varName] = new Set();
+          hashSetMemory[varName].add(val);
+        } else if (op === 'remove') {
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const val = evaluateData(valEdge?.source || "", valEdge?.sourceHandle || undefined, localScope);
+          hashSetMemory[varName]?.delete(val);
+        } else if (op === 'clear') {
+          hashSetMemory[varName] = new Set();
         }
       }
 

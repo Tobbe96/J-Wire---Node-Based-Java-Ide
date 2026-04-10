@@ -23,6 +23,7 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
   const scannerValues = new Map<string, unknown>();
   const arrayListMemory: Record<string, unknown[]> = {};
   const hashMapMemory: Record<string, Map<unknown, unknown>> = {};
+  const hashSetMemory: Record<string, Set<unknown>> = {};
 
   // Initialize variables
   nodes.filter(n => n.type === 'java').forEach(n => {
@@ -141,14 +142,16 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
     }
 
     if (node.type === 'not') {
+      const op = (node.data.operation as string) || '!';
       const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
       const val = evaluateData(edgeA?.source || '', edgeA?.sourceHandle || undefined, localScope);
+      if (op === '~') return ~Number(val);
       return !val;
     }
 
     if (node.type === 'mathFunc') {
       const op = node.data.operation as string;
-      if (['abs', 'sqrt', 'ceil', 'floor', 'round', 'log', 'log10'].includes(op)) {
+      if (['abs', 'sqrt', 'ceil', 'floor', 'round', 'log', 'log10', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan'].includes(op)) {
         const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
         const val = evaluateData(edgeIn?.source || '', edgeIn?.sourceHandle || undefined, localScope);
         switch (op) {
@@ -159,6 +162,12 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
           case 'round': return Math.round(Number(val));
           case 'log': return Math.log(Number(val));
           case 'log10': return Math.log10(Number(val));
+          case 'sin': return Math.sin(Number(val));
+          case 'cos': return Math.cos(Number(val));
+          case 'tan': return Math.tan(Number(val));
+          case 'asin': return Math.asin(Number(val));
+          case 'acos': return Math.acos(Number(val));
+          case 'atan': return Math.atan(Number(val));
         }
       }
       if (op === 'random') return Math.random();
@@ -196,6 +205,34 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
           const start = evaluateData(edgeStart?.source || '', edgeStart?.sourceHandle || undefined, localScope);
           const end = evaluateData(edgeEnd?.source || '', edgeEnd?.sourceHandle || undefined, localScope);
           return String(val).substring(Number(start), Number(end));
+        }
+        case 'split': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const delimEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-delimiter');
+          const val = evaluateData(edgeIn?.source || '', edgeIn?.sourceHandle || undefined, localScope);
+          const delim = evaluateData(delimEdge?.source || '', delimEdge?.sourceHandle || undefined, localScope);
+          return String(val).split(String(delim));
+        }
+        case 'contains': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const targetEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = evaluateData(edgeIn?.source || '', edgeIn?.sourceHandle || undefined, localScope);
+          const target = evaluateData(targetEdge?.source || '', targetEdge?.sourceHandle || undefined, localScope);
+          return String(val).includes(String(target));
+        }
+        case 'startsWith': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const targetEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = evaluateData(edgeIn?.source || '', edgeIn?.sourceHandle || undefined, localScope);
+          const target = evaluateData(targetEdge?.source || '', targetEdge?.sourceHandle || undefined, localScope);
+          return String(val).startsWith(String(target));
+        }
+        case 'endsWith': {
+          const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const targetEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = evaluateData(edgeIn?.source || '', edgeIn?.sourceHandle || undefined, localScope);
+          const target = evaluateData(targetEdge?.source || '', targetEdge?.sourceHandle || undefined, localScope);
+          return String(val).endsWith(String(target));
         }
         default: return '';
       }
@@ -283,6 +320,19 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
       }
       if (op === 'size') return map?.size ?? 0;
       if (op === 'keySet') return map ? Array.from(map.keys()) : [];
+      return null;
+    }
+
+    if (node.type === 'hashSetOp') {
+      const op = node.data.operation as string;
+      const varName = (node.data.variableName as string) || 'set';
+      const set = hashSetMemory[varName];
+      if (op === 'contains') {
+        const valEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-value');
+        const val = evaluateData(valEdge?.source || '', valEdge?.sourceHandle || undefined, localScope);
+        return set?.has(val) ?? false;
+      }
+      if (op === 'size') return set?.size ?? 0;
       return null;
     }
 
@@ -438,6 +488,42 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
         } else if (op === 'clear') {
           arrayListMemory[varName] = [];
           pushStep(nextNode.id, 'arrayListOp', `${varName}.clear()`, localScope, callStack);
+        } else if (op === 'sort') {
+          if (arrayListMemory[varName]) {
+            arrayListMemory[varName].sort((a, b) => {
+              if (typeof a === 'number' && typeof b === 'number') return a - b;
+              return String(a).localeCompare(String(b));
+            });
+          }
+          pushStep(nextNode.id, 'arrayListOp', `Collections.sort(${varName})`, localScope, callStack);
+        } else if (op === 'reverse') {
+          if (arrayListMemory[varName]) {
+            arrayListMemory[varName].reverse();
+          }
+          pushStep(nextNode.id, 'arrayListOp', `Collections.reverse(${varName})`, localScope, callStack);
+        }
+      }
+
+      if (nextNode.type === 'hashSetOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'set';
+        if (op === 'create') {
+          hashSetMemory[varName] = new Set();
+          pushStep(nextNode.id, 'hashSetOp', `Create HashSet ${varName}`, localScope, callStack);
+        } else if (op === 'add') {
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const val = evaluateData(valEdge?.source || '', valEdge?.sourceHandle || undefined, localScope);
+          if (!hashSetMemory[varName]) hashSetMemory[varName] = new Set();
+          hashSetMemory[varName].add(val);
+          pushStep(nextNode.id, 'hashSetOp', `${varName}.add(${val})`, localScope, callStack);
+        } else if (op === 'remove') {
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const val = evaluateData(valEdge?.source || '', valEdge?.sourceHandle || undefined, localScope);
+          hashSetMemory[varName]?.delete(val);
+          pushStep(nextNode.id, 'hashSetOp', `${varName}.remove(${val})`, localScope, callStack);
+        } else if (op === 'clear') {
+          hashSetMemory[varName] = new Set();
+          pushStep(nextNode.id, 'hashSetOp', `${varName}.clear()`, localScope, callStack);
         }
       }
 

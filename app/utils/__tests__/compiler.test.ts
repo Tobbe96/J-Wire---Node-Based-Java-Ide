@@ -831,4 +831,243 @@ describe('generateJavaCode', () => {
     const code = generateJavaCode(nodes, edges);
     expect(code).toContain('scores.size()');
   });
+
+  // --- Extended String Operations ---
+  it('generates str.split(delim)', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'csv', type: 'String', value: 'a,b,c' }),
+      makeNode('v2', 'java', { label: 'delim', type: 'String', value: ',' }),
+      makeNode('so', 'stringOp', { label: 'Split', operation: 'split' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-delimiter'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('csv.split(delim)');
+  });
+
+  it('generates str.contains(target)', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'msg', type: 'String', value: 'hello world' }),
+      makeNode('v2', 'java', { label: 'sub', type: 'String', value: 'world' }),
+      makeNode('so', 'stringOp', { label: 'Contains', operation: 'contains' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('msg.contains(sub)');
+  });
+
+  it('generates str.startsWith(target)', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'word', type: 'String', value: 'hello' }),
+      makeNode('v2', 'java', { label: 'prefix', type: 'String', value: 'hel' }),
+      makeNode('so', 'stringOp', { label: 'StartsWith', operation: 'startsWith' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('word.startsWith(prefix)');
+  });
+
+  it('generates str.endsWith(target)', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'file', type: 'String', value: 'test.java' }),
+      makeNode('v2', 'java', { label: 'suffix', type: 'String', value: '.java' }),
+      makeNode('so', 'stringOp', { label: 'EndsWith', operation: 'endsWith' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'so', 'data-out', 'data-in'),
+      makeEdge('v2', 'so', 'data-out', 'data-in-target'),
+      makeEdge('so', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('file.endsWith(suffix)');
+  });
+
+  // --- Trig Math Functions ---
+  it('generates Math.sin, Math.cos, Math.tan', () => {
+    for (const op of ['sin', 'cos', 'tan']) {
+      const nodes: Node[] = [
+        makeNode('v1', 'java', { label: 'angle', type: 'double', value: '1.0' }),
+        makeNode('mf', 'mathFunc', { label: op, operation: op, type: 'double' }),
+        makeNode('main', 'main', { label: 'Main' }),
+        makeNode('p1', 'print', { label: 'Print' }),
+      ];
+      const edges: Edge[] = [
+        makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+        makeEdge('v1', 'mf', 'data-out', 'data-in'),
+        makeEdge('mf', 'p1', 'data-out', 'data-in'),
+      ];
+      const code = generateJavaCode(nodes, edges);
+      expect(code).toContain(`Math.${op}(angle)`);
+    }
+  });
+
+  it('generates Math.asin, Math.acos, Math.atan', () => {
+    for (const op of ['asin', 'acos', 'atan']) {
+      const nodes: Node[] = [
+        makeNode('v1', 'java', { label: 'val', type: 'double', value: '0.5' }),
+        makeNode('mf', 'mathFunc', { label: op, operation: op, type: 'double' }),
+        makeNode('main', 'main', { label: 'Main' }),
+        makeNode('p1', 'print', { label: 'Print' }),
+      ];
+      const edges: Edge[] = [
+        makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+        makeEdge('v1', 'mf', 'data-out', 'data-in'),
+        makeEdge('mf', 'p1', 'data-out', 'data-in'),
+      ];
+      const code = generateJavaCode(nodes, edges);
+      expect(code).toContain(`Math.${op}(val)`);
+    }
+  });
+
+  // --- Bitwise Operations ---
+  it('generates bitwise AND, OR, XOR, left shift, right shift', () => {
+    const ops = ['&', '|', '^', '<<', '>>'];
+    for (const op of ops) {
+      const nodes: Node[] = [
+        makeNode('main', 'main', { label: 'Main' }),
+        makeNode('v1', 'java', { label: 'a', type: 'int', value: '6' }),
+        makeNode('v2', 'java', { label: 'b', type: 'int', value: '3' }),
+        makeNode('m1', 'math', { label: 'Bitwise', operation: op, type: 'int' }),
+        makeNode('p1', 'print', { label: 'Print' }),
+      ];
+      const edges: Edge[] = [
+        makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+        makeEdge('v1', 'm1', 'data-out', 'data-in-a'),
+        makeEdge('v2', 'm1', 'data-out', 'data-in-b'),
+        makeEdge('m1', 'p1', 'data-out', 'data-in'),
+      ];
+      const code = generateJavaCode(nodes, edges);
+      expect(code).toContain(`(a ${op} b)`);
+    }
+  });
+
+  it('generates bitwise NOT (~)', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '5' }),
+      makeNode('n1', 'not', { label: 'BitNot', operation: '~' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'n1', 'data-out', 'data-in'),
+      makeEdge('n1', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('(~x)');
+  });
+
+  // --- HashSet Operations ---
+  it('generates HashSet create with import', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('hs', 'hashSetOp', { label: 'Create Set', operation: 'create', variableName: 'names', elementType: 'String' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'hs', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('import java.util.HashSet;');
+    expect(code).toContain('HashSet<String> names = new HashSet<>();');
+  });
+
+  it('generates HashSet add with connected value', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'item', type: 'String', value: 'hello' }),
+      makeNode('hs_create', 'hashSetOp', { label: 'Create', operation: 'create', variableName: 'words', elementType: 'String' }),
+      makeNode('hs_add', 'hashSetOp', { label: 'Add', operation: 'add', variableName: 'words', elementType: 'String' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'hs_create', 'exec-out', 'exec-in'),
+      makeEdge('hs_create', 'hs_add', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'hs_add', 'data-out', 'data-in-value'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('words.add(item);');
+  });
+
+  it('generates HashSet contains as data expression', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'item', type: 'int', value: '5' }),
+      makeNode('hs_contains', 'hashSetOp', { label: 'Contains', operation: 'contains', variableName: 'nums' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'hs_contains', 'data-out', 'data-in-value'),
+      makeEdge('hs_contains', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('nums.contains(item)');
+  });
+
+  it('generates HashSet size as data expression', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('hs_size', 'hashSetOp', { label: 'Size', operation: 'size', variableName: 'nums' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('hs_size', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('nums.size()');
+  });
+
+  // --- Sort / Reverse (arrayListOp) ---
+  it('generates Collections.sort with import', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('al_create', 'arrayListOp', { label: 'Create', operation: 'create', variableName: 'items', elementType: 'int' }),
+      makeNode('al_sort', 'arrayListOp', { label: 'Sort', operation: 'sort', variableName: 'items' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'al_create', 'exec-out', 'exec-in'),
+      makeEdge('al_create', 'al_sort', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('import java.util.Collections;');
+    expect(code).toContain('Collections.sort(items);');
+  });
+
+  it('generates Collections.reverse with import', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('al_create', 'arrayListOp', { label: 'Create', operation: 'create', variableName: 'items', elementType: 'int' }),
+      makeNode('al_rev', 'arrayListOp', { label: 'Reverse', operation: 'reverse', variableName: 'items' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'al_create', 'exec-out', 'exec-in'),
+      makeEdge('al_create', 'al_rev', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('import java.util.Collections;');
+    expect(code).toContain('Collections.reverse(items);');
+  });
 });

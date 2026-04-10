@@ -36,6 +36,7 @@ import CommentNode from '../components/Nodes/CommentNode';
 import StringFormatNode from '../components/Nodes/StringFormatNode';
 import ArrayListOpNode from '../components/Nodes/ArrayListOpNode';
 import HashMapOpNode from '../components/Nodes/HashMapOpNode';
+import HashSetOpNode from '../components/Nodes/HashSetOpNode';
 
 // Edge Components
 import AnimatedEdge from '../components/AnimatedEdge';
@@ -76,6 +77,7 @@ export const nodeTypes = {
   stringFormat: StringFormatNode,
   arrayListOp: ArrayListOpNode,
   hashMapOp: HashMapOpNode,
+  hashSetOp: HashSetOpNode,
 };
 
 export const edgeTypes = {

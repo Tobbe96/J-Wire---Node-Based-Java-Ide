@@ -25,6 +25,8 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
   const hasScannerNodes = nodes.some(n => n.type === 'scanner');
   const hasArrayListNodes = nodes.some(n => n.type === 'arrayListOp');
   const hasHashMapNodes = nodes.some(n => n.type === 'hashMapOp');
+  const hasHashSetNodes = nodes.some(n => n.type === 'hashSetOp');
+  const hasCollectionsUtil = nodes.some(n => n.type === 'arrayListOp' && ['sort', 'reverse'].includes(n.data.operation as string));
 
   // Helper to resolve a node's output type for a given handle
   const resolveNodeOutputType = (node: Node, sourceHandle?: string): string | null => {
@@ -37,7 +39,9 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
     if (node.type === 'cast') return (node.data.targetType as string) || 'String';
     if (node.type === 'stringOp') {
       const op = node.data.operation as string;
-      return (op === 'length' || op === 'indexOf') ? 'int' : 'String';
+      if (op === 'length' || op === 'indexOf') return 'int';
+      if (op === 'contains' || op === 'startsWith' || op === 'endsWith') return 'boolean';
+      return 'String';
     }
     if (node.type === 'method' && sourceHandle) {
       const paramMatch = sourceHandle.match(/^param-out-(\d+)$/);
@@ -58,7 +62,9 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
   if (hasScannerNodes) code += 'import java.util.Scanner;\n';
   if (hasArrayListNodes) code += 'import java.util.ArrayList;\n';
   if (hasHashMapNodes) code += 'import java.util.HashMap;\n';
-  if (hasScannerNodes || hasArrayListNodes || hasHashMapNodes) code += '\n';
+  if (hasHashSetNodes) code += 'import java.util.HashSet;\n';
+  if (hasCollectionsUtil) code += 'import java.util.Collections;\n';
+  if (hasScannerNodes || hasArrayListNodes || hasHashMapNodes || hasHashSetNodes || hasCollectionsUtil) code += '\n';
   code += `public class ${className} {\n\n`;
 
   if (hasScannerNodes) {
@@ -138,9 +144,10 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
       return `(${valA} ${op} ${valB})`;
     }
     if (node.type === 'not') {
+      const op = (node.data.operation as string) || '!';
       const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
-      const val = edgeA ? evaluateDataNode(edgeA.source, edgeA.sourceHandle || undefined) : 'false';
-      return `(!${val})`;
+      const val = edgeA ? evaluateDataNode(edgeA.source, edgeA.sourceHandle || undefined) : (op === '~' ? '0' : 'false');
+      return `(${op}${val})`;
     }
     if (node.type === 'stringOp') {
       switch (node.data.operation) {
@@ -203,13 +210,41 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
           const val = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : '""';
           return `${val}.toLowerCase()`;
         }
+        case 'split': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeDelim = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-delimiter');
+          const val = edgeStr ? evaluateDataNode(edgeStr.source, edgeStr.sourceHandle || undefined) : '""';
+          const delim = edgeDelim ? evaluateDataNode(edgeDelim.source, edgeDelim.sourceHandle || undefined) : '","';
+          return `${val}.split(${delim})`;
+        }
+        case 'contains': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeTarget = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = edgeStr ? evaluateDataNode(edgeStr.source, edgeStr.sourceHandle || undefined) : '""';
+          const target = edgeTarget ? evaluateDataNode(edgeTarget.source, edgeTarget.sourceHandle || undefined) : '""';
+          return `${val}.contains(${target})`;
+        }
+        case 'startsWith': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeTarget = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = edgeStr ? evaluateDataNode(edgeStr.source, edgeStr.sourceHandle || undefined) : '""';
+          const target = edgeTarget ? evaluateDataNode(edgeTarget.source, edgeTarget.sourceHandle || undefined) : '""';
+          return `${val}.startsWith(${target})`;
+        }
+        case 'endsWith': {
+          const edgeStr = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
+          const edgeTarget = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-target');
+          const val = edgeStr ? evaluateDataNode(edgeStr.source, edgeStr.sourceHandle || undefined) : '""';
+          const target = edgeTarget ? evaluateDataNode(edgeTarget.source, edgeTarget.sourceHandle || undefined) : '""';
+          return `${val}.endsWith(${target})`;
+        }
         default: return '""';
       }
     }
     if (node.type === 'mathFunc') {
       const op = node.data.operation as string;
       // Single-input functions
-      if (['abs', 'sqrt', 'ceil', 'floor', 'round', 'log', 'log10'].includes(op)) {
+      if (['abs', 'sqrt', 'ceil', 'floor', 'round', 'log', 'log10', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan'].includes(op)) {
         const edgeIn = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in');
         const val = edgeIn ? evaluateDataNode(edgeIn.source, edgeIn.sourceHandle || undefined) : '0';
         if (op === 'abs') return `Math.abs(${val})`;
@@ -219,6 +254,12 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
         if (op === 'round') return `(int)Math.round(${val})`;
         if (op === 'log') return `Math.log(${val})`;
         if (op === 'log10') return `Math.log10(${val})`;
+        if (op === 'sin') return `Math.sin(${val})`;
+        if (op === 'cos') return `Math.cos(${val})`;
+        if (op === 'tan') return `Math.tan(${val})`;
+        if (op === 'asin') return `Math.asin(${val})`;
+        if (op === 'acos') return `Math.acos(${val})`;
+        if (op === 'atan') return `Math.atan(${val})`;
       }
       if (op === 'random') return 'Math.random()';
       const edgeA = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-a');
@@ -334,6 +375,17 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
       }
       if (op === 'size') return `${varName}.size()`;
       if (op === 'keySet') return `${varName}.keySet()`;
+      return 'null';
+    }
+    if (node.type === 'hashSetOp') {
+      const op = node.data.operation as string;
+      const varName = (node.data.variableName as string) || 'set';
+      if (op === 'contains') {
+        const valEdge = edges.find(e => e.target === nodeId && e.targetHandle === 'data-in-value');
+        const val = valEdge ? evaluateDataNode(valEdge.source, valEdge.sourceHandle || undefined) : 'null';
+        return `${varName}.contains(${val})`;
+      }
+      if (op === 'size') return `${varName}.size()`;
       return 'null';
     }
     if (node.type === 'forEach') {
@@ -493,6 +545,29 @@ export function generateJavaCode(nodes: Node[], edges: Edge[], className: string
           const idxEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-index');
           const idx = idxEdge ? evaluateDataNode(idxEdge.source, idxEdge.sourceHandle || undefined) : '0';
           methodBody += `    ${varName}.remove(${idx});\n`;
+        } else if (op === 'clear') {
+          methodBody += `    ${varName}.clear();\n`;
+        } else if (op === 'sort') {
+          methodBody += `    Collections.sort(${varName});\n`;
+        } else if (op === 'reverse') {
+          methodBody += `    Collections.reverse(${varName});\n`;
+        }
+      }
+
+      if (nextNode.type === 'hashSetOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'set';
+        const elemType = (nextNode.data.elementType as string) || 'int';
+        if (op === 'create') {
+          methodBody += `    HashSet<${boxedType(elemType)}> ${varName} = new HashSet<>();\n`;
+        } else if (op === 'add') {
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const val = valEdge ? evaluateDataNode(valEdge.source, valEdge.sourceHandle || undefined) : getDefaultLiteral(elemType);
+          methodBody += `    ${varName}.add(${val});\n`;
+        } else if (op === 'remove') {
+          const valEdge = edges.find(e => e.target === nextNode.id && e.targetHandle === 'data-in-value');
+          const val = valEdge ? evaluateDataNode(valEdge.source, valEdge.sourceHandle || undefined) : getDefaultLiteral(elemType);
+          methodBody += `    ${varName}.remove(${val});\n`;
         } else if (op === 'clear') {
           methodBody += `    ${varName}.clear();\n`;
         }
