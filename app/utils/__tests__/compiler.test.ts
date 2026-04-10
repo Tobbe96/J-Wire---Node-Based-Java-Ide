@@ -497,4 +497,338 @@ describe('generateJavaCode', () => {
     const code = generateJavaCode(nodes, edges);
     expect(code).toContain('throw new RuntimeException("Something went wrong")');
   });
+
+  // --- char type ---
+  it('generates a char field with single-quoted value', () => {
+    const nodes: Node[] = [
+      makeNode('v1', 'java', { label: 'initial', type: 'char', value: 'A', modifier: 'public' }),
+    ];
+    const code = generateJavaCode(nodes, []);
+    expect(code).toContain("public static char initial = 'A';");
+  });
+
+  // --- final modifier ---
+  it('generates a final field', () => {
+    const nodes: Node[] = [
+      makeNode('v1', 'java', { label: 'MAX', type: 'int', value: '100', modifier: 'public final' }),
+    ];
+    const code = generateJavaCode(nodes, []);
+    expect(code).toContain('public final static int MAX = 100;');
+  });
+
+  // --- Increment node ---
+  it('generates post-increment statement', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('inc', 'increment', { label: 'Increment', variableName: 'count', mode: 'post-increment' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'inc', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('count++;');
+  });
+
+  it('generates post-decrement statement', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('inc', 'increment', { label: 'Decrement', variableName: 'count', mode: 'post-decrement' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'inc', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('count--;');
+  });
+
+  it('generates pre-increment statement', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('inc', 'increment', { label: 'Increment', variableName: 'count', mode: 'pre-increment' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'inc', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('++count;');
+  });
+
+  it('generates pre-decrement statement', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('inc', 'increment', { label: 'Decrement', variableName: 'count', mode: 'pre-decrement' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'inc', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('--count;');
+  });
+
+  // --- CompoundAssign node ---
+  it('generates += compound assignment from a variable', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'bonus', type: 'int', value: '5' }),
+      makeNode('ca', 'compoundAssign', { label: 'Add Assign', variableName: 'total', operator: '+=' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'ca', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'ca', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('total += bonus;');
+  });
+
+  it('generates *= compound assignment from a variable', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'factor', type: 'int', value: '3' }),
+      makeNode('ca', 'compoundAssign', { label: 'Mul Assign', variableName: 'result', operator: '*=' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'ca', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'ca', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('result *= factor;');
+  });
+
+  // --- Comment node ---
+  it('generates a comment inside the method body', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('c1', 'comment', { label: 'Comment', text: 'This is a comment' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'c1', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('// This is a comment');
+  });
+
+  // --- StringFormat node ---
+  it('generates String.format with arguments', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'name', type: 'String', value: 'Alice' }),
+      makeNode('v2', 'java', { label: 'age', type: 'int', value: '30' }),
+      makeNode('sf', 'stringFormat', { label: 'Format', formatString: 'Hello %s, you are %d', argCount: 2 }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'sf', 'data-out', 'data-in-arg-0'),
+      makeEdge('v2', 'sf', 'data-out', 'data-in-arg-1'),
+      makeEdge('sf', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('String.format("Hello %s, you are %d", name, age)');
+  });
+
+  // --- Math functions ---
+  it('generates Math.sqrt', () => {
+    const nodes: Node[] = [
+      makeNode('v1', 'java', { label: 'x', type: 'double', value: '16.0' }),
+      makeNode('mf', 'mathFunc', { label: 'Sqrt', operation: 'sqrt', type: 'double' }),
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'mf', 'data-out', 'data-in'),
+      makeEdge('mf', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('Math.sqrt(x)');
+  });
+
+  it('generates Math.random with no input', () => {
+    const nodes: Node[] = [
+      makeNode('mf', 'mathFunc', { label: 'Random', operation: 'random', type: 'double' }),
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('mf', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('Math.random()');
+  });
+
+  it('generates Math.ceil, Math.floor, Math.round', () => {
+    const ops = ['ceil', 'floor', 'round'] as const;
+    for (const op of ops) {
+      const nodes: Node[] = [
+        makeNode('v1', 'java', { label: 'val', type: 'double', value: '3.7' }),
+        makeNode('mf', 'mathFunc', { label: op, operation: op, type: 'double' }),
+        makeNode('main', 'main', { label: 'Main' }),
+        makeNode('p1', 'print', { label: 'Print' }),
+      ];
+      const edges: Edge[] = [
+        makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+        makeEdge('v1', 'mf', 'data-out', 'data-in'),
+        makeEdge('mf', 'p1', 'data-out', 'data-in'),
+      ];
+      const code = generateJavaCode(nodes, edges);
+      expect(code).toContain(`Math.${op}(val)`);
+    }
+  });
+
+  it('generates Math.log and Math.log10', () => {
+    for (const op of ['log', 'log10']) {
+      const nodes: Node[] = [
+        makeNode('v1', 'java', { label: 'num', type: 'double', value: '100.0' }),
+        makeNode('mf', 'mathFunc', { label: op, operation: op, type: 'double' }),
+        makeNode('main', 'main', { label: 'Main' }),
+        makeNode('p1', 'print', { label: 'Print' }),
+      ];
+      const edges: Edge[] = [
+        makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+        makeEdge('v1', 'mf', 'data-out', 'data-in'),
+        makeEdge('mf', 'p1', 'data-out', 'data-in'),
+      ];
+      const code = generateJavaCode(nodes, edges);
+      expect(code).toContain(`Math.${op}(num)`);
+    }
+  });
+
+  // --- ArrayList operations ---
+  it('generates ArrayList create with import', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('al', 'arrayListOp', { label: 'Create List', operation: 'create', variableName: 'numbers', elementType: 'int' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'al', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('import java.util.ArrayList;');
+    expect(code).toContain('ArrayList<Integer> numbers = new ArrayList<>();');
+  });
+
+  it('generates ArrayList add with connected value', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'item', type: 'int', value: '42' }),
+      makeNode('al_create', 'arrayListOp', { label: 'Create', operation: 'create', variableName: 'numbers', elementType: 'int' }),
+      makeNode('al_add', 'arrayListOp', { label: 'Add', operation: 'add', variableName: 'numbers', elementType: 'int' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'al_create', 'exec-out', 'exec-in'),
+      makeEdge('al_create', 'al_add', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'al_add', 'data-out', 'data-in-value'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('numbers.add(item);');
+  });
+
+  it('generates ArrayList get as data expression', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('idx', 'java', { label: 'idx', type: 'int', value: '0' }),
+      makeNode('al_get', 'arrayListOp', { label: 'Get', operation: 'get', variableName: 'numbers' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('idx', 'al_get', 'data-out', 'data-in-index'),
+      makeEdge('al_get', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('numbers.get(idx)');
+  });
+
+  it('generates ArrayList size as data expression', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('al_size', 'arrayListOp', { label: 'Size', operation: 'size', variableName: 'numbers' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('al_size', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('numbers.size()');
+  });
+
+  // --- HashMap operations ---
+  it('generates HashMap create with import', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('hm', 'hashMapOp', { label: 'Create Map', operation: 'create', variableName: 'scores', keyType: 'String', valueType: 'int' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'hm', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('import java.util.HashMap;');
+    expect(code).toContain('HashMap<String, Integer> scores = new HashMap<>();');
+  });
+
+  it('generates HashMap put with key and value', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('k1', 'java', { label: 'playerName', type: 'String', value: 'Alice' }),
+      makeNode('v1', 'java', { label: 'playerScore', type: 'int', value: '100' }),
+      makeNode('hm_create', 'hashMapOp', { label: 'Create', operation: 'create', variableName: 'scores', keyType: 'String', valueType: 'int' }),
+      makeNode('hm_put', 'hashMapOp', { label: 'Put', operation: 'put', variableName: 'scores', keyType: 'String', valueType: 'int' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'hm_create', 'exec-out', 'exec-in'),
+      makeEdge('hm_create', 'hm_put', 'exec-out', 'exec-in'),
+      makeEdge('k1', 'hm_put', 'data-out', 'data-in-key'),
+      makeEdge('v1', 'hm_put', 'data-out', 'data-in-value'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('scores.put(playerName, playerScore);');
+  });
+
+  it('generates HashMap get as data expression', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('k1', 'java', { label: 'key', type: 'String', value: 'Alice' }),
+      makeNode('hm_get', 'hashMapOp', { label: 'Get', operation: 'get', variableName: 'scores' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('k1', 'hm_get', 'data-out', 'data-in-key'),
+      makeEdge('hm_get', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('scores.get(key)');
+  });
+
+  it('generates HashMap containsKey as data expression', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('k1', 'java', { label: 'lookupKey', type: 'String', value: 'Bob' }),
+      makeNode('hm_ck', 'hashMapOp', { label: 'ContainsKey', operation: 'containsKey', variableName: 'scores' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('k1', 'hm_ck', 'data-out', 'data-in-key'),
+      makeEdge('hm_ck', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('scores.containsKey(lookupKey)');
+  });
+
+  it('generates HashMap size as data expression', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('hm_size', 'hashMapOp', { label: 'Size', operation: 'size', variableName: 'scores' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('hm_size', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('scores.size()');
+  });
 });
