@@ -91,15 +91,18 @@ export default function LivePreview({ code }: { code: string }) {
           </span>
         </div>
       </div>
-      <div
-        ref={codeAreaRef}
-        key={vfxEnabled ? flashKey : undefined}
-        style={{
-          ...codeAreaStyle,
-          ...(vfxEnabled ? { animation: 'vfx-code-flash 0.4s ease-out' } : {}),
-        }}
-        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-      />
+      {/* Wrapper sizes via flex; inner div scrolls via absolute positioning */}
+      <div style={codeAreaWrapperStyle}>
+        <div
+          ref={codeAreaRef}
+          key={vfxEnabled ? flashKey : undefined}
+          style={{
+            ...codeAreaStyle,
+            ...(vfxEnabled ? { animation: 'vfx-code-flash 0.4s ease-out' } : {}),
+          }}
+          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+        />
+      </div>
     </div>
   );
 }
@@ -114,7 +117,6 @@ const codePanelStyle: React.CSSProperties = {
   flexDirection: 'column',
   flex: 1,
   minHeight: 0,
-  minWidth: 0,
   overflow: 'hidden',
   zIndex: 10,
 };
@@ -128,6 +130,7 @@ const headerStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
+  flexShrink: 0,
 };
 
 const copyButtonStyle: React.CSSProperties = {
@@ -142,14 +145,20 @@ const copyButtonStyle: React.CSSProperties = {
   transition: 'color 0.15s, border-color 0.15s',
 };
 
+// Takes flex space but doesn't let content affect width/height
+const codeAreaWrapperStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  position: 'relative',
+};
+
+// Absolutely positioned so it scrolls without pushing the layout
 const codeAreaStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
   padding: '15px',
   overflowX: 'auto',
   overflowY: 'auto',
-  flex: 1,
-  minHeight: 0,
-  minWidth: 0,
-  maxWidth: '100%',
   background: '#0d0d0d',
   fontSize: '13px',
 };
