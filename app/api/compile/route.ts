@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -171,8 +171,7 @@ export async function POST(request: Request): Promise<Response> {
 
     // --- Compile all files together ---
     try {
-      const fileArgs = fileNames.map(f => `"${f}"`).join(' ');
-      execSync(`javac ${fileArgs}`, {
+      execFileSync('javac', fileNames, {
         cwd: workDir,
         timeout: EXECUTION_TIMEOUT_MS,
         stdio: 'pipe',
@@ -192,7 +191,7 @@ export async function POST(request: Request): Promise<Response> {
     // --- Execute main class ---
     try {
       const stdinInput = inputs && inputs.length > 0 ? inputs.join('\n') + '\n' : undefined;
-      const stdout = execSync(`java "${safeMainClass}"`, {
+      const stdout = execFileSync('java', [safeMainClass], {
         cwd: workDir,
         timeout: EXECUTION_TIMEOUT_MS,
         stdio: 'pipe',

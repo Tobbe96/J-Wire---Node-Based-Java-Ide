@@ -1,4 +1,5 @@
 import type { Executor, TreeJsNode } from './Executor';
+import { sandboxStatement } from './sandbox';
 import { getRuntimeDefault } from '../theme';
 import type { Parameter, LocalVariable } from '../nodeTypes';
 import type { ProjectFile } from '../../store/editorStore';
@@ -210,7 +211,7 @@ export function runLogicChainImpl(
           : getRuntimeDefault(input.type);
       });
       try {
-        const fn = new Function(...Object.keys(inputValues), '__print__', '__mem__', code);
+        const fn = sandboxStatement(Object.keys(inputValues), code);
         fn(...Object.values(inputValues), (msg: unknown) => exec.consoleOutput.push(String(msg)), exec.runtimeMemory);
       } catch (err) {
         exec.consoleOutput.push(`> CUSTOM CODE ERROR: ${err instanceof Error ? err.message : String(err)}`);

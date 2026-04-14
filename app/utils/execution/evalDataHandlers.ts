@@ -1,4 +1,5 @@
 import type { Executor, TreeJsNode } from './Executor';
+import { sandboxExpression } from './sandbox';
 import { getRuntimeDefault } from '../theme';
 import type { Parameter, LocalVariable } from '../nodeTypes';
 import type { ProjectFile } from '../../store/editorStore';
@@ -567,7 +568,7 @@ export function evalDataImpl(
       inputValues[input.name] = e ? exec.evaluateData(e.source, e.sourceHandle || undefined, localScope) : getRuntimeDefault(input.type);
     });
     try {
-      const fn = new Function(...Object.keys(inputValues), `return (${code});`);
+      const fn = sandboxExpression(Object.keys(inputValues), code);
       return fn(...Object.values(inputValues));
     } catch { return null; }
   }
