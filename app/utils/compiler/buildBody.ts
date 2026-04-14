@@ -960,6 +960,8 @@ export function createBuildMethodBody(
           }
         } else if (op === 'setText') {
           methodBody += `    ${varName}.setText(${ev2('data-in-text')});\n`;
+        } else if (op === 'append') {
+          methodBody += `    ${varName}.append(${ev2('data-in-text')});\n`;
         } else if (op === 'setEnabled') {
           methodBody += `    ${varName}.setEnabled(${ev2('data-in-value')});\n`;
         } else if (op === 'setVisible') {

@@ -748,6 +748,7 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
   'sw-control-jspinner': { type: 'swingControlOp', data: { label: 'JSpinner: Create', operation: 'create', controlType: 'JSpinner', variableName: 'spinner' } },
   'sw-control-setText': { type: 'swingControlOp', data: { label: 'Swing: Set Text', operation: 'setText', controlType: 'JButton', variableName: 'control' } },
   'sw-control-getText': { type: 'swingControlOp', data: { label: 'Swing: Get Text', operation: 'getText', controlType: 'JTextField', variableName: 'control' } },
+  'sw-control-append': { type: 'swingControlOp', data: { label: 'Swing: Append Text', operation: 'append', controlType: 'JTextArea', variableName: 'textArea' } },
   'sw-control-setEnabled': { type: 'swingControlOp', data: { label: 'Swing: Set Enabled', operation: 'setEnabled', controlType: 'JButton', variableName: 'control' } },
   'sw-control-setVisible': { type: 'swingControlOp', data: { label: 'Swing: Set Visible', operation: 'setVisible', controlType: 'JButton', variableName: 'control' } },
   'sw-control-setSelected': { type: 'swingControlOp', data: { label: 'Swing: Set Selected', operation: 'setSelected', controlType: 'JCheckBox', variableName: 'control' } },
