@@ -91,18 +91,15 @@ export default function LivePreview({ code }: { code: string }) {
           </span>
         </div>
       </div>
-      {/* Wrapper sizes via flex; inner div scrolls via absolute positioning */}
-      <div style={codeAreaWrapperStyle}>
-        <div
-          ref={codeAreaRef}
-          key={vfxEnabled ? flashKey : undefined}
-          style={{
-            ...codeAreaStyle,
-            ...(vfxEnabled ? { animation: 'vfx-code-flash 0.4s ease-out' } : {}),
-          }}
-          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-        />
-      </div>
+      <div
+        ref={codeAreaRef}
+        key={vfxEnabled ? flashKey : undefined}
+        style={{
+          ...codeAreaStyle,
+          ...(vfxEnabled ? { animation: 'vfx-code-flash 0.4s ease-out' } : {}),
+        }}
+        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+      />
     </div>
   );
 }
@@ -145,20 +142,14 @@ const copyButtonStyle: React.CSSProperties = {
   transition: 'color 0.15s, border-color 0.15s',
 };
 
-// Takes flex space but doesn't let content affect width/height
-const codeAreaWrapperStyle: React.CSSProperties = {
+// width:0 + minWidth:100% prevents content from pushing the panel wider
+const codeAreaStyle: React.CSSProperties = {
   flex: 1,
   minHeight: 0,
-  position: 'relative',
-};
-
-// Absolutely positioned so it scrolls without pushing the layout
-const codeAreaStyle: React.CSSProperties = {
-  position: 'absolute',
-  inset: 0,
+  width: 0,
+  minWidth: '100%',
+  overflow: 'auto',
   padding: '15px',
-  overflowX: 'auto',
-  overflowY: 'auto',
   background: '#0d0d0d',
   fontSize: '13px',
 };

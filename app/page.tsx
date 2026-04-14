@@ -376,7 +376,7 @@ function JavaNodeEditor() {
       <ResizeHandle direction="vertical" onResize={onResizeRight} />
 
       <aside aria-label="Code preview and terminal">
-      <div style={{ display: 'flex', flexDirection: 'column', width: rightWidth, borderLeft: '1px solid #000', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', width: rightWidth, height: '100%', borderLeft: '1px solid #000', overflow: 'hidden' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ErrorBoundary fallbackLabel="Preview">
             <LivePreview code={generatedJavaCode} />
