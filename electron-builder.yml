@@ -1,6 +1,6 @@
 appId: com.tobbe96.devflow
 productName: DevFlow
-copyright: Copyright © 2025 Tobias Boström
+copyright: Copyright © 2026 Tobias Boström
 
 directories:
   output: dist-electron

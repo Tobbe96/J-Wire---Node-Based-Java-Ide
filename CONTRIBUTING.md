@@ -1,6 +1,6 @@
 # Contributing to DevFlow
 
-Thank you for your interest in contributing to DevFlow!This guide will help you get set up and start contributing.
+Thank you for your interest in contributing to DevFlow! This guide will help you get set up and start contributing.
 
 ## Getting Started
 
@@ -138,6 +138,20 @@ The Docker image includes JDK 17 for server-side Java compilation.
 ### Vercel (Frontend Only)
 
 Deploy to Vercel for the frontend experience. Note: server-side Java compilation requires JDK, which isn't available on Vercel's default runtime. The in-browser execution mode still works.
+
+### Electron (Desktop)
+
+Build distributable desktop installers:
+
+```bash
+npm run electron:build:win    # Windows: NSIS installer + portable .exe
+npm run electron:build:mac    # macOS: .dmg disk image
+npm run electron:build:linux  # Linux: AppImage + .deb
+```
+
+Output goes to `dist-electron/`. The portable Windows build can be run directly without installation.
+
+> **Note:** On Windows, if the build fails with a symlink error, set the environment variable `CSC_IDENTITY_AUTO_DISCOVERY=false` or enable Windows Developer Mode in Settings.
 
 ## Architecture
 
