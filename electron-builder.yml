@@ -24,7 +24,9 @@ extraResources:
 win:
   target:
     - nsis
+    - portable
   icon: public/icons/icon-512x512.png
+  signAndEditExecutable: false
 
 mac:
   target:
