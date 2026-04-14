@@ -1196,6 +1196,311 @@ const swingRegistration: Template = {
   ],
 };
 
+// ─── 12. Swing To-Do List Manager (Multi-File) ──────────────────
+const swingTodoList: Template = {
+  id: 'swing-todo-list',
+  name: 'Swing To-Do List Manager',
+  description: 'Multi-file Swing app: To-Do GUI with BorderLayout, multiple event listeners, and a backend service with for-loop, branching, and ArrayList operations. JDK 8+.',
+  className: 'TodoApp',
+  nodes: [],
+  edges: [],
+  files: [
+    // ─── File 1: TodoApp.java ──────────────────────────────────
+    {
+      className: 'TodoApp',
+      classType: 'class',
+      nodes: [
+        // Swing entry point
+        { id: 'sw-app', type: 'swingApp', position: { x: 0, y: 0 }, data: { label: 'Swing Application' } },
+
+        // Frame: setTitle
+        { id: 'frame-title', type: 'swingFrameOp', position: { x: 300, y: 0 },
+          data: { label: 'JFrame: Set Title', operation: 'setTitle', variableName: 'this' } },
+        { id: 'lit-title', type: 'literal', position: { x: 200, y: 130 },
+          data: { label: 'Literal', literalType: 'String', value: 'To-Do List Manager' } },
+
+        // Frame: setSize
+        { id: 'frame-size', type: 'swingFrameOp', position: { x: 600, y: 0 },
+          data: { label: 'JFrame: Set Size', operation: 'setSize', variableName: 'this' } },
+        { id: 'lit-w', type: 'literal', position: { x: 500, y: 100 },
+          data: { label: 'Literal', literalType: 'int', value: '600' } },
+        { id: 'lit-h', type: 'literal', position: { x: 500, y: 170 },
+          data: { label: 'Literal', literalType: 'int', value: '450' } },
+
+        // Frame: setDefaultCloseOperation
+        { id: 'frame-close', type: 'swingFrameOp', position: { x: 900, y: 0 },
+          data: { label: 'JFrame: Default Close', operation: 'setDefaultCloseOperation', variableName: 'this' } },
+
+        // Main panel: BorderLayout
+        { id: 'panel-main', type: 'swingPanelOp', position: { x: 1200, y: 0 },
+          data: { label: 'JPanel: BorderLayout', operation: 'create', layoutType: 'BorderLayout', variableName: 'mainPanel' } },
+
+        // Top panel: FlowLayout (input + buttons)
+        { id: 'panel-top', type: 'swingPanelOp', position: { x: 1500, y: 0 },
+          data: { label: 'JPanel: FlowLayout', operation: 'create', layoutType: 'FlowLayout', variableName: 'topPanel' } },
+
+        // Input field
+        { id: 'ctrl-input', type: 'swingControlOp', position: { x: 1800, y: 0 },
+          data: { label: 'JTextField: Create', operation: 'create', controlType: 'JTextField', variableName: 'inputField' } },
+
+        // Style: set preferred size on input
+        { id: 'style-input-size', type: 'swingStyleOp', position: { x: 2100, y: 0 },
+          data: { label: 'Style: Preferred Size', operation: 'setPreferredSize', variableName: 'inputField' } },
+        { id: 'lit-input-w', type: 'literal', position: { x: 2000, y: 100 },
+          data: { label: 'Literal', literalType: 'int', value: '350' } },
+        { id: 'lit-input-h', type: 'literal', position: { x: 2000, y: 170 },
+          data: { label: 'Literal', literalType: 'int', value: '30' } },
+
+        // Add Task button
+        { id: 'ctrl-add-btn', type: 'swingControlOp', position: { x: 2400, y: 0 },
+          data: { label: 'JButton: Create', operation: 'create', controlType: 'JButton', variableName: 'addBtn' } },
+        { id: 'ctrl-add-text', type: 'swingControlOp', position: { x: 2700, y: 0 },
+          data: { label: 'JButton: Set Text', operation: 'setText', controlType: 'JButton', variableName: 'addBtn' } },
+        { id: 'lit-add-text', type: 'literal', position: { x: 2600, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'Add Task' } },
+
+        // Remove button
+        { id: 'ctrl-remove-btn', type: 'swingControlOp', position: { x: 3000, y: 0 },
+          data: { label: 'JButton: Create', operation: 'create', controlType: 'JButton', variableName: 'removeBtn' } },
+        { id: 'ctrl-remove-text', type: 'swingControlOp', position: { x: 3300, y: 0 },
+          data: { label: 'JButton: Set Text', operation: 'setText', controlType: 'JButton', variableName: 'removeBtn' } },
+        { id: 'lit-remove-text', type: 'literal', position: { x: 3200, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'Remove' } },
+
+        // Text area for task display
+        { id: 'ctrl-display', type: 'swingControlOp', position: { x: 3600, y: 0 },
+          data: { label: 'JTextArea: Create', operation: 'create', controlType: 'JTextArea', variableName: 'taskDisplay' } },
+
+        // Style: font on display
+        { id: 'style-display-font', type: 'swingStyleOp', position: { x: 3900, y: 0 },
+          data: { label: 'Style: Set Font', operation: 'setFont', variableName: 'taskDisplay' } },
+        { id: 'lit-font-size', type: 'literal', position: { x: 3800, y: 150 },
+          data: { label: 'Literal', literalType: 'int', value: '14' } },
+
+        // Style: tooltip on display
+        { id: 'style-display-tip', type: 'swingStyleOp', position: { x: 4200, y: 0 },
+          data: { label: 'Style: Tooltip', operation: 'setToolTipText', variableName: 'taskDisplay' } },
+        { id: 'lit-tip', type: 'literal', position: { x: 4100, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'Your tasks appear here' } },
+
+        // Add components to top panel
+        { id: 'top-add-input', type: 'swingPanelOp', position: { x: 4500, y: 0 },
+          data: { label: 'TopPanel: Add', operation: 'add', variableName: 'topPanel' } },
+        { id: 'top-add-addbtn', type: 'swingPanelOp', position: { x: 4800, y: 0 },
+          data: { label: 'TopPanel: Add', operation: 'add', variableName: 'topPanel' } },
+        { id: 'top-add-removebtn', type: 'swingPanelOp', position: { x: 5100, y: 0 },
+          data: { label: 'TopPanel: Add', operation: 'add', variableName: 'topPanel' } },
+
+        // Add panels to main panel
+        { id: 'main-add-top', type: 'swingPanelOp', position: { x: 5400, y: 0 },
+          data: { label: 'Main: Add North', operation: 'add', variableName: 'mainPanel' } },
+        { id: 'lit-north', type: 'literal', position: { x: 5300, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'North' } },
+        { id: 'main-add-display', type: 'swingPanelOp', position: { x: 5700, y: 0 },
+          data: { label: 'Main: Add Center', operation: 'add', variableName: 'mainPanel' } },
+        { id: 'lit-center', type: 'literal', position: { x: 5600, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'Center' } },
+
+        // Event: Add button → message dialog
+        { id: 'evt-add', type: 'swingEventOp', position: { x: 6000, y: 0 },
+          data: { label: 'Add Listener', operation: 'addActionListener', variableName: 'addBtn' } },
+        { id: 'dialog-add', type: 'swingDialogOp', position: { x: 6200, y: 200 },
+          data: { label: 'Message Dialog', operation: 'showMessageDialog' } },
+        { id: 'lit-add-dlg-title', type: 'literal', position: { x: 6050, y: 350 },
+          data: { label: 'Literal', literalType: 'String', value: 'Added' } },
+        { id: 'lit-add-dlg-msg', type: 'literal', position: { x: 6050, y: 420 },
+          data: { label: 'Literal', literalType: 'String', value: 'Task has been added!' } },
+
+        // Event: Remove button → confirm dialog
+        { id: 'evt-remove', type: 'swingEventOp', position: { x: 6500, y: 0 },
+          data: { label: 'Remove Listener', operation: 'addActionListener', variableName: 'removeBtn' } },
+        { id: 'dialog-confirm', type: 'swingDialogOp', position: { x: 6700, y: 200 },
+          data: { label: 'Confirm Dialog', operation: 'showConfirmDialog' } },
+        { id: 'lit-confirm-title', type: 'literal', position: { x: 6550, y: 350 },
+          data: { label: 'Literal', literalType: 'String', value: 'Confirm' } },
+        { id: 'lit-confirm-msg', type: 'literal', position: { x: 6550, y: 420 },
+          data: { label: 'Literal', literalType: 'String', value: 'Remove selected task?' } },
+
+        // Add main panel to frame + center + show
+        { id: 'frame-add', type: 'swingPanelOp', position: { x: 7000, y: 0 },
+          data: { label: 'Add to Frame', operation: 'add', variableName: 'this' } },
+        { id: 'frame-center', type: 'swingFrameOp', position: { x: 7300, y: 0 },
+          data: { label: 'JFrame: Center', operation: 'setLocationRelativeTo', variableName: 'this' } },
+        { id: 'frame-visible', type: 'swingFrameOp', position: { x: 7600, y: 0 },
+          data: { label: 'JFrame: Set Visible', operation: 'setVisible', variableName: 'this' } },
+        { id: 'lit-true', type: 'literal', position: { x: 7500, y: 150 },
+          data: { label: 'Literal', literalType: 'boolean', value: 'true' } },
+      ],
+      edges: [
+        // ═══ Exec chain ═══
+        { id: 'e1', source: 'sw-app', target: 'frame-title', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e2', source: 'frame-title', target: 'frame-size', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e3', source: 'frame-size', target: 'frame-close', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e4', source: 'frame-close', target: 'panel-main', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e5', source: 'panel-main', target: 'panel-top', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e6', source: 'panel-top', target: 'ctrl-input', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e7', source: 'ctrl-input', target: 'style-input-size', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e8', source: 'style-input-size', target: 'ctrl-add-btn', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e9', source: 'ctrl-add-btn', target: 'ctrl-add-text', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e10', source: 'ctrl-add-text', target: 'ctrl-remove-btn', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e11', source: 'ctrl-remove-btn', target: 'ctrl-remove-text', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e12', source: 'ctrl-remove-text', target: 'ctrl-display', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e13', source: 'ctrl-display', target: 'style-display-font', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e14', source: 'style-display-font', target: 'style-display-tip', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e15', source: 'style-display-tip', target: 'top-add-input', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e16', source: 'top-add-input', target: 'top-add-addbtn', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e17', source: 'top-add-addbtn', target: 'top-add-removebtn', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e18', source: 'top-add-removebtn', target: 'main-add-top', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e19', source: 'main-add-top', target: 'main-add-display', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e20', source: 'main-add-display', target: 'evt-add', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e21', source: 'evt-add', target: 'evt-remove', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e22', source: 'evt-remove', target: 'frame-add', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e23', source: 'frame-add', target: 'frame-center', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e24', source: 'frame-center', target: 'frame-visible', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+
+        // ═══ Event bodies ═══
+        { id: 'e-evt-add', source: 'evt-add', target: 'dialog-add', sourceHandle: 'event-body', targetHandle: 'exec-in' },
+        { id: 'e-evt-remove', source: 'evt-remove', target: 'dialog-confirm', sourceHandle: 'event-body', targetHandle: 'exec-in' },
+
+        // ═══ Data edges ═══
+        { id: 'd1', source: 'lit-title', target: 'frame-title', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
+        { id: 'd2', source: 'lit-w', target: 'frame-size', sourceHandle: 'data-out', targetHandle: 'data-in-w' },
+        { id: 'd3', source: 'lit-h', target: 'frame-size', sourceHandle: 'data-out', targetHandle: 'data-in-h' },
+        { id: 'd-input-w', source: 'lit-input-w', target: 'style-input-size', sourceHandle: 'data-out', targetHandle: 'data-in-w' },
+        { id: 'd-input-h', source: 'lit-input-h', target: 'style-input-size', sourceHandle: 'data-out', targetHandle: 'data-in-h' },
+        { id: 'd-add-text', source: 'lit-add-text', target: 'ctrl-add-text', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
+        { id: 'd-remove-text', source: 'lit-remove-text', target: 'ctrl-remove-text', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
+        { id: 'd-font-size', source: 'lit-font-size', target: 'style-display-font', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
+        { id: 'd-tip', source: 'lit-tip', target: 'style-display-tip', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
+        // Panel add child refs
+        { id: 'd-add-input', source: 'ctrl-input', target: 'top-add-input', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-add-addbtn', source: 'ctrl-add-btn', target: 'top-add-addbtn', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-add-removebtn', source: 'ctrl-remove-btn', target: 'top-add-removebtn', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-top-to-main', source: 'panel-top', target: 'main-add-top', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-north', source: 'lit-north', target: 'main-add-top', sourceHandle: 'data-out', targetHandle: 'data-in-constraint' },
+        { id: 'd-display-to-main', source: 'ctrl-display', target: 'main-add-display', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-center', source: 'lit-center', target: 'main-add-display', sourceHandle: 'data-out', targetHandle: 'data-in-constraint' },
+        // Dialog data
+        { id: 'd-add-dlg-title', source: 'lit-add-dlg-title', target: 'dialog-add', sourceHandle: 'data-out', targetHandle: 'data-in-title' },
+        { id: 'd-add-dlg-msg', source: 'lit-add-dlg-msg', target: 'dialog-add', sourceHandle: 'data-out', targetHandle: 'data-in-msg' },
+        { id: 'd-confirm-title', source: 'lit-confirm-title', target: 'dialog-confirm', sourceHandle: 'data-out', targetHandle: 'data-in-title' },
+        { id: 'd-confirm-msg', source: 'lit-confirm-msg', target: 'dialog-confirm', sourceHandle: 'data-out', targetHandle: 'data-in-msg' },
+        // Frame add main panel
+        { id: 'd-panel-frame', source: 'panel-main', target: 'frame-add', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        // Visible
+        { id: 'd-true', source: 'lit-true', target: 'frame-visible', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
+      ],
+    },
+
+    // ─── File 2: TaskManager.java ──────────────────────────────
+    {
+      className: 'TaskManager',
+      classType: 'class',
+      nodes: [
+        // Field: ArrayList<String> tasks
+        { id: 'field-tasks', type: 'java', position: { x: 50, y: 0 },
+          data: { label: 'tasks', type: 'ArrayList<String>', value: 'new ArrayList<>()', modifier: 'private', isStatic: false } },
+
+        // ═══ Method: addTask(String task) ═══
+        { id: 'method-add', type: 'method', position: { x: 50, y: 200 },
+          data: { label: 'addTask', returnType: 'void', isStatic: false,
+                  parameters: [{ name: 'task', type: 'String' }] } },
+
+        { id: 'get-task', type: 'getter', position: { x: 50, y: 400 },
+          data: { label: 'task', type: 'String' } },
+        { id: 'str-empty', type: 'stringOp', position: { x: 250, y: 350 },
+          data: { label: 'String isEmpty', operation: 'isEmpty', variableName: 'task' } },
+        { id: 'branch-empty', type: 'branch', position: { x: 350, y: 200 },
+          data: { label: 'If Empty?', accepts: ['boolean'] } },
+
+        // True branch: error + return
+        { id: 'print-err', type: 'print', position: { x: 650, y: 300 },
+          data: { label: 'Print', accepts: ALL_TYPES } },
+        { id: 'lit-err', type: 'literal', position: { x: 550, y: 440 },
+          data: { label: 'Literal', literalType: 'String', value: 'Error: Task cannot be empty' } },
+        { id: 'return-void', type: 'return', position: { x: 950, y: 300 },
+          data: { label: 'Return' } },
+
+        // False branch: add + print success
+        { id: 'al-add', type: 'arrayListOp', position: { x: 650, y: 100 },
+          data: { label: 'ArrayList Add', operation: 'add', variableName: 'tasks', elementType: 'String' } },
+        { id: 'get-task-2', type: 'getter', position: { x: 550, y: 50 },
+          data: { label: 'task', type: 'String' } },
+        { id: 'print-added', type: 'print', position: { x: 950, y: 100 },
+          data: { label: 'Print', accepts: ALL_TYPES } },
+        { id: 'str-fmt-add', type: 'stringFormat', position: { x: 800, y: -50 },
+          data: { label: 'String.format', formatString: 'Added: %s', argCount: 1 } },
+        { id: 'get-task-3', type: 'getter', position: { x: 650, y: -100 },
+          data: { label: 'task', type: 'String' } },
+
+        // ═══ Method: listTasks() ═══
+        { id: 'method-list', type: 'method', position: { x: 50, y: 600 },
+          data: { label: 'listTasks', returnType: 'void', isStatic: false, parameters: [] } },
+
+        { id: 'for-loop', type: 'for', position: { x: 350, y: 600 },
+          data: { label: 'For Loop', comparison: '<' } },
+        { id: 'al-size-list', type: 'arrayListOp', position: { x: 250, y: 750 },
+          data: { label: 'ArrayList Size', operation: 'size', variableName: 'tasks', elementType: 'String' } },
+        { id: 'print-item', type: 'print', position: { x: 650, y: 700 },
+          data: { label: 'Print', accepts: ALL_TYPES } },
+        { id: 'al-get', type: 'arrayListOp', position: { x: 500, y: 830 },
+          data: { label: 'ArrayList Get', operation: 'get', variableName: 'tasks', elementType: 'String' } },
+        { id: 'getter-i', type: 'getter', position: { x: 350, y: 900 },
+          data: { label: 'i', type: 'int' } },
+
+        // ═══ Method: getTaskCount() ═══
+        { id: 'method-count', type: 'method', position: { x: 50, y: 1050 },
+          data: { label: 'getTaskCount', returnType: 'int', isStatic: false, parameters: [] } },
+        { id: 'return-count', type: 'return', position: { x: 350, y: 1050 },
+          data: { label: 'Return', accepts: ['int'] } },
+        { id: 'al-size-count', type: 'arrayListOp', position: { x: 250, y: 1200 },
+          data: { label: 'ArrayList Size', operation: 'size', variableName: 'tasks', elementType: 'String' } },
+
+        // ═══ Main ═══
+        { id: 'main', type: 'main', position: { x: 50, y: 1350 },
+          data: { label: 'Main' } },
+        { id: 'print-demo', type: 'print', position: { x: 350, y: 1350 },
+          data: { label: 'Print', accepts: ALL_TYPES } },
+        { id: 'lit-demo', type: 'literal', position: { x: 250, y: 1500 },
+          data: { label: 'Literal', literalType: 'String', value: 'TaskManager ready — use with TodoApp' } },
+      ],
+      edges: [
+        // ═══ addTask exec chain ═══
+        { id: 'e-add-branch', source: 'method-add', target: 'branch-empty', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e-branch-true', source: 'branch-empty', target: 'print-err', sourceHandle: 'exec-out-true', targetHandle: 'exec-in' },
+        { id: 'e-printerr-return', source: 'print-err', target: 'return-void', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e-branch-false', source: 'branch-empty', target: 'al-add', sourceHandle: 'exec-out-false', targetHandle: 'exec-in' },
+        { id: 'e-aladd-print', source: 'al-add', target: 'print-added', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+
+        // ═══ addTask data ═══
+        { id: 'e-d-gettask-strempty', source: 'get-task', target: 'str-empty', sourceHandle: 'data-out', targetHandle: 'data-in' },
+        { id: 'e-d-strempty-branch', source: 'str-empty', target: 'branch-empty', sourceHandle: 'data-out', targetHandle: 'data-in' },
+        { id: 'e-d-literr-printerr', source: 'lit-err', target: 'print-err', sourceHandle: 'data-out', targetHandle: 'data-in' },
+        { id: 'e-d-gettask2-aladd', source: 'get-task-2', target: 'al-add', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
+        { id: 'e-d-gettask3-strfmt', source: 'get-task-3', target: 'str-fmt-add', sourceHandle: 'data-out', targetHandle: 'data-in-arg-0' },
+        { id: 'e-d-strfmt-printadd', source: 'str-fmt-add', target: 'print-added', sourceHandle: 'data-out', targetHandle: 'data-in' },
+
+        // ═══ listTasks exec chain ═══
+        { id: 'e-list-for', source: 'method-list', target: 'for-loop', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e-for-body', source: 'for-loop', target: 'print-item', sourceHandle: 'exec-body', targetHandle: 'exec-in' },
+
+        // ═══ listTasks data ═══
+        { id: 'e-d-alsize-for', source: 'al-size-list', target: 'for-loop', sourceHandle: 'data-out', targetHandle: 'data-end' },
+        { id: 'e-d-getteri-alget', source: 'getter-i', target: 'al-get', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
+        { id: 'e-d-alget-printitem', source: 'al-get', target: 'print-item', sourceHandle: 'data-out', targetHandle: 'data-in' },
+
+        // ═══ getTaskCount ═══
+        { id: 'e-count-return', source: 'method-count', target: 'return-count', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e-d-alsize-return', source: 'al-size-count', target: 'return-count', sourceHandle: 'data-out', targetHandle: 'data-in' },
+
+        // ═══ Main ═══
+        { id: 'e-main-print', source: 'main', target: 'print-demo', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e-d-litdemo-print', source: 'lit-demo', target: 'print-demo', sourceHandle: 'data-out', targetHandle: 'data-in' },
+      ],
+    },
+  ],
+};
+
 // ─── Export ────────────────────────────────────────────────────
 
 export const TEMPLATES: Template[] = [
@@ -1210,4 +1515,5 @@ export const TEMPLATES: Template[] = [
   arraySumForEach,
   stringFormatter,
   swingRegistration,
+  swingTodoList,
 ];
