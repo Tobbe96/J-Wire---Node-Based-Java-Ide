@@ -32,7 +32,13 @@ Open [http://localhost:3000](http://localhost:3000) to start the development ser
 | `npm run lint` | Run ESLint |
 | `npm test` | Run all tests once (Vitest) |
 | `npm run test:watch` | Run tests in watch mode |
+| `npm run test:e2e` | Run Playwright E2E tests |
 | `npm start` | Start the production server (after build) |
+| `npm run electron:dev` | Launch the desktop app (dev mode) |
+| `npm run electron:build` | Build desktop installer for current platform |
+| `npm run electron:build:win` | Build Windows installer (.exe) |
+| `npm run electron:build:mac` | Build macOS installer (.dmg) |
+| `npm run electron:build:linux` | Build Linux installer (AppImage + .deb) |
 
 ### Project Structure
 
@@ -61,6 +67,11 @@ app/
 │   └── theme.ts         # Type colors, defaults, and helpers
 ├── layout.tsx          # Root layout (fonts, metadata, service worker)
 └── page.tsx            # Main editor page (React Flow canvas + panels)
+electron/
+├── main.js             # Electron main process (dev/prod server management)
+└── preload.js          # Secure context bridge for renderer
+e2e/
+└── app.spec.ts         # Playwright E2E smoke tests
 public/
 └── sw.js               # Service worker for offline support
 ```
@@ -106,11 +117,12 @@ npm test
 
 ### CI Pipeline
 
-The GitHub Actions workflow (`.github/workflows/ci.yml`) runs three jobs on every push and PR:
+The GitHub Actions workflow (`.github/workflows/ci.yml`) runs four jobs on every push and PR:
 
 1. **Lint** — `npm run lint`
 2. **Test** — `npx vitest run --reporter=verbose`
 3. **Build** — `npm run build` (depends on lint + test passing)
+4. **E2E** — `npx playwright test` (depends on build passing)
 
 ## Deployment
 

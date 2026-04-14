@@ -22,6 +22,8 @@ The core loop is: **drag nodes → connect wires → see Java code → run it**.
 | Testing | [Vitest 4](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + jsdom |
 | Linting | [ESLint 9](https://eslint.org/) + eslint-config-next |
 | Git Hooks | [Husky 9](https://typicode.github.io/husky/) + lint-staged |
+| Desktop App | [Electron](https://www.electronjs.org/) + electron-builder |
+| E2E Testing | [Playwright](https://playwright.dev/) |
 | Language | TypeScript 5 (strict) |
 
 ## Directory Structure
@@ -114,7 +116,14 @@ DevFlow/
 │   └── page.tsx                    # Main editor page (React Flow + all panels)
 ├── public/
 │   └── sw.js                       # Service worker for offline caching
-├── .github/workflows/ci.yml        # CI pipeline (lint → test → build)
+├── electron/
+│   ├── main.js                     # Electron main process (dev/prod server)
+│   └── preload.js                  # Secure context bridge for renderer
+├── e2e/
+│   └── app.spec.ts                 # Playwright E2E smoke tests
+├── electron-builder.yml             # Electron build config (Win/Mac/Linux)
+├── .github/workflows/ci.yml        # CI pipeline (lint → test → build → e2e)
+├── playwright.config.ts             # Playwright configuration
 ├── vitest.config.ts                # Vitest configuration
 ├── eslint.config.mjs               # ESLint flat config
 ├── next.config.ts                  # Next.js configuration
@@ -309,6 +318,50 @@ Key actions:
 | `app/components/LivePreview.tsx` | Real-time Java code preview with Shiki |
 | `app/components/Nodes/` | 75+ node component implementations |
 
+## Electron Desktop App
+
+DevFlow can run as a standalone desktop application via Electron, providing a native window experience on Windows, macOS, and Linux.
+
+### Architecture
+
+```
+┌────────────────────────────────────────┐
+│  Electron Main Process (electron/main.js) │
+│  - Creates BrowserWindow               │
+│  - Manages Next.js server lifecycle     │
+│  - Native menu bar (File, Edit, View)   │
+└───────────────┬────────────────────────┘
+                │ loads URL
+                ▼
+┌────────────────────────────────────────┐
+│  Renderer Process (BrowserWindow)       │
+│  - Runs the full Next.js web app        │
+│  - Same code, same UI, same features    │
+│  - Context-isolated (no Node.js access) │
+└────────────────────────────────────────┘
+```
+
+### Dev Mode vs Production
+
+| Mode | How it works |
+|---|---|
+| **Dev** (`electron:dev`) | Starts `next dev` and Electron concurrently. Electron waits for `localhost:3000` to be ready, then opens a BrowserWindow pointing to it. Hot reload works normally. |
+| **Production** (`electron:build`) | Runs `next build` to produce a standalone server, then `electron-builder` packages it into a native installer. At runtime, Electron spawns the standalone Next.js server internally and connects to it. |
+
+### Key Design Decisions
+
+- **Context isolation enabled** — The renderer has no access to Node.js APIs. A minimal preload script (`electron/preload.js`) exposes only `isElectron` and `platform` via `contextBridge`.
+- **External links open in default browser** — `setWindowOpenHandler` intercepts new window requests and delegates to `shell.openExternal()`.
+- **Java compilation works locally** — Since Electron runs on the user's machine, the `/api/compile` endpoint can invoke `javac`/`java` directly if JDK is installed. No server required.
+
+### Build Outputs
+
+| Platform | Command | Output |
+|---|---|---|
+| Windows | `npm run electron:build:win` | NSIS installer (.exe) |
+| macOS | `npm run electron:build:mac` | DMG disk image (.dmg) |
+| Linux | `npm run electron:build:linux` | AppImage + Debian package (.deb) |
+
 ## Testing
 
 ### What's Tested
@@ -330,3 +383,11 @@ Key actions:
 2. Use Vitest globals (`describe`, `it`, `expect`) — no imports needed
 3. The `@` alias resolves to `./app` in tests
 4. Run tests: `npm test`
+
+### E2E Tests
+
+End-to-end tests use [Playwright](https://playwright.dev/) and live in the `e2e/` directory:
+
+- `app.spec.ts` — Smoke tests covering app load, page title, sidebar, code preview, theme toggle, docs modal, node palette, and React Flow canvas
+- Run locally: `npm run test:e2e`
+- CI runs E2E after the build step with Chromium
