@@ -114,6 +114,8 @@ const codePanelStyle: React.CSSProperties = {
   flexDirection: 'column',
   flex: 1,
   minHeight: 0,
+  minWidth: 0,
+  overflow: 'hidden',
   zIndex: 10,
 };
 
@@ -146,6 +148,8 @@ const codeAreaStyle: React.CSSProperties = {
   overflowY: 'auto',
   flex: 1,
   minHeight: 0,
+  minWidth: 0,
+  maxWidth: '100%',
   background: '#0d0d0d',
   fontSize: '13px',
 };
