@@ -6,6 +6,7 @@ import { getTypeColor } from '../../utils/theme';
 const ACCENT = '#8e44ad';
 const BOOL_COLOR = getTypeColor('boolean');
 const INT_COLOR = getTypeColor('int');
+const LIST_COLOR = getTypeColor('ArrayList');
 
 const lbl: React.CSSProperties = { fontSize: '11px', color: '#ccc' };
 const bold: React.CSSProperties = { fontSize: '11px', color: '#fff', fontWeight: 'bold' };
