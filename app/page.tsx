@@ -36,6 +36,7 @@ import { useConnectionHandlers } from './hooks/useConnectionHandlers';
 
 // Utilities
 import { getCompatibleNodeKinds } from './utils/validation';
+import { analytics } from './utils/analytics';
 
 function JavaNodeEditor() {
   const {
@@ -99,7 +100,7 @@ function JavaNodeEditor() {
   const { undo, redo } = useEditorStore.temporal.getState();
 
   // Load on mount
-  useEffect(() => { loadNodeGraph(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadNodeGraph(); analytics.recordSession(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Keyboard shortcuts (replaces inline useEffect) ──────────────────────
   useKeyboardShortcuts({

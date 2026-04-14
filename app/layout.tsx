@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import MobileNotice from "./components/MobileNotice";
 import ServiceWorkerRegistrar from "./components/ServiceWorkerRegistrar";
 import "./globals.css";
 
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "j-flow — Visual Java IDE",
+  title: "DevFlow — Visual Java IDE",
   description: "A node-based visual IDE for building Java programs through drag-and-drop flowcharts",
 };
 
@@ -34,6 +35,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegistrar />
+        <MobileNotice />
         {children}
       </body>
     </html>

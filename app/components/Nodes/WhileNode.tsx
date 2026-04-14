@@ -33,7 +33,7 @@ const WhileNode = ({ id, data, selected }: NodeProps<Node<WhileNodeDataExt>>) =>
 
   return (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-    <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+    <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
       WHILE (Loop)
     </div>
 

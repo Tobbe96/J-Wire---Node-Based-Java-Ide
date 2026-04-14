@@ -27,9 +27,9 @@ export default function ConnectionSpark() {
 
   // Expose to window so the store can trigger it
   useEffect(() => {
-    (window as unknown as Record<string, unknown>).__jflowSpark = addSpark;
+    (window as unknown as Record<string, unknown>).__devflowSpark = addSpark;
     return () => {
-      delete (window as unknown as Record<string, unknown>).__jflowSpark;
+      delete (window as unknown as Record<string, unknown>).__devflowSpark;
     };
   }, [addSpark]);
 
@@ -57,7 +57,7 @@ export default function ConnectionSpark() {
 
 /** Trigger a connection spark from anywhere */
 export function triggerConnectionSpark(x: number, y: number, color: string) {
-  const fn = (window as unknown as Record<string, unknown>).__jflowSpark as
+  const fn = (window as unknown as Record<string, unknown>).__devflowSpark as
     | ((x: number, y: number, color: string) => void)
     | undefined;
   fn?.(x, y, color);

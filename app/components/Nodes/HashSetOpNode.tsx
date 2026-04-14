@@ -119,7 +119,7 @@ const HashSetOpNode = ({
   if (op === 'create') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={bodyStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -135,7 +135,7 @@ const HashSetOpNode = ({
   if (op === 'add') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -157,7 +157,7 @@ const HashSetOpNode = ({
   if (op === 'remove') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -179,7 +179,7 @@ const HashSetOpNode = ({
   if (op === 'contains') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -201,7 +201,7 @@ const HashSetOpNode = ({
   if (op === 'size') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
-        <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ display: 'flex', alignItems: 'center', ...rowStyle }}>
@@ -216,7 +216,7 @@ const HashSetOpNode = ({
   // ─── clear ──────────────────────────────────────────────
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-      <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
       {renderVarEdit()}
       <div style={bodyStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

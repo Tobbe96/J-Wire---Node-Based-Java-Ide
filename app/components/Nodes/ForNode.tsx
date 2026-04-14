@@ -58,7 +58,7 @@ const ForNode = ({ id, data, selected }: NodeProps<Node<ForNodeData>>) => {
 
   return (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '200px' }}>
-    <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+    <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
       FOR (Loop)
     </div>
 

@@ -1,8 +1,8 @@
-# j-flow Architecture
+# DevFlow Architecture
 
 ## Overview
 
-j-flow is a **visual Java IDE** that lets users build Java programs by connecting nodes on a drag-and-drop flowchart canvas. The node graph is compiled to valid Java source code in real time and can be executed either in-browser (via a simulated runtime) or server-side (via `javac` + `java`).
+DevFlow is a **visual Java IDE** that lets users build Java programs by connecting nodes on a drag-and-drop flowchart canvas. The node graph is compiled to valid Java source code in real time and can be executed either in-browser (via a simulated runtime) or server-side (via `javac` + `java`).
 
 The core loop is: **drag nodes → connect wires → see Java code → run it**.
 
@@ -27,7 +27,7 @@ The core loop is: **drag nodes → connect wires → see Java code → run it**.
 ## Directory Structure
 
 ```
-j-flow/
+DevFlow/
 ├── app/
 │   ├── api/
 │   │   └── compile/
@@ -205,7 +205,7 @@ Located in `app/utils/compiler/evaluateData.ts`, this function:
 
 ### Execution
 
-j-flow supports two execution modes:
+DevFlow supports two execution modes:
 
 #### 1. In-Browser Execution (Script Mode)
 - **Entry**: `executeGraph()` in `app/utils/executor.ts`

@@ -66,7 +66,7 @@ const ConstructorNode = ({ id, data, selected }: NodeProps<Node<ConstructorNodeD
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '240px' }}>
-      <div className="jflow-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
+      <div className="devflow-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
         <span>CONSTRUCTOR</span>
         <span style={{ color: ACCENT, fontSize: '10px' }}>new</span>
       </div>

@@ -42,7 +42,7 @@ const TernaryNode = ({ id, data, selected }: NodeProps<Node<TernaryNodeData>>) =
 
   return (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-    <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+    <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
       TERNARY ( ? : )
     </div>
 

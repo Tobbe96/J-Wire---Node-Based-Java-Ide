@@ -139,9 +139,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 function GettingStarted() {
   return (
     <div>
-      <h2 style={h2}>Getting Started with J-Flow</h2>
+      <h2 style={h2}>Getting Started with DevFlow</h2>
       <p style={{ color: '#bbb', marginBottom: 16 }}>
-        J-Flow is a visual node-based IDE for building Java programs. Instead of writing code
+        DevFlow is a visual node-based IDE for building Java programs. Instead of writing code
         line by line, you connect visual nodes that represent variables, logic, and operations.
       </p>
 
@@ -276,7 +276,7 @@ function TypeSystem() {
     <div>
       <h2 style={h2}>Type System &amp; Connection Colors</h2>
       <p style={{ color: '#bbb', marginBottom: 16 }}>
-        J-Flow uses color-coded connections to distinguish data types. You can only connect
+        DevFlow uses color-coded connections to distinguish data types. You can only connect
         handles of the same type — the IDE prevents invalid connections automatically.
       </p>
 
@@ -359,7 +359,7 @@ function DocsModal({ onClose }: DocsModalProps) {
         <div style={header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 22 }}>📖</span>
-            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#fff' }}>J-Flow Documentation</h1>
+            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#fff' }}>DevFlow Documentation</h1>
           </div>
           <button
             ref={closeButtonRef}

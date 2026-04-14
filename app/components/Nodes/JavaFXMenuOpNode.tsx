@@ -49,7 +49,7 @@ const JavaFXMenuOpNode = ({ data, selected, id }: Props) => {
 
   const wrap = (children: React.ReactNode) => (
     <div style={{ ...nodeContainer(FX_COLOR, !!selected), minWidth: '240px' }}>
-      <div className="jflow-header-shimmer" style={nodeHeaderSolid(FX_COLOR)}>☰ Menu: {OP_LABELS[op] ?? op}</div>
+      <div className="devflow-header-shimmer" style={nodeHeaderSolid(FX_COLOR)}>☰ Menu: {OP_LABELS[op] ?? op}</div>
       <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>{sub}{children}</div>
     </div>
   );

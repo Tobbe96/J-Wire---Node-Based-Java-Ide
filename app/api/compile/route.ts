@@ -149,7 +149,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     // Create an isolated temp directory
-    workDir = join(tmpdir(), `jflow-${randomUUID()}`);
+    workDir = join(tmpdir(), `devflow-${randomUUID()}`);
     mkdirSync(workDir, { recursive: true });
 
     // Write all Java source files

@@ -33,13 +33,13 @@ describe('useVfxStore', () => {
   });
 
   it('hydrate() reads "true" from localStorage', () => {
-    mockStorage['jflow-vfx'] = 'true';
+    mockStorage['devflow-vfx'] = 'true';
     useVfxStore.getState().hydrate();
     expect(useVfxStore.getState().vfxEnabled).toBe(true);
   });
 
   it('hydrate() reads "false" from localStorage', () => {
-    mockStorage['jflow-vfx'] = 'false';
+    mockStorage['devflow-vfx'] = 'false';
     useVfxStore.getState().hydrate();
     expect(useVfxStore.getState().vfxEnabled).toBe(false);
   });
@@ -53,9 +53,9 @@ describe('useVfxStore', () => {
 
   it('toggleVfx() persists to localStorage', () => {
     useVfxStore.getState().toggleVfx();
-    expect(mockStorage['jflow-vfx']).toBe('true');
+    expect(mockStorage['devflow-vfx']).toBe('true');
     useVfxStore.getState().toggleVfx();
-    expect(mockStorage['jflow-vfx']).toBe('false');
+    expect(mockStorage['devflow-vfx']).toBe('false');
   });
 
   it('setVfxEnabled() sets specific value', () => {
@@ -67,8 +67,8 @@ describe('useVfxStore', () => {
 
   it('setVfxEnabled() persists to localStorage', () => {
     useVfxStore.getState().setVfxEnabled(true);
-    expect(mockStorage['jflow-vfx']).toBe('true');
+    expect(mockStorage['devflow-vfx']).toBe('true');
     useVfxStore.getState().setVfxEnabled(false);
-    expect(mockStorage['jflow-vfx']).toBe('false');
+    expect(mockStorage['devflow-vfx']).toBe('false');
   });
 });

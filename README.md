@@ -1,12 +1,12 @@
-# j-flow
+# DevFlow
 
-[![CI](https://github.com/your-username/j-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/j-flow/actions/workflows/ci.yml)
+[![CI](https://github.com/Tobbe96/DevFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/Tobbe96/DevFlow/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](#license)
 
 A **node-based visual IDE** for building Java programs through drag-and-drop flowcharts. Connect nodes to define variables, methods, control flow, and I/O — then see real-time Java code generation and execute your program instantly.
 
 <!-- Screenshot placeholder: replace with an actual screenshot -->
-<!-- ![j-flow screenshot](docs/screenshot.png) -->
+<!-- ![DevFlow screenshot](docs/screenshot.png) -->
 
 ## Features
 
@@ -35,8 +35,8 @@ A **node-based visual IDE** for building Java programs through drag-and-drop flo
 ### Setup
 
 ```bash
-git clone https://github.com/your-username/j-flow.git
-cd j-flow
+git clone https://github.com/Tobbe96/DevFlow.git
+cd DevFlow
 npm install
 npm run dev
 ```

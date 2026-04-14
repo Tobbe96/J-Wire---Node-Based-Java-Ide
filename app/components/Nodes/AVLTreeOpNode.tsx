@@ -46,7 +46,7 @@ const AVLTreeOpNode = ({ data, selected, id }: Props) => {
 
   const wrap = (children: React.ReactNode) => (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '210px' }}>
-      <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>⚖️ AVL: {OP_LABELS[op] ?? op}</div>
+      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>⚖️ AVL: {OP_LABELS[op] ?? op}</div>
       <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>{sub}{children}</div>
     </div>
   );

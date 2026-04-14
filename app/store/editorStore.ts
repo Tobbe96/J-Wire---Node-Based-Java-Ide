@@ -21,6 +21,7 @@ import { isValidJavaConnection, resolveSourceType, resolveTargetAccepts, getAuto
 import type { ProjectClassInfo, Parameter } from '../utils/nodeTypes';
 import type { Template } from '../utils/templates';
 import { useToastStore } from './toastStore';
+import { analytics } from '../utils/analytics';
 
 const STORAGE_KEY = 'java-nodegraph-save';
 
@@ -365,6 +366,7 @@ export const useEditorStore = create<EditorStore>()(
       },
 
       compileAndRunJava: async () => {
+        analytics.track('compile');
         const { nodes, edges, className, files, activeFileId } = get();
         const toast = useToastStore.getState();
         const syncedFiles = files.map(f =>
@@ -678,6 +680,7 @@ export const useEditorStore = create<EditorStore>()(
 
       // --- Persistence ---
       saveNodeGraph: () => {
+        analytics.track('save');
         const { _rfInstance, className, files, activeFileId, nodes, edges } = get();
         const viewport = _rfInstance ? _rfInstance.toObject().viewport : undefined;
         // Sync active file before saving
@@ -736,6 +739,7 @@ export const useEditorStore = create<EditorStore>()(
       },
 
       exportToFile: () => {
+        analytics.track('export');
         const { _rfInstance, className, files, activeFileId, nodes, edges } = get();
         const viewport = _rfInstance ? _rfInstance.toObject().viewport : undefined;
         const allFiles = files.map(f =>
@@ -746,7 +750,7 @@ export const useEditorStore = create<EditorStore>()(
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `jflow-project.json`;
+        a.download = `devflow-project.json`;
         a.click();
         URL.revokeObjectURL(url);
         useToastStore.getState().addToast('Project exported', 'success');
@@ -882,6 +886,7 @@ export const useEditorStore = create<EditorStore>()(
 
       // --- Templates ---
       loadTemplate: (template) => {
+        analytics.track('template_load');
         if (template.files && template.files.length > 0) {
           const newFiles: ProjectFile[] = template.files.map((f, idx) => ({
             id: `file-${Date.now()}-${idx}`,

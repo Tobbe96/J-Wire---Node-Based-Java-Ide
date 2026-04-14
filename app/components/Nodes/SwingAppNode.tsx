@@ -8,7 +8,7 @@ type Props = { id: string; data: Record<string, unknown>; selected?: boolean };
 
 const SwingAppNode = ({ selected }: Props) => (
   <div style={{ ...nodeContainer(SWING_COLOR, !!selected), minWidth: '210px' }}>
-    <div className="jflow-header-shimmer" style={nodeHeaderSolid(SWING_COLOR)}>☕ Swing Application</div>
+    <div className="devflow-header-shimmer" style={nodeHeaderSolid(SWING_COLOR)}>☕ Swing Application</div>
     <div style={{ padding: '10px' }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold', marginRight: '5px' }}>constructor</span>

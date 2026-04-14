@@ -25,7 +25,7 @@ const JavaNode = ({ id, data, selected }: { id: string; data: Record<string, unk
 
   return (
     <div style={nodeContainer(color, !!selected)}>
-      <div className="jflow-header-shimmer" style={nodeHeaderGradient(color)}>
+      <div className="devflow-header-shimmer" style={nodeHeaderGradient(color)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
           <Handle type="target" position={Position.Left} id="exec-in" title="Execution in" style={execHandleStyle('left')} />
           <span>SET {typeName}</span>

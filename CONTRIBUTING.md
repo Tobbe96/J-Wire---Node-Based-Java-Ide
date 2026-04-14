@@ -1,6 +1,6 @@
-# Contributing to j-flow
+# Contributing to DevFlow
 
-Thank you for your interest in contributing to j-flow! This guide will help you get set up and start contributing.
+Thank you for your interest in contributing to DevFlow!This guide will help you get set up and start contributing.
 
 ## Getting Started
 
@@ -13,8 +13,8 @@ Thank you for your interest in contributing to j-flow! This guide will help you 
 ### Setup
 
 ```bash
-git clone https://github.com/<your-fork>/j-flow.git
-cd j-flow
+git clone https://github.com/Tobbe96/DevFlow.git
+cd DevFlow
 npm install
 npm run dev
 ```
@@ -111,6 +111,21 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs three jobs on ever
 1. **Lint** — `npm run lint`
 2. **Test** — `npx vitest run --reporter=verbose`
 3. **Build** — `npm run build` (depends on lint + test passing)
+
+## Deployment
+
+### Docker (Full Features)
+
+```bash
+docker build -t devflow .
+docker run -p 3000:3000 devflow
+```
+
+The Docker image includes JDK 17 for server-side Java compilation.
+
+### Vercel (Frontend Only)
+
+Deploy to Vercel for the frontend experience. Note: server-side Java compilation requires JDK, which isn't available on Vercel's default runtime. The in-browser execution mode still works.
 
 ## Architecture
 

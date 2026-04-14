@@ -40,7 +40,7 @@ const ArraysUtilNode = ({ data, selected, id }: NodeProps<Node<ArraysUtilNodeDat
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-      <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         ARRAYS: {op.toUpperCase()}
       </div>
       <div style={{ padding: '4px 10px 2px' }}>

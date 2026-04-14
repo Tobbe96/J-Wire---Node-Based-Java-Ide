@@ -56,7 +56,7 @@ export default function AmbientParticles() {
 
   return (
     <Particles
-      id="jflow-ambient-particles"
+      id="devflow-ambient-particles"
       options={options}
     />
   );

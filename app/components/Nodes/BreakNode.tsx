@@ -17,7 +17,7 @@ const BreakNode = ({ id, data, selected }: NodeProps<Node<BreakNodeData>>) => {
 
   return (
   <div style={{ ...nodeContainer('#c0392b', !!selected), minWidth: '140px' }}>
-    <div className="jflow-header-shimmer" style={nodeHeaderSolid('#c0392b')}>
+    <div className="devflow-header-shimmer" style={nodeHeaderSolid('#c0392b')}>
       BREAK
     </div>
     <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>

@@ -18,7 +18,7 @@ const handleStyle = (color: string, side: 'left' | 'right') => ({
 const AssertNode = ({ selected }: NodeProps<Node<AssertNodeData>>) => {
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-      <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         ASSERT
       </div>
       <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>

@@ -4,7 +4,7 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* J-Flow theme tokens — dark by default */
+  /* DevFlow theme tokens — dark by default */
   --jf-canvas-bg: #121212;
   --jf-panel-bg: #1a1a1a;
   --jf-panel-border: #2a2a2a;
@@ -304,12 +304,12 @@ body {
   100% { transform: translateX(400%) skewX(-15deg); }
 }
 
-.jflow-header-shimmer {
+.devflow-header-shimmer {
   position: relative;
   overflow: hidden;
 }
 
-.jflow-header-shimmer::after {
+.devflow-header-shimmer::after {
   content: '';
   position: absolute;
   top: 0;
@@ -343,7 +343,7 @@ body {
   filter: none;
 }
 
-[data-vfx="off"] .jflow-header-shimmer::after {
+[data-vfx="off"] .devflow-header-shimmer::after {
   animation: none;
   display: none;
 }
@@ -361,4 +361,60 @@ select:focus-visible,
 [role="option"]:focus-visible {
   outline: 2px solid #6366f1;
   outline-offset: 2px;
+}
+
+/* Mobile/small-screen notice */
+.mobile-notice {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .mobile-notice {
+    display: flex;
+  }
+}
+
+.mobile-notice-content {
+  background: var(--bg-secondary, #1e1e2e);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  text-align: center;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.mobile-notice-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.mobile-notice-content p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+  opacity: 0.85;
+}
+
+.mobile-notice-content button {
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mobile-notice-content button:hover {
+  background: #4f46e5;
 }

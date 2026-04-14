@@ -58,7 +58,7 @@ const CallInstanceMethodNode = ({ id, data, selected }: NodeProps<Node<CallInsta
 
   return (
     <div style={nodeContainer(ACCENT, !!selected)}>
-      <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>CALL INSTANCE METHOD</div>
+      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>CALL INSTANCE METHOD</div>
 
       <Handle type="target" position={Position.Left} id="exec-in" style={execHandleStyle('left')} />
 
