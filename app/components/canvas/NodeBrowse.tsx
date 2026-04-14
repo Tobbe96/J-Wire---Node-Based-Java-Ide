@@ -38,7 +38,7 @@ export default function NodeBrowser({ position, onAddNode, onClose, compatibleKi
   const menuRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => { requestAnimationFrame(() => inputRef.current?.focus()); }, []);
 
   const cancel = () => { if (closeTimer.current) clearTimeout(closeTimer.current); };
   const scheduleClose = (all = true) => {
@@ -83,6 +83,8 @@ export default function NodeBrowser({ position, onAddNode, onClose, compatibleKi
         style={{ ...browserStyle, left: l1pos.x, top: l1pos.y }}
         onMouseEnter={cancel}
         onMouseLeave={() => scheduleClose(true)}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div style={{ padding: '8px', borderBottom: '1px solid #333' }}>
           <input
@@ -93,15 +95,16 @@ export default function NodeBrowser({ position, onAddNode, onClose, compatibleKi
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Escape') onClose();
-              if (e.key === 'ArrowDown') {
+              else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 const first = menuRef.current?.querySelector<HTMLElement>('[role="option"], button');
                 first?.focus();
-              }
-              if (e.key === 'Enter' && filteredNodes.length > 0) {
+              } else if (e.key === 'Enter' && filteredNodes.length > 0) {
                 onAddNode(filteredNodes[0]);
                 onClose();
               }
+              // Prevent keyboard shortcuts hook from intercepting while typing
+              e.stopPropagation();
             }}
             aria-label="Search nodes"
             role="searchbox"

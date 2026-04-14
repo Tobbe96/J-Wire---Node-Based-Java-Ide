@@ -13,6 +13,7 @@ import Terminal from './components/Panels/Terminal';
 import NodeBrowser from './components/canvas/NodeBrowse';
 import ContextMenu from './components/canvas/ContextMenu';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import ResizeHandle from './components/ui/ResizeHandle';
 import { Toast } from './components/ui/Toast';
 import ThemeToggle from './components/ui/ThemeToggle';
 import VfxToggle from './components/ui/VfxToggle';
@@ -141,7 +142,22 @@ function JavaNodeEditor() {
 
   const [showDocs, setShowDocs] = useState(false);
 
-  const handleDebugToggle = useCallback(() => {
+  // Resizable panel dimensions
+  const [leftWidth, setLeftWidth] = useState(240);
+  const [rightWidth, setRightWidth] = useState(350);
+  const [terminalHeight, setTerminalHeight] = useState(250);
+
+  const onResizeLeft = useCallback((delta: number) => {
+    setLeftWidth((w) => Math.max(160, Math.min(500, w + delta)));
+  }, []);
+  const onResizeRight = useCallback((delta: number) => {
+    setRightWidth((w) => Math.max(250, Math.min(600, w - delta)));
+  }, []);
+  const onResizeTerminal = useCallback((delta: number) => {
+    setTerminalHeight((h) => Math.max(120, Math.min(500, h - delta)));
+  }, []);
+
+  const handleDebugToggle= useCallback(() => {
     if (isDebugging) stopDebug();
     else startDebug(nodes, edges);
   }, [isDebugging, stopDebug, startDebug, nodes, edges]);
@@ -256,9 +272,12 @@ function JavaNodeEditor() {
           onRemoveFile={removeFile}
           onRenameFile={renameFile}
           onLoadTemplate={loadTemplate}
+          width={leftWidth}
         />
       </ErrorBoundary>
       </aside>
+
+      <ResizeHandle direction="vertical" onResize={onResizeLeft} />
 
       <main aria-label="Flow canvas" style={{ flexGrow: 1, minWidth: 0 }}>
       <div ref={canvasContainerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -353,13 +372,17 @@ function JavaNodeEditor() {
       </div>
       </main>
 
+      <ResizeHandle direction="vertical" onResize={onResizeRight} />
+
       <aside aria-label="Code preview and terminal">
-      <div style={{ display: 'flex', flexDirection: 'column', width: '350px', borderLeft: '1px solid #000' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', width: rightWidth, borderLeft: '1px solid #000' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ErrorBoundary fallbackLabel="Preview">
             <LivePreview code={generatedJavaCode} />
           </ErrorBoundary>
         </div>
+
+        <ResizeHandle direction="horizontal" onResize={onResizeTerminal} />
 
         <ErrorBoundary fallbackLabel="Terminal">
           <Terminal
@@ -369,6 +392,7 @@ function JavaNodeEditor() {
             onDebug={handleDebugToggle}
             isCompiling={isCompiling}
             isDebugging={isDebugging}
+            height={terminalHeight}
           />
         </ErrorBoundary>
       </div>
