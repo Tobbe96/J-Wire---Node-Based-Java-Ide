@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useToastStore } from '../store/toastStore';
+import { useToastStore } from '../../store/toastStore';
 
 const borderColors: Record<string, string> = {
   success: '#2ecc71',

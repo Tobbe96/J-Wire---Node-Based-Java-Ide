@@ -1,7 +1,7 @@
 // Node & edge type registries for React Flow
 
 // Node Components
-import JavaNode from '../components/JavaNode';
+import JavaNode from '../components/canvas/JavaNode';
 import PrintNode from '../components/Nodes/PrintNode';
 import MethodNode from '../components/Nodes/MethodNode';
 import MathNode from '../components/Nodes/MathNode';
@@ -78,7 +78,7 @@ import SwingDialogOpNode from '../components/Nodes/SwingDialogOpNode';
 import SwingMenuOpNode from '../components/Nodes/SwingMenuOpNode';
 
 // Edge Components
-import AnimatedEdge from '../components/AnimatedEdge';
+import AnimatedEdge from '../components/canvas/AnimatedEdge';
 
 export const nodeTypes = {
   java: JavaNode,

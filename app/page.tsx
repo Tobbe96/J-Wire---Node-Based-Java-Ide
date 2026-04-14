@@ -8,16 +8,16 @@ import { nodeTypes, edgeTypes } from './utils/nodeTypeMap';
 
 // Panels & UI
 import LeftSidebar from './components/Panels/LeftSidebar';
-import LivePreview from './components/LivePreview';
+import LivePreview from './components/Panels/LivePreview';
 import Terminal from './components/Panels/Terminal';
-import NodeBrowser from './components/NodeBrowse';
-import ContextMenu from './components/ContextMenu';
-import ErrorBoundary from './components/ErrorBoundary';
-import { Toast } from './components/Toast';
-import ThemeToggle from './components/ThemeToggle';
-import VfxToggle from './components/VfxToggle';
-import DocsModal from './components/DocsModal';
-import DebugPanel from './components/DebugPanel';
+import NodeBrowser from './components/canvas/NodeBrowse';
+import ContextMenu from './components/canvas/ContextMenu';
+import ErrorBoundary from './components/ui/ErrorBoundary';
+import { Toast } from './components/ui/Toast';
+import ThemeToggle from './components/ui/ThemeToggle';
+import VfxToggle from './components/ui/VfxToggle';
+import DocsModal from './components/ui/DocsModal';
+import DebugPanel from './components/Panels/DebugPanel';
 
 // VFX
 import AmbientParticles from './components/vfx/AmbientParticles';
@@ -260,8 +260,8 @@ function JavaNodeEditor() {
       </ErrorBoundary>
       </aside>
 
-      <main aria-label="Flow canvas">
-      <div ref={canvasContainerRef} style={{ flexGrow: 1, position: 'relative' }}>
+      <main aria-label="Flow canvas" style={{ flexGrow: 1, minWidth: 0 }}>
+      <div ref={canvasContainerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
         <div style={{ position: 'absolute', top: 10, right: 290, zIndex: 20, display: 'flex', gap: 6 }}>
           <ThemeToggle />
           <VfxToggle />

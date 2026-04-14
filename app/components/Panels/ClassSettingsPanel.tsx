@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import type { ProjectClassInfo } from '../utils/nodeTypes';
+import type { ProjectClassInfo } from '../../utils/nodeTypes';
 
 interface ClassSettingsPanelProps {
   className: string;

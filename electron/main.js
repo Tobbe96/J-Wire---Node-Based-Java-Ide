@@ -92,7 +92,9 @@ function buildAppMenu() {
 
 function startNextServer() {
   return new Promise((resolve, reject) => {
-    const standaloneDir = path.join(__dirname, '..', '.next', 'standalone');
+    const standaloneDir = isDev
+      ? path.join(__dirname, '..', '.next', 'standalone')
+      : path.join(process.resourcesPath, 'standalone');
     const serverPath = path.join(standaloneDir, 'server.js');
 
     serverProcess = spawn(process.execPath, [serverPath], {
@@ -101,6 +103,7 @@ function startNextServer() {
         ...process.env,
         PORT: String(PROD_PORT),
         HOSTNAME: 'localhost',
+        ELECTRON_RUN_AS_NODE: '1',
       },
       stdio: 'pipe',
     });

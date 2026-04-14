@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import MobileNotice from "./components/MobileNotice";
-import ServiceWorkerRegistrar from "./components/ServiceWorkerRegistrar";
+import MobileNotice from "./components/ui/MobileNotice";
+import ServiceWorkerRegistrar from "./components/ui/ServiceWorkerRegistrar";
 import "./globals.css";
 
 const geistSans = Geist({

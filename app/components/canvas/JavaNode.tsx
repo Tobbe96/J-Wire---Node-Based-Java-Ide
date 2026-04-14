@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { getTypeColor } from '../utils/theme';
-import { nodeContainer, nodeHeaderGradient, execHandleStyle, dataHandleStyle } from '../utils/nodeStyles';
+import { getTypeColor } from '../../utils/theme';
+import { nodeContainer, nodeHeaderGradient, execHandleStyle, dataHandleStyle } from '../../utils/nodeStyles';
 
 const inputStyle: React.CSSProperties = {
   background: 'rgba(0,0,0,0.5)',

@@ -1,6 +1,6 @@
 'use client';
 import React, { memo, useState, useCallback } from 'react';
-import { useDebugStore } from '../store/debugStore';
+import { useDebugStore } from '../../store/debugStore';
 
 interface ControlBtn {
   id: string;

@@ -1,6 +1,6 @@
 'use client';
 import React, { memo, useEffect, useState, useCallback, useRef } from 'react';
-import { TYPE_COLORS } from '../utils/theme';
+import { TYPE_COLORS } from '../../utils/theme';
 
 interface DocsModalProps {
   onClose: () => void;

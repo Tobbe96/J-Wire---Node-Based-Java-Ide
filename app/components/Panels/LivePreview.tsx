@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { codeToHtml } from 'shiki';
-import { useVfxStore } from '../store/vfxStore';
+import { useVfxStore } from '../../store/vfxStore';
 
 export default function LivePreview({ code }: { code: string }) {
   const [highlightedHtml, setHighlightedHtml] = useState<string>('');

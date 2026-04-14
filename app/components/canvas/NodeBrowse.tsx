@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { NODE_CATEGORIES, NODE_CONFIGS, CATEGORY_META, isGrouped } from '../utils/nodeRegistry';
+import { NODE_CATEGORIES, NODE_CONFIGS, CATEGORY_META, isGrouped } from '../../utils/nodeRegistry';
 
 interface NodeBrowserProps {
   position: { x: number; y: number };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useVfxStore } from '../store/vfxStore';
+import { useVfxStore } from '../../store/vfxStore';
 
 export default function VfxToggle() {
   const { vfxEnabled, toggleVfx } = useVfxStore();
