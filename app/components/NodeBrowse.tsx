@@ -35,6 +35,7 @@ export default function NodeBrowser({ position, onAddNode, onClose, compatibleKi
   const [l3, setL3] = useState<{ x: number; y: number } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -90,12 +91,25 @@ export default function NodeBrowser({ position, onAddNode, onClose, compatibleKi
             placeholder="Search nodes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && onClose()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') onClose();
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const first = menuRef.current?.querySelector<HTMLElement>('[role="option"], button');
+                first?.focus();
+              }
+              if (e.key === 'Enter' && filteredNodes.length > 0) {
+                onAddNode(filteredNodes[0]);
+                onClose();
+              }
+            }}
+            aria-label="Search nodes"
+            role="searchbox"
             style={searchInputStyle}
           />
         </div>
 
-        <div style={{ padding: '4px' }}>
+        <div style={{ padding: '4px' }} role="listbox" ref={menuRef}>
           {searchTerm !== '' ? (
             <div style={{ maxHeight: '340px', overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#555 #1a1a1a' }}>
               {filteredNodes.length > 0 ? filteredNodes.map((k) => (
@@ -114,6 +128,8 @@ export default function NodeBrowser({ position, onAddNode, onClose, compatibleKi
               return (
                 <div
                   key={cat}
+                  role="option"
+                  aria-selected={isActive}
                   style={{ opacity: catCompat ? 1 : 0.35, pointerEvents: catCompat ? 'auto' : 'none' }}
                   onMouseEnter={(e) => {
                     cancel();

@@ -9,6 +9,7 @@ export default function VfxToggle() {
     <button
       onClick={toggleVfx}
       title={vfxEnabled ? 'Disable VFX' : 'Enable VFX'}
+      aria-label={vfxEnabled ? 'Disable visual effects' : 'Enable visual effects'}
       style={{
         height: 28,
         borderRadius: 5,

@@ -1,5 +1,5 @@
 'use client';
-import React, { memo, useEffect, useState, useCallback } from 'react';
+import React, { memo, useEffect, useState, useCallback, useRef } from 'react';
 import { TYPE_COLORS } from '../utils/theme';
 
 interface DocsModalProps {
@@ -315,6 +315,8 @@ function TypeSystem() {
 
 function DocsModal({ onClose }: DocsModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>('getting-started');
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose();
@@ -325,9 +327,34 @@ function DocsModal({ onClose }: DocsModalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // Focus close button on mount; restore focus on unmount
+  useEffect(() => {
+    const prev = document.activeElement as HTMLElement | null;
+    closeButtonRef.current?.focus();
+    return () => { prev?.focus(); };
+  }, []);
+
+  // Focus trap: Tab cycles within the modal
+  const handleTabTrap = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== 'Tab') return;
+    const modal = modalRef.current;
+    if (!modal) return;
+    const focusable = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }, []);
+
   return (
-    <div style={overlay} onClick={onClose}>
-      <div style={modal} onClick={e => e.stopPropagation()}>
+    <div style={overlay} onClick={onClose} onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
+      <div ref={modalRef} style={modal} role="dialog" aria-modal="true" aria-label="Documentation" onClick={e => e.stopPropagation()} onKeyDown={handleTabTrap}>
         {/* Header */}
         <div style={header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -335,6 +362,7 @@ function DocsModal({ onClose }: DocsModalProps) {
             <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#fff' }}>J-Flow Documentation</h1>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             style={{
               background: '#333', border: '1px solid #555', borderRadius: 6,

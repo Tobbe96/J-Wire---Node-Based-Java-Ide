@@ -226,11 +226,13 @@ function JavaNodeEditor() {
     <div
       data-vfx={vfxEnabled ? 'on' : 'off'}
       data-theme={theme}
+      role="application"
       style={{ width: '100vw', height: '100vh', background: 'var(--jf-canvas-bg)', position: 'relative', overflow: 'hidden' }}
     >
       {vfxEnabled && <AmbientParticles />}
 
       <div style={{ display: 'flex', width: '100%', height: '100%', position: 'relative', zIndex: 1 }}>
+      <aside aria-label="Project sidebar">
       <ErrorBoundary fallbackLabel="Sidebar">
         <LeftSidebar
           nodes={nodes}
@@ -255,7 +257,9 @@ function JavaNodeEditor() {
           onLoadTemplate={loadTemplate}
         />
       </ErrorBoundary>
+      </aside>
 
+      <main aria-label="Flow canvas">
       <div ref={canvasContainerRef} style={{ flexGrow: 1, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 10, right: 290, zIndex: 20, display: 'flex', gap: 6 }}>
           <ThemeToggle />
@@ -263,6 +267,7 @@ function JavaNodeEditor() {
         </div>
         <button
           onClick={autoLayout}
+          aria-label="Auto layout nodes"
           style={{ position: 'absolute', top: 10, right: 170, zIndex: 20, background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
         >
           Auto Layout
@@ -270,6 +275,7 @@ function JavaNodeEditor() {
         <button
           onClick={() => setShowDocs(true)}
           title="Help / Documentation"
+          aria-label="Open documentation"
           style={{ position: 'absolute', top: 10, right: 50, zIndex: 20, background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '6px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', fontWeight: 700, lineHeight: 1 }}
         >
           ?
@@ -344,7 +350,9 @@ function JavaNodeEditor() {
         <DebugPanel />
         <ConnectionSpark />
       </div>
+      </main>
 
+      <aside aria-label="Code preview and terminal">
       <div style={{ display: 'flex', flexDirection: 'column', width: '350px', borderLeft: '1px solid #000' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ErrorBoundary fallbackLabel="Preview">
@@ -363,6 +371,7 @@ function JavaNodeEditor() {
           />
         </ErrorBoundary>
       </div>
+      </aside>
 
       {showDocs && <DocsModal onClose={() => setShowDocs(false)} />}
     </div>

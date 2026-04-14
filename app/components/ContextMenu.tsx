@@ -45,6 +45,7 @@ interface ItemProps {
 
 const Item = memo(({ icon, label, shortcut, onClick, danger, onClose }: ItemProps) => (
   <button
+    role="menuitem"
     style={{ ...btnStyle, color: danger ? '#f87171' : 'var(--ctx-text, #e0e0e0)' }}
     onClick={() => { onClick?.(); onClose(); }}
     onMouseEnter={(e) => handleHover(e, true)}
@@ -58,7 +59,7 @@ const Item = memo(({ icon, label, shortcut, onClick, danger, onClose }: ItemProp
 Item.displayName = 'ContextMenuItem';
 
 const Divider = () => (
-  <div style={{ height: 1, background: 'var(--ctx-border, rgba(255,255,255,0.08))', margin: '3px 8px' }} />
+  <div role="separator" style={{ height: 1, background: 'var(--ctx-border, rgba(255,255,255,0.08))', margin: '3px 8px' }} />
 );
 
 export default function ContextMenu({
@@ -84,6 +85,36 @@ export default function ContextMenu({
     };
   }, [onClose]);
 
+  // Focus first menu item on mount & keyboard navigation
+  useEffect(() => {
+    const menu = menuRef.current;
+    if (!menu) return;
+    const items = () => menu.querySelectorAll<HTMLElement>('[role="menuitem"]');
+    const first = items()[0];
+    if (first) first.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const list = Array.from(items());
+      const idx = list.indexOf(document.activeElement as HTMLElement);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        list[(idx + 1) % list.length]?.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        list[(idx - 1 + list.length) % list.length]?.focus();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        list[0]?.focus();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        list[list.length - 1]?.focus();
+      }
+    };
+
+    menu.addEventListener('keydown', handleKeyDown);
+    return () => menu.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Clamp to viewport
   const ww = typeof window !== 'undefined' ? window.innerWidth : 1200;
   const wh = typeof window !== 'undefined' ? window.innerHeight : 900;
@@ -95,6 +126,7 @@ export default function ContextMenu({
   return (
     <div
       ref={menuRef}
+      role="menu"
       style={{
         position: 'fixed',
         left: cx,

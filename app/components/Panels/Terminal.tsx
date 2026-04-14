@@ -113,7 +113,7 @@ const Terminal = ({ consoleOutput, onRun, onRunJava, onDebug, isCompiling, isDeb
           )}
         </div>
       </div>
-      <div style={{ ...outputStyle, position: 'relative' }}>
+      <div style={{ ...outputStyle, position: 'relative' }} aria-live="polite" role="log">
         {/* Scanline overlay */}
         {vfxEnabled && (
           <div style={{
