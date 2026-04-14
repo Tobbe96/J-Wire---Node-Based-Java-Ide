@@ -1079,8 +1079,8 @@ const javafxRegistration: Template = {
       classType: 'class',
       nodes: [
         // Field: ArrayList<String> users
-        { id: 'field-users', type: 'variable', position: { x: 50, y: 0 },
-          data: { label: 'users', type: 'ArrayList<String>', scope: 'field', modifier: 'private' } },
+        { id: 'field-users', type: 'java', position: { x: 50, y: 0 },
+          data: { label: 'users', type: 'ArrayList<String>', value: 'new ArrayList<>()', modifier: 'private', isStatic: false } },
 
         // Method: validateUser
         { id: 'method-validate', type: 'method', position: { x: 50, y: 200 },
@@ -1114,8 +1114,8 @@ const javafxRegistration: Template = {
           data: { label: 'String Op', operation: 'length', variableName: 'password' } },
         { id: 'lit-six', type: 'literal', position: { x: 450, y: 680 },
           data: { label: 'Literal', literalType: 'int', value: '6' } },
-        { id: 'compare-len', type: 'comparison', position: { x: 550, y: 550 },
-          data: { label: 'Compare', comparator: '<', accepts: ALL_NUMERIC } },
+        { id: 'compare-len', type: 'math', position: { x: 550, y: 550 },
+          data: { label: 'LESS THAN', type: 'boolean', symbol: '<', operation: '<', accepts: ALL_NUMERIC } },
         { id: 'branch-pass', type: 'branch', position: { x: 650, y: 200 },
           data: { label: 'If Short?', accepts: ['boolean'] } },
         { id: 'print-pass-err', type: 'print', position: { x: 950, y: 100 },
@@ -1142,7 +1142,7 @@ const javafxRegistration: Template = {
           data: { label: 'registerUser', returnType: 'void',
                   parameters: [{ name: 'username', type: 'String' }] } },
         { id: 'al-add', type: 'arrayListOp', position: { x: 350, y: 750 },
-          data: { label: 'ArrayList Add', operation: 'add', variableName: 'users' } },
+          data: { label: 'ArrayList Add', operation: 'add', variableName: 'users', elementType: 'String' } },
         { id: 'get-username-2', type: 'getter', position: { x: 250, y: 900 },
           data: { label: 'username', type: 'String' } },
         { id: 'print-registered', type: 'print', position: { x: 650, y: 750 },
@@ -1176,9 +1176,11 @@ const javafxRegistration: Template = {
         { id: 'e-printok-rettrue', source: 'print-ok', target: 'return-true', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
 
         // ═══ validateUser data connections ═══
+        { id: 'e-d-getuser-strempty', source: 'get-username', target: 'str-isempty-user', sourceHandle: 'data-out', targetHandle: 'data-in' },
         { id: 'e-d-strempty-branch1', source: 'str-isempty-user', target: 'branch-user', sourceHandle: 'data-out', targetHandle: 'data-in' },
         { id: 'e-d-litusererr-print1', source: 'lit-user-err', target: 'print-user-err', sourceHandle: 'data-out', targetHandle: 'data-in' },
         { id: 'e-d-litfalse1-ret1', source: 'lit-false-1', target: 'return-false-1', sourceHandle: 'data-out', targetHandle: 'data-in' },
+        { id: 'e-d-getpass-strlen', source: 'get-password', target: 'str-len-pass', sourceHandle: 'data-out', targetHandle: 'data-in' },
         { id: 'e-d-strlen-cmp', source: 'str-len-pass', target: 'compare-len', sourceHandle: 'data-out', targetHandle: 'data-in-a' },
         { id: 'e-d-litsix-cmp', source: 'lit-six', target: 'compare-len', sourceHandle: 'data-out', targetHandle: 'data-in-b' },
         { id: 'e-d-cmplen-branch2', source: 'compare-len', target: 'branch-pass', sourceHandle: 'data-out', targetHandle: 'data-in' },
@@ -1190,7 +1192,7 @@ const javafxRegistration: Template = {
         // ═══ registerUser method ═══
         { id: 'e-mreg-aladd', source: 'method-register', target: 'al-add', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
         { id: 'e-aladd-printreg', source: 'al-add', target: 'print-registered', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-d-getuser2-aladd', source: 'get-username-2', target: 'al-add', sourceHandle: 'data-out', targetHandle: 'data-in-item' },
+        { id: 'e-d-getuser2-aladd', source: 'get-username-2', target: 'al-add', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
         { id: 'e-d-strfmtreg-printreg', source: 'str-fmt-reg', target: 'print-registered', sourceHandle: 'data-out', targetHandle: 'data-in' },
         { id: 'e-d-getuser3-strfmt', source: 'get-username-3', target: 'str-fmt-reg', sourceHandle: 'data-out', targetHandle: 'data-in-arg-0' },
 

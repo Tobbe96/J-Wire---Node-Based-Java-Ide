@@ -5,9 +5,16 @@ import { getTypeColor } from '../../utils/theme';
 import type { MathNodeData } from '../../utils/nodeTypes';
 
 const ACCENT = '#3498db';
+const BOOL_ACCENT = '#e74c3c';
 const INPUT_COLOR = getTypeColor('int');
+const BOOL_OUTPUT_COLOR = getTypeColor('boolean');
 
 const MathNode = ({ id, data, selected }: NodeProps<Node<MathNodeData>>) => {
+  const isBoolean = data.type === 'boolean';
+  const accent = isBoolean ? BOOL_ACCENT : ACCENT;
+  const headerBg = isBoolean ? '#c0392b' : '#2980b9';
+  const outputColor = isBoolean ? BOOL_OUTPUT_COLOR : INPUT_COLOR;
+
   const aConnections = useNodeConnections({ handleType: 'target', handleId: 'data-in-a' });
   const bConnections = useNodeConnections({ handleType: 'target', handleId: 'data-in-b' });
   const isAConnected = aConnections.length > 0;
@@ -24,8 +31,8 @@ const MathNode = ({ id, data, selected }: NodeProps<Node<MathNodeData>>) => {
   }, [id, data.updateNodeData]);
 
   return (
-    <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
-      <div className="jflow-header-shimmer" style={nodeHeaderSolid('#2980b9')}>
+    <div style={{ ...nodeContainer(accent, !!selected), minWidth: '150px' }}>
+      <div className="jflow-header-shimmer" style={nodeHeaderSolid(headerBg)}>
         {data.label} ( {data.symbol} )
       </div>
 
@@ -63,7 +70,7 @@ const MathNode = ({ id, data, selected }: NodeProps<Node<MathNodeData>>) => {
 
         <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
           <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}>Result</span>
-          <Handle type="source" position={Position.Right} id="data-out" style={{ background: INPUT_COLOR, width: '10px', height: '10px', right: '-16px' }} />
+          <Handle type="source" position={Position.Right} id="data-out" style={{ background: outputColor, width: '10px', height: '10px', right: '-16px' }} />
         </div>
       </div>
     </div>
