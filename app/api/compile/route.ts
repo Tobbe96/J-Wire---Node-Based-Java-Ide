@@ -3,10 +3,20 @@ import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
+import { isValidJavaIdentifier } from '../../utils/validators';
 
 export const dynamic = 'force-dynamic';
 
 const EXECUTION_TIMEOUT_MS = 10_000;
+const MAX_BODY_SIZE = 500 * 1024; // 500KB
+
+type ErrorCode =
+  | 'INVALID_INPUT'
+  | 'COMPILATION_ERROR'
+  | 'RUNTIME_ERROR'
+  | 'TIMEOUT'
+  | 'JDK_MISSING'
+  | 'INTERNAL_ERROR';
 
 interface JavaFile {
   code: string;
@@ -27,6 +37,7 @@ interface CompileResponse {
   success: boolean;
   output?: string;
   error?: string;
+  errorCode?: ErrorCode;
   compilationError?: string;
 }
 
@@ -38,7 +49,24 @@ export async function POST(request: Request): Promise<Response> {
   let workDir: string | null = null;
 
   try {
-    const body = (await request.json()) as CompileRequest;
+    // Body size validation
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+      return Response.json(
+        { success: false, error: 'Request body too large (max 500KB)', errorCode: 'INVALID_INPUT' } satisfies CompileResponse,
+        { status: 400 }
+      );
+    }
+
+    const rawBody = await request.text();
+    if (rawBody.length > MAX_BODY_SIZE) {
+      return Response.json(
+        { success: false, error: 'Request body too large (max 500KB)', errorCode: 'INVALID_INPUT' } satisfies CompileResponse,
+        { status: 400 }
+      );
+    }
+
+    const body = JSON.parse(rawBody) as CompileRequest;
     const { inputs } = body;
 
     // Normalize to multi-file format (support legacy single-file requests)
@@ -53,7 +81,7 @@ export async function POST(request: Request): Promise<Response> {
       mainClass = body.className;
     } else {
       return Response.json(
-        { success: false, error: 'Missing code/className or files array' } satisfies CompileResponse,
+        { success: false, error: 'Missing code/className or files array', errorCode: 'INVALID_INPUT' } satisfies CompileResponse,
         { status: 400 }
       );
     }
@@ -61,9 +89,20 @@ export async function POST(request: Request): Promise<Response> {
     const safeMainClass = sanitizeClassName(mainClass);
     if (!safeMainClass) {
       return Response.json(
-        { success: false, error: 'Invalid main class name' } satisfies CompileResponse,
+        { success: false, error: 'Invalid main class name', errorCode: 'INVALID_INPUT' } satisfies CompileResponse,
         { status: 400 }
       );
+    }
+
+    // Validate class names are valid Java identifiers
+    const allClassNames = javaFiles.map(f => f.className);
+    for (const cn of allClassNames) {
+      if (!isValidJavaIdentifier(cn)) {
+        return Response.json(
+          { success: false, error: `Invalid Java identifier: '${cn}'`, errorCode: 'INVALID_INPUT' } satisfies CompileResponse,
+          { status: 400 }
+        );
+      }
     }
 
     // Create an isolated temp directory
@@ -82,7 +121,7 @@ export async function POST(request: Request): Promise<Response> {
 
     if (fileNames.length === 0) {
       return Response.json(
-        { success: false, error: 'No valid Java files to compile' } satisfies CompileResponse,
+        { success: false, error: 'No valid Java files to compile', errorCode: 'INVALID_INPUT' } satisfies CompileResponse,
         { status: 400 }
       );
     }
@@ -103,6 +142,7 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({
         success: false,
         compilationError: stderr,
+        errorCode: 'COMPILATION_ERROR',
       } satisfies CompileResponse);
     }
 
@@ -134,6 +174,7 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({
         success: false,
         output: stdout || undefined,
+        errorCode: isTimeout ? 'TIMEOUT' : 'RUNTIME_ERROR',
         error: isTimeout
           ? 'Execution timed out (10 s limit)'
           : stderr || message,
@@ -151,6 +192,7 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         {
           success: false,
+          errorCode: 'JDK_MISSING',
           error:
             'Java Development Kit (JDK) not found. Please install a JDK and ensure javac/java are on your PATH.',
         } satisfies CompileResponse,
@@ -159,7 +201,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     return Response.json(
-      { success: false, error: message } satisfies CompileResponse,
+      { success: false, error: message, errorCode: 'INTERNAL_ERROR' } satisfies CompileResponse,
       { status: 500 }
     );
   } finally {

@@ -439,7 +439,17 @@ export const useEditorStore = create<EditorStore>()(
             toast.addToast('Runtime error', 'error');
           }
         } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : String(err);
+          let message: string;
+          if (err instanceof TypeError && err.message.includes('fetch')) {
+            message = 'Cannot connect to server. Make sure the dev server is running.';
+          } else if (
+            err instanceof Error &&
+            (err.message.includes('NetworkError') || err.message.includes('Failed to fetch'))
+          ) {
+            message = 'Network error — check your internet connection or server status.';
+          } else {
+            message = err instanceof Error ? err.message : String(err);
+          }
           set({ consoleOutput: ['> Failed to reach compile server:', message] });
           toast.addToast('Failed to compile', 'error');
         } finally {

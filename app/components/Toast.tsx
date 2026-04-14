@@ -7,6 +7,7 @@ const borderColors: Record<string, string> = {
   success: '#2ecc71',
   error: '#e74c3c',
   info: '#3498db',
+  warning: '#f39c12',
 };
 
 export function Toast() {
