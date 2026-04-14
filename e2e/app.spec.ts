@@ -28,8 +28,9 @@ test.describe('DevFlow App', () => {
     await expect(themeToggle).toBeAttached();
     // Get initial state
     const initialLabel = await themeToggle.getAttribute('aria-label');
-    // Click to toggle (force needed — element may be outside viewport in headless)
-    await themeToggle.click({ force: true });
+    // Use dispatchEvent — the button may be outside viewport in headless CI
+    await themeToggle.dispatchEvent('click');
+    await page.waitForTimeout(500);
     // Label should change
     const newLabel = await themeToggle.getAttribute('aria-label');
     expect(newLabel).not.toBe(initialLabel);
