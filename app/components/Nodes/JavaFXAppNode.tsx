@@ -8,7 +8,7 @@ type Props = { id: string; data: Record<string, unknown>; selected?: boolean };
 
 const JavaFXAppNode = ({ selected }: Props) => (
   <div style={{ ...nodeContainer(FX_COLOR, !!selected), minWidth: '210px' }}>
-    <div className="devflow-header-shimmer" style={nodeHeaderSolid(FX_COLOR)}>🖥️ JavaFX Application</div>
+    <div className="jwire-header-shimmer" style={nodeHeaderSolid(FX_COLOR)}>🖥️ JavaFX Application</div>
     <div style={{ padding: '10px' }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold', marginRight: '5px' }}>start(Stage)</span>

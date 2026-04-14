@@ -15,7 +15,7 @@ const SetVariableNode = ({ data, selected, id }: { data: EnrichedData<SetVarNode
 
   return (
     <div style={nodeContainer(borderColor, selected)}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(borderColor)}>SET VARIABLE ( = )</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(borderColor)}>SET VARIABLE ( = )</div>
 
       <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>

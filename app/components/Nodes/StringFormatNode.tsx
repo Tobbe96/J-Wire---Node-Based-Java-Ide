@@ -20,7 +20,7 @@ const StringFormatNode = ({ data, selected, id }: { data: EnrichedData<StringFor
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
       {/* HEADER */}
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         String.format()
       </div>
 

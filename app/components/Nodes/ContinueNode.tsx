@@ -17,7 +17,7 @@ const ContinueNode = ({ id, data, selected }: NodeProps<Node<ContinueNodeData>>)
 
   return (
   <div style={{ ...nodeContainer('#f39c12', !!selected), minWidth: '140px' }}>
-    <div className="devflow-header-shimmer" style={nodeHeaderSolid('#f39c12')}>
+    <div className="jwire-header-shimmer" style={nodeHeaderSolid('#f39c12')}>
       CONTINUE
     </div>
     <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>

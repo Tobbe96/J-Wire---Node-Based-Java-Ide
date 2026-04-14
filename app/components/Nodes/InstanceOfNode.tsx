@@ -33,7 +33,7 @@ const InstanceOfNode = ({ data, selected, id }: NodeProps<Node<InstanceOfNodeDat
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         INSTANCEOF
       </div>
       <div style={{ padding: '4px 10px 2px', display: 'flex', alignItems: 'center', gap: '5px' }}>

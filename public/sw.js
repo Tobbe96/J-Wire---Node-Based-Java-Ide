@@ -1,4 +1,4 @@
-const CACHE_VERSION = "devflow-v1";
+const CACHE_VERSION = "jwire-v1";
 const SHELL_ASSETS = ["/icon.svg"];
 
 self.addEventListener("install", (event) => {

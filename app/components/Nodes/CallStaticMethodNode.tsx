@@ -36,7 +36,7 @@ const CallStaticMethodNode = ({ id, data, selected }: NodeProps<Node<CallStaticM
 
   return (
     <div style={nodeContainer(ACCENT, !!selected)}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>CALL STATIC METHOD</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>CALL STATIC METHOD</div>
 
       <Handle type="target" position={Position.Left} id="exec-in" style={execHandleStyle('left')} />
 

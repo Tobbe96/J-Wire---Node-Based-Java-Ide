@@ -55,7 +55,7 @@ const ArrayOpNode = ({ id, data, selected }: NodeProps<Node<ArrayNodeData>>) => 
 
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '10px', color: '#aaa', whiteSpace: 'nowrap' }}>Type</span>
@@ -87,7 +87,7 @@ const ArrayOpNode = ({ id, data, selected }: NodeProps<Node<ArrayNodeData>>) => 
 
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '10px', color: '#aaa', whiteSpace: 'nowrap' }}>Type</span>
@@ -113,7 +113,7 @@ const ArrayOpNode = ({ id, data, selected }: NodeProps<Node<ArrayNodeData>>) => 
   if (op === 'access') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -137,7 +137,7 @@ const ArrayOpNode = ({ id, data, selected }: NodeProps<Node<ArrayNodeData>>) => 
   if (op === 'set') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -171,7 +171,7 @@ const ArrayOpNode = ({ id, data, selected }: NodeProps<Node<ArrayNodeData>>) => 
   // length
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
       <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>

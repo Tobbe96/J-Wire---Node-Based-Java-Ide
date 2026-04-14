@@ -1,6 +1,6 @@
-# Contributing to DevFlow
+# Contributing to JWire
 
-Thank you for your interest in contributing to DevFlow! This guide will help you get set up and start contributing.
+Thank you for your interest in contributing to JWire! This guide will help you get set up and start contributing.
 
 ## Getting Started
 
@@ -13,8 +13,8 @@ Thank you for your interest in contributing to DevFlow! This guide will help you
 ### Setup
 
 ```bash
-git clone https://github.com/Tobbe96/DevFlow.git
-cd DevFlow
+git clone https://github.com/Tobbe96/JWire.git
+cd JWire
 npm install
 npm run dev
 ```
@@ -129,8 +129,8 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs four jobs on every
 ### Docker (Full Features)
 
 ```bash
-docker build -t devflow .
-docker run -p 3000:3000 devflow
+docker build -t JWire .
+docker run -p 3000:3000 JWire
 ```
 
 The Docker image includes JDK 17 for server-side Java compilation.

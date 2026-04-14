@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "DevFlow — Visual Java IDE",
-    short_name: "DevFlow",
+    name: "JWire — Visual Java IDE",
+    short_name: "JWire",
     description:
       "A node-based visual IDE for building Java programs through drag-and-drop flowcharts",
     start_url: "/",

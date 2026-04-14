@@ -7,7 +7,7 @@ const ACCENT = '#2ecc71';
 
 const MainNode = ({ selected }: NodeProps<Node<MainNodeData>>) => (
   <div style={nodeContainer(ACCENT, !!selected)}>
-    <div className="devflow-header-shimmer" style={{ ...nodeHeaderGradient(ACCENT), padding: '10px', fontSize: '13px' }}>
+    <div className="jwire-header-shimmer" style={{ ...nodeHeaderGradient(ACCENT), padding: '10px', fontSize: '13px' }}>
       ▶ ENTRY POINT: Main()
     </div>
 

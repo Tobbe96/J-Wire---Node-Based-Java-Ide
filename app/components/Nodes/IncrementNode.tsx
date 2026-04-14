@@ -15,7 +15,7 @@ const IncrementNode = ({ data, selected, id }: { data: EnrichedData<IncrementNod
 
   return (
     <div style={nodeContainer(borderColor, selected)}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(borderColor)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(borderColor)}>
         {modeLabels[data.mode] ?? 'INCREMENT ++'}
       </div>
 

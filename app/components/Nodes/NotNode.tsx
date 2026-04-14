@@ -13,7 +13,7 @@ interface NotNodeData extends Record<string, unknown> {
 
 const NotNode = ({ selected }: NodeProps<Node<NotNodeData>>) => (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '120px' }}>
-    <div className="devflow-header-shimmer" style={nodeHeaderSolid('#2980b9')}>
+    <div className="jwire-header-shimmer" style={nodeHeaderSolid('#2980b9')}>
       NOT ( ! )
     </div>
 

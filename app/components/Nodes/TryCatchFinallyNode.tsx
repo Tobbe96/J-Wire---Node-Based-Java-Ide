@@ -66,7 +66,7 @@ const TryCatchFinallyNode = ({ id, data, selected }: NodeProps<Node<TryCatchFina
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '230px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         TRY / CATCH / FINALLY
       </div>
 

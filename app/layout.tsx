@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DevFlow — Visual Java IDE",
+  title: "JWire — Visual Java IDE",
   description: "A node-based visual IDE for building Java programs through drag-and-drop flowcharts",
 };
 

@@ -38,7 +38,7 @@ const SwitchNode = ({ id, data, selected }: NodeProps<Node<SwitchNodeData>>) => 
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '220px' }}>
-      <div className="devflow-header-shimmer" style={{ ...nodeHeaderSolid(ACCENT), display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="jwire-header-shimmer" style={{ ...nodeHeaderSolid(ACCENT), display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>SWITCH</span>
         <div style={{ display: 'flex', gap: '4px' }}>
           <button onClick={removeCase} style={smallButton('#c0392b')}>−</button>

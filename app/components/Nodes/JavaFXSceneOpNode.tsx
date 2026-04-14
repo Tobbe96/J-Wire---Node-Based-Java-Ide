@@ -20,7 +20,7 @@ const JavaFXSceneOpNode = ({ data, selected, id }: Props) => {
 
   return (
     <div style={{ ...nodeContainer(FX_COLOR, !!selected), minWidth: '220px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(FX_COLOR)}>🎭 Scene: Create</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(FX_COLOR)}>🎭 Scene: Create</div>
       <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <input className="nodrag" value={varName} onChange={e => update?.(id, { variableName: e.target.value })} style={varInp} placeholder="sceneName" />
         <div style={between}>

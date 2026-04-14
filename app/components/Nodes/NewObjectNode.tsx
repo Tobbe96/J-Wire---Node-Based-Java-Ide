@@ -51,7 +51,7 @@ const NewObjectNode = ({ id, data, selected }: NodeProps<Node<NewObjectNodeData>
 
   return (
     <div style={nodeContainer(ACCENT, !!selected)}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>NEW OBJECT</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>NEW OBJECT</div>
 
       <Handle type="target" position={Position.Left} id="exec-in" style={execHandleStyle('left')} />
 

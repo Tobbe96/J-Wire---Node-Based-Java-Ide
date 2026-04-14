@@ -18,7 +18,7 @@ const ThrowNode = ({ id, data, selected }: NodeProps<Node<ThrowNodeData>>) => {
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         THROW
       </div>
 

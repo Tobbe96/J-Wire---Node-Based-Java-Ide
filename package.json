@@ -1,5 +1,5 @@
 {
-  "name": "devflow",
+  "name": "jwire",
   "version": "0.1.0",
   "description": "A node-based visual IDE for building Java programs through drag-and-drop flowcharts",
   "author": "Tobias Boström",

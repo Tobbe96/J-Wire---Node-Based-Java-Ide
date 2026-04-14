@@ -4,7 +4,7 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* DevFlow theme tokens — dark by default */
+  /* JWire theme tokens — dark by default */
   --jf-canvas-bg: #121212;
   --jf-panel-bg: #1a1a1a;
   --jf-panel-border: #2a2a2a;
@@ -304,12 +304,12 @@ body {
   100% { transform: translateX(400%) skewX(-15deg); }
 }
 
-.devflow-header-shimmer {
+.jwire-header-shimmer {
   position: relative;
   overflow: hidden;
 }
 
-.devflow-header-shimmer::after {
+.jwire-header-shimmer::after {
   content: '';
   position: absolute;
   top: 0;
@@ -343,7 +343,7 @@ body {
   filter: none;
 }
 
-[data-vfx="off"] .devflow-header-shimmer::after {
+[data-vfx="off"] .jwire-header-shimmer::after {
   animation: none;
   display: none;
 }

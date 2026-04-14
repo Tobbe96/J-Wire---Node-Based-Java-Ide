@@ -109,7 +109,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   if (op === 'create') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -129,7 +129,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   if (op === 'put') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -161,7 +161,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   if (op === 'remove') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -189,7 +189,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   if (op === 'get') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -209,7 +209,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   if (op === 'containsKey') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -229,7 +229,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   if (op === 'size') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', position: 'relative' }}>
           <span style={boldLabelStyle}>{getOutputLabel()}</span>
@@ -243,7 +243,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   if (op === 'getOrDefault') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -269,7 +269,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   if (op === 'values' || op === 'entrySet') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', position: 'relative' }}>
           <span style={boldLabelStyle}>{op === 'values' ? `Collection<${valueType}>` : `Set<Entry>`}</span>
@@ -282,7 +282,7 @@ const HashMapOpNode = ({ data, selected, id }: Props) => {
   // --- keySet: data-out only (String color) ---
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
       {renderVarEdit()}
       <div style={{ padding: '10px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', position: 'relative' }}>
         <span style={boldLabelStyle}>{getOutputLabel()}</span>

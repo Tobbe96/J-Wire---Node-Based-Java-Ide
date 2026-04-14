@@ -26,7 +26,7 @@ const SwingEventOpNode = ({ data, selected, id }: Props) => {
 
   return (
     <div style={{ ...nodeContainer(SWING_COLOR, !!selected), minWidth: '230px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(SWING_COLOR)}>⚡ Event: {OP_LABELS[op] ?? op}</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(SWING_COLOR)}>⚡ Event: {OP_LABELS[op] ?? op}</div>
       <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
           <input className="nodrag" value={varName} onChange={e => update?.(id, { variableName: e.target.value })} style={varInp} placeholder="controlName" />

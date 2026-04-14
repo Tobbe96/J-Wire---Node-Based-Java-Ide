@@ -37,7 +37,7 @@ describe('useThemeStore', () => {
 
   it('toggleTheme persists to localStorage', () => {
     useThemeStore.getState().toggleTheme();
-    expect(mockStorage['devflow-theme']).toBe('light');
+    expect(mockStorage['jwire-theme']).toBe('light');
   });
 
   it('setTheme sets a specific theme', () => {
@@ -47,8 +47,8 @@ describe('useThemeStore', () => {
 
   it('setTheme persists to localStorage', () => {
     useThemeStore.getState().setTheme('light');
-    expect(mockStorage['devflow-theme']).toBe('light');
+    expect(mockStorage['jwire-theme']).toBe('light');
     useThemeStore.getState().setTheme('dark');
-    expect(mockStorage['devflow-theme']).toBe('dark');
+    expect(mockStorage['jwire-theme']).toBe('dark');
   });
 });

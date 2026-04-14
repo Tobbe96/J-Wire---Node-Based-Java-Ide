@@ -33,7 +33,7 @@ const DoWhileNode = ({ id, data, selected }: NodeProps<Node<DoWhileNodeData>>) =
 
   return (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-    <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+    <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
       DO-WHILE (Loop)
     </div>
 

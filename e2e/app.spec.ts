@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('DevFlow App', () => {
+test.describe('JWire App', () => {
   test('loads the application', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
     // The app should render with the main canvas area
@@ -9,7 +9,7 @@ test.describe('DevFlow App', () => {
 
   test('has the correct page title', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/DevFlow/);
+    await expect(page).toHaveTitle(/JWire/);
   });
 
   test('shows project sidebar', async ({ page }) => {

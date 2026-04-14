@@ -10,7 +10,7 @@
  *   analytics.getSummary();
  */
 
-const STORAGE_KEY = 'devflow_analytics';
+const STORAGE_KEY = 'jwire_analytics';
 
 interface AnalyticsData {
   events: Record<string, number>;

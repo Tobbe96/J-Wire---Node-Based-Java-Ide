@@ -56,7 +56,7 @@ export default function AmbientParticles() {
 
   return (
     <Particles
-      id="devflow-ambient-particles"
+      id="jwire-ambient-particles"
       options={options}
     />
   );

@@ -7,7 +7,7 @@ const ACCENT = '#9b59b6';
 
 const ReturnNode = ({ selected }: NodeProps<Node<ReturnNodeData>>) => (
   <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '140px' }}>
-    <div className="devflow-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
+    <div className="jwire-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
         <Handle type="target" position={Position.Left} id="exec-in" style={execHandleStyle('left')} />
         <span>RETURN</span>

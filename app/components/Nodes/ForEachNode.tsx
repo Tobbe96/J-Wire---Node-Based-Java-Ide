@@ -46,7 +46,7 @@ const ForEachNode = ({ id, data, selected }: NodeProps<Node<ForEachNodeData>>) =
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '200px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>FOR-EACH (Loop)</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>FOR-EACH (Loop)</div>
 
       <div style={{ padding: '4px 10px 2px', display: 'flex', alignItems: 'center', gap: 4 }}>
         <span style={{ fontSize: '10px', color: '#888' }}>label:</span>

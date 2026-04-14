@@ -750,7 +750,7 @@ export const useEditorStore = create<EditorStore>()(
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `devflow-project.json`;
+        a.download = `jwire-project.json`;
         a.click();
         URL.revokeObjectURL(url);
         useToastStore.getState().addToast('Project exported', 'success');

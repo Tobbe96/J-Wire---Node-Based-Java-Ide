@@ -120,7 +120,7 @@ const ArrayListOpNode = ({
     const initialValues = (data.initialValues as string) || '';
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={bodyStyle}>
           <div style={{ padding: '0 2px' }}>
@@ -146,7 +146,7 @@ const ArrayListOpNode = ({
   if (op === 'add') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -168,7 +168,7 @@ const ArrayListOpNode = ({
   if (op === 'get') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -190,7 +190,7 @@ const ArrayListOpNode = ({
   if (op === 'set') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -216,7 +216,7 @@ const ArrayListOpNode = ({
   if (op === 'remove') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -238,7 +238,7 @@ const ArrayListOpNode = ({
   if (op === 'size') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ display: 'flex', alignItems: 'center', ...rowStyle }}>
@@ -254,7 +254,7 @@ const ArrayListOpNode = ({
   if (op === 'contains') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -276,7 +276,7 @@ const ArrayListOpNode = ({
   if (op === 'sort') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={bodyStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -292,7 +292,7 @@ const ArrayListOpNode = ({
   if (op === 'reverse') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={bodyStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -308,7 +308,7 @@ const ArrayListOpNode = ({
   if (op === 'indexOf' || op === 'lastIndexOf') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -330,7 +330,7 @@ const ArrayListOpNode = ({
   if (op === 'shuffle') {
     return (
       <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-        <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+        <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
         {renderVarEdit()}
         <div style={bodyStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -345,7 +345,7 @@ const ArrayListOpNode = ({
   // ─── clear ──────────────────────────────────────────────
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
       {renderVarEdit()}
       <div style={bodyStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

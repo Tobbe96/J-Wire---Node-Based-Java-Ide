@@ -42,7 +42,7 @@ const StackOpNode = ({ data, selected, id }: Props) => {
 
   const wrap = (children: React.ReactNode) => (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '175px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{header}</div>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{header}</div>
       <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>{sub}{children}</div>
     </div>
   );

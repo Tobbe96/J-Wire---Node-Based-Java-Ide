@@ -32,7 +32,7 @@ const MathNode = ({ id, data, selected }: NodeProps<Node<MathNodeData>>) => {
 
   return (
     <div style={{ ...nodeContainer(accent, !!selected), minWidth: '150px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(headerBg)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(headerBg)}>
         {data.label} ( {data.symbol} )
       </div>
 

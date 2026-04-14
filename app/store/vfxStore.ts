@@ -12,17 +12,17 @@ export const useVfxStore = create<VfxStore>((set) => ({
   vfxEnabled: false,
   hydrated: false,
   hydrate: () => {
-    const stored = localStorage.getItem('devflow-vfx');
+    const stored = localStorage.getItem('jwire-vfx');
     set({ vfxEnabled: stored !== 'false', hydrated: true });
   },
   toggleVfx: () =>
     set((state) => {
       const next = !state.vfxEnabled;
-      localStorage.setItem('devflow-vfx', String(next));
+      localStorage.setItem('jwire-vfx', String(next));
       return { vfxEnabled: next };
     }),
   setVfxEnabled: (enabled) => {
-    localStorage.setItem('devflow-vfx', String(enabled));
+    localStorage.setItem('jwire-vfx', String(enabled));
     set({ vfxEnabled: enabled });
   },
 }));

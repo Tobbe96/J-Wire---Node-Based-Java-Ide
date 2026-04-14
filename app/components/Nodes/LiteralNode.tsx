@@ -33,7 +33,7 @@ const LiteralNode = ({ id, data, selected }: NodeProps<Node<LiteralNodeData>>) =
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         📌 LITERAL
       </div>
 

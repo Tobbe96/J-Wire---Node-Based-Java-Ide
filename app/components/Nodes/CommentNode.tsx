@@ -15,7 +15,7 @@ const CommentNode = ({ data, selected, id }: { data: EnrichedData<CommentNodeDat
       ...nodeContainer(ACCENT, selected),
       background: 'linear-gradient(180deg, #2a2213 0%, #1a1710 100%)',
     }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
         📝 COMMENT
       </div>
 

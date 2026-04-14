@@ -12,7 +12,7 @@ export default function MobileNotice() {
       <div className="mobile-notice-content">
         <h2>Desktop Recommended</h2>
         <p>
-          DevFlow is a visual IDE designed for desktop use. For the best experience
+          JWire is a visual IDE designed for desktop use. For the best experience
           with drag-and-drop flowcharts, please use a device with a larger screen.
         </p>
         <button onClick={() => setDismissed(true)}>

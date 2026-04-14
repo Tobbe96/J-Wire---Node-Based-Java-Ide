@@ -171,7 +171,7 @@ const StringOpNode = ({ data, selected }: NodeProps<Node<StringOpNodeData>>) => 
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         {headerLabel}
       </div>
 

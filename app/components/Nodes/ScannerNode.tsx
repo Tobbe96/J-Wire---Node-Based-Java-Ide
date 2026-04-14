@@ -45,7 +45,7 @@ const ScannerNode = ({ id, data, selected }: NodeProps<Node<ScannerNodeData>>) =
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
-      <div className="devflow-header-shimmer" style={{ ...nodeHeaderSolid(ACCENT), display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="jwire-header-shimmer" style={{ ...nodeHeaderSolid(ACCENT), display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
           <Handle type="target" position={Position.Left} id="exec-in" title="Execution in" style={execHandleStyle('left')} />
           <span>📥 SCANNER</span>

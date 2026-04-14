@@ -18,7 +18,7 @@ const BranchNode = ({ id, data, selected }: NodeProps<Node<BranchNodeData>>) => 
 
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
-      <div className="devflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderSolid(ACCENT)}>
         BRANCH (If / Else)
       </div>
 

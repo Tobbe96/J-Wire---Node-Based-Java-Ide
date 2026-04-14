@@ -1,6 +1,6 @@
-# DevFlow
+# JWire
 
-[![CI](https://github.com/Tobbe96/DevFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/Tobbe96/DevFlow/actions/workflows/ci.yml)
+[![CI](https://github.com/Tobbe96/JWire/actions/workflows/ci.yml/badge.svg)](https://github.com/Tobbe96/JWire/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](#license)
 [![Electron](https://img.shields.io/badge/Electron-Desktop_App-47848F?logo=electron&logoColor=white)](#desktop-app-electron)
 
@@ -9,7 +9,7 @@ A **node-based visual IDE** for building Java programs through drag-and-drop flo
 Available as a **web app**, **desktop app** (Electron), or **PWA**.
 
 <!-- Screenshot placeholder: replace with an actual screenshot -->
-<!-- ![DevFlow screenshot](docs/screenshot.png) -->
+<!-- ![JWire screenshot](docs/screenshot.png) -->
 
 ## Features
 
@@ -39,8 +39,8 @@ Available as a **web app**, **desktop app** (Electron), or **PWA**.
 ### Web App
 
 ```bash
-git clone https://github.com/Tobbe96/DevFlow.git
-cd DevFlow
+git clone https://github.com/Tobbe96/JWire.git
+cd JWire
 npm install
 npm run dev
 ```
@@ -70,8 +70,8 @@ Build output is placed in the `installation/` directory.
 ### Docker
 
 ```bash
-docker build -t devflow .
-docker run -p 3000:3000 devflow
+docker build -t JWire .
+docker run -p 3000:3000 JWire
 ```
 
 The Docker image includes JDK 17 for server-side Java compilation.

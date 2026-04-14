@@ -7,19 +7,28 @@
  * requests, reading storage, or escaping into the host environment.
  */
 
+// Globals shadowed via function parameters (set to undefined).
+// Note: `eval` and `Function` cannot be parameter names in strict mode,
+// so they are neutralised in the code preamble instead.
 const BLOCKED_GLOBALS = [
   'window', 'self', 'globalThis', 'document',
   'fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource',
   'localStorage', 'sessionStorage', 'indexedDB',
   'navigator', 'location', 'history',
   'alert', 'confirm', 'prompt',
-  'eval', 'Function', 'importScripts',
+  'importScripts',
   'setTimeout', 'setInterval', 'requestAnimationFrame',
   'postMessage', 'process', 'require', 'module', 'exports',
   '__dirname', '__filename',
 ] as const;
 
 const BLOCKED_FILL = new Array(BLOCKED_GLOBALS.length).fill(undefined);
+
+// Preamble injected into the function body to neutralise eval/Function
+// without using them as parameter names (which strict mode forbids).
+const STRICT_PREAMBLE = `"use strict";
+var _blocked = undefined;
+`;
 
 /**
  * Create a sandboxed function from user code (statement mode).
@@ -31,7 +40,7 @@ export function sandboxStatement(
   code: string,
 ): (...args: unknown[]) => void {
   const allParams = [...paramNames, '__print__', '__mem__', ...BLOCKED_GLOBALS];
-  const fn = new Function(...allParams, `"use strict";\n${code}`);
+  const fn = new Function(...allParams, `${STRICT_PREAMBLE}${code}`);
 
   return (...args: unknown[]) => {
     fn(...args, ...BLOCKED_FILL);
@@ -47,7 +56,7 @@ export function sandboxExpression(
   code: string,
 ): (...args: unknown[]) => unknown {
   const allParams = [...paramNames, ...BLOCKED_GLOBALS];
-  const fn = new Function(...allParams, `"use strict";\nreturn (${code});`);
+  const fn = new Function(...allParams, `${STRICT_PREAMBLE}return (${code});`);
 
   return (...args: unknown[]) => {
     return fn(...args, ...BLOCKED_FILL);

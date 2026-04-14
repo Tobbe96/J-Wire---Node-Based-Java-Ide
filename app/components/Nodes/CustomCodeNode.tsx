@@ -74,7 +74,7 @@ const CustomCodeNode = ({
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '260px' }}>
       {/* Header */}
-      <div className="devflow-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
+      <div className="jwire-header-shimmer" style={nodeHeaderGradient(ACCENT)}>
         <span>CUSTOM CODE</span>
         <span style={{ color: ACCENT, fontSize: '10px' }}>{mode}</span>
       </div>

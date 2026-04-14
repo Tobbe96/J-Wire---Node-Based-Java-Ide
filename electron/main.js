@@ -15,7 +15,7 @@ function createWindow(url) {
     height: 900,
     minWidth: 900,
     minHeight: 600,
-    title: 'DevFlow',
+    title: 'JWire',
     icon: path.join(__dirname, '..', 'public', 'icons', 'icon-512x512.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -83,7 +83,7 @@ function buildAppMenu() {
       submenu: [
         {
           label: 'GitHub Repository',
-          click: () => shell.openExternal('https://github.com/Tobbe96/DevFlow'),
+          click: () => shell.openExternal('https://github.com/Tobbe96/JWire'),
         },
       ],
     },
