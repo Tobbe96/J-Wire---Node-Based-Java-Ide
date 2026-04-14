@@ -42,6 +42,32 @@ import CustomCodeNode from '../components/Nodes/CustomCodeNode';
 import ConstructorNode from '../components/Nodes/ConstructorNode';
 import NewObjectNode from '../components/Nodes/NewObjectNode';
 import CallInstanceMethodNode from '../components/Nodes/CallInstanceMethodNode';
+import SuperConstructorCallNode from '../components/Nodes/SuperConstructorCallNode';
+import EnumConstantsNode from '../components/Nodes/EnumConstantsNode';
+import StackOpNode from '../components/Nodes/StackOpNode';
+import QueueOpNode from '../components/Nodes/QueueOpNode';
+import DequeOpNode from '../components/Nodes/DequeOpNode';
+import PriorityQueueOpNode from '../components/Nodes/PriorityQueueOpNode';
+import AlgorithmNode from '../components/Nodes/AlgorithmNode';
+import InstanceOfNode from '../components/Nodes/InstanceOfNode';
+import AssertNode from '../components/Nodes/AssertNode';
+import ArraysUtilNode from '../components/Nodes/ArraysUtilNode';
+import TreeNodeOpNode from '../components/Nodes/TreeNodeOpNode';
+import BSTOpNode from '../components/Nodes/BSTOpNode';
+import AVLTreeOpNode from '../components/Nodes/AVLTreeOpNode';
+import JavaFXAppNode from '../components/Nodes/JavaFXAppNode';
+import JavaFXStageOpNode from '../components/Nodes/JavaFXStageOpNode';
+import JavaFXSceneOpNode from '../components/Nodes/JavaFXSceneOpNode';
+import JavaFXLayoutOpNode from '../components/Nodes/JavaFXLayoutOpNode';
+import JavaFXControlOpNode from '../components/Nodes/JavaFXControlOpNode';
+import JavaFXEventOpNode from '../components/Nodes/JavaFXEventOpNode';
+import JavaFXStyleOpNode from '../components/Nodes/JavaFXStyleOpNode';
+import JavaFXDialogOpNode from '../components/Nodes/JavaFXDialogOpNode';
+import JavaFXMenuOpNode from '../components/Nodes/JavaFXMenuOpNode';
+import JavaFXTableOpNode from '../components/Nodes/JavaFXTableOpNode';
+import JavaFXListOpNode from '../components/Nodes/JavaFXListOpNode';
+import JavaFXMediaOpNode from '../components/Nodes/JavaFXMediaOpNode';
+import JavaFXChartOpNode from '../components/Nodes/JavaFXChartOpNode';
 
 // Edge Components
 import AnimatedEdge from '../components/AnimatedEdge';
@@ -88,6 +114,32 @@ export const nodeTypes = {
   constructor: ConstructorNode,
   newObject: NewObjectNode,
   callInstanceMethod: CallInstanceMethodNode,
+  superConstructorCall: SuperConstructorCallNode,
+  enumConstants: EnumConstantsNode,
+  stackOp: StackOpNode,
+  queueOp: QueueOpNode,
+  dequeOp: DequeOpNode,
+  priorityQueueOp: PriorityQueueOpNode,
+  algorithm: AlgorithmNode,
+  instanceOf: InstanceOfNode,
+  assert: AssertNode,
+  arraysUtil: ArraysUtilNode,
+  treeNodeOp: TreeNodeOpNode,
+  bstOp: BSTOpNode,
+  avlTreeOp: AVLTreeOpNode,
+  javafxApp: JavaFXAppNode,
+  javafxStageOp: JavaFXStageOpNode,
+  javafxSceneOp: JavaFXSceneOpNode,
+  javafxLayoutOp: JavaFXLayoutOpNode,
+  javafxControlOp: JavaFXControlOpNode,
+  javafxEventOp: JavaFXEventOpNode,
+  javafxStyleOp: JavaFXStyleOpNode,
+  javafxDialogOp: JavaFXDialogOpNode,
+  javafxMenuOp: JavaFXMenuOpNode,
+  javafxTableOp: JavaFXTableOpNode,
+  javafxListOp: JavaFXListOpNode,
+  javafxMediaOp: JavaFXMediaOpNode,
+  javafxChartOp: JavaFXChartOpNode,
 };
 
 export const edgeTypes = {

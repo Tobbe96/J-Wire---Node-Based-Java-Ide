@@ -1410,4 +1410,375 @@ describe('executeGraph', () => {
     // But the important thing is execution didn't crash
     expect(output.some(l => l.startsWith('>'))).toBe(true);
   });
+
+  // --- Getter nodes ---
+
+  it('getter node reads variable value from runtimeMemory', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'score', type: 'int', value: '99' }),
+      makeNode('g1', 'getter', { label: 'score', type: 'int', variableId: 'v1' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('g1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 99');
+  });
+
+  it('getter node reads updated variable value after setVar', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '5' }),
+      makeNode('set1', 'setVar', { label: 'Set x', variableName: 'x', inlineValue: '42' }),
+      makeNode('g1', 'getter', { label: 'x', type: 'int', variableId: 'v1' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'set1', 'exec-out', 'exec-in'),
+      makeEdge('set1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('g1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 42');
+  });
+
+  it('getter node works with String variables', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'greeting', type: 'String', value: 'Hello' }),
+      makeNode('g1', 'getter', { label: 'greeting', type: 'String', variableId: 'v1' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('g1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> Hello');
+  });
+
+  it('getter node feeds into math operation', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'a', type: 'int', value: '7' }),
+      makeNode('v2', 'java', { label: 'b', type: 'int', value: '3' }),
+      makeNode('g1', 'getter', { label: 'a', type: 'int', variableId: 'v1' }),
+      makeNode('g2', 'getter', { label: 'b', type: 'int', variableId: 'v2' }),
+      makeNode('m1', 'math', { label: 'Add', operation: '+', type: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('g1', 'm1', 'data-out', 'data-in-a'),
+      makeEdge('g2', 'm1', 'data-out', 'data-in-b'),
+      makeEdge('m1', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 10');
+  });
+
+  // ── For-loop enhancements ─────────────────────────────────────────────────
+
+  it('executes for loop with default < comparison', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('f1', 'for', { label: 'FOR', comparison: '<', step: '1' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'f1', 'exec-out', 'exec-in'),
+      makeEdge('f1', 'p1', 'exec-body', 'exec-in'),
+      makeEdge('f1', 'p1', 'data-index', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    // Default start=0, end=0 (no edge) → no iterations since evaluateData returns null for missing
+    // Just check it runs without error
+    expect(output).not.toContain('FATAL');
+  });
+
+  it('executes for loop with step 2 printing even indices', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('start', 'literal', { literalType: 'int', value: '0' }),
+      makeNode('end', 'literal', { literalType: 'int', value: '6' }),
+      makeNode('f1', 'for', { label: 'FOR', comparison: '<', step: '2' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'f1', 'exec-out', 'exec-in'),
+      makeEdge('start', 'f1', 'data-out', 'data-start'),
+      makeEdge('end', 'f1', 'data-out', 'data-end'),
+      makeEdge('f1', 'p1', 'exec-body', 'exec-in'),
+      makeEdge('f1', 'p1', 'data-index', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 0');
+    expect(output).toContain('> 2');
+    expect(output).toContain('> 4');
+    expect(output).not.toContain('> 6');
+  });
+
+  it('executes for loop with <= comparison', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('start', 'literal', { literalType: 'int', value: '3' }),
+      makeNode('end', 'literal', { literalType: 'int', value: '5' }),
+      makeNode('f1', 'for', { label: 'FOR', comparison: '<=', step: '1' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'f1', 'exec-out', 'exec-in'),
+      makeEdge('start', 'f1', 'data-out', 'data-start'),
+      makeEdge('end', 'f1', 'data-out', 'data-end'),
+      makeEdge('f1', 'p1', 'exec-body', 'exec-in'),
+      makeEdge('f1', 'p1', 'data-index', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 3');
+    expect(output).toContain('> 5');
+    expect(output).not.toContain('> 6');
+  });
+
+  it('executes for loop counting down with > comparison', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('start', 'literal', { literalType: 'int', value: '3' }),
+      makeNode('end', 'literal', { literalType: 'int', value: '0' }),
+      makeNode('f1', 'for', { label: 'FOR', comparison: '>', step: '-1' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'f1', 'exec-out', 'exec-in'),
+      makeEdge('start', 'f1', 'data-out', 'data-start'),
+      makeEdge('end', 'f1', 'data-out', 'data-end'),
+      makeEdge('f1', 'p1', 'exec-body', 'exec-in'),
+      makeEdge('f1', 'p1', 'data-index', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 3');
+    expect(output).toContain('> 1');
+    expect(output).not.toContain('> 0');
+  });
+
+  // ── Try-Catch ─────────────────────────────────────────────────────────────
+
+  it('executes try block without exception', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('tc', 'tryCatchFinally', { label: 'Try', exceptionType: 'Exception', exceptionVarName: 'e' }),
+      makeNode('p1', 'print', { label: 'Print', inlineValue: 'success' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'tc', 'exec-out', 'exec-in'),
+      makeEdge('tc', 'p1', 'exec-try', 'exec-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> success');
+  });
+
+  it('executes catch block when exception thrown', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('tc', 'tryCatchFinally', { label: 'Try', exceptionType: 'Exception', exceptionVarName: 'err' }),
+      makeNode('th', 'throw', { label: 'Throw', inlineValue: 'oops' }),
+      makeNode('p1', 'print', { label: 'Print', inlineValue: 'caught' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'tc', 'exec-out', 'exec-in'),
+      makeEdge('tc', 'th', 'exec-try', 'exec-in'),
+      makeEdge('tc', 'p1', 'exec-catch', 'exec-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> caught');
+  });
+
+  // ── ArrayList initialValues ───────────────────────────────────────────────
+
+  it('ArrayList Create with initialValues executes with populated list', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('al', 'arrayListOp', { label: 'ArrayList', operation: 'create', listType: 'String', variableName: 'names', initialValues: 'Alice, Bob' }),
+      makeNode('idx', 'literal', { literalType: 'int', value: '1' }),
+      makeNode('ag', 'arrayListOp', { label: 'Get', operation: 'get', variableName: 'names' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'al', 'exec-out', 'exec-in'),
+      makeEdge('al', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('idx', 'ag', 'data-out', 'data-in-index'),
+      makeEdge('ag', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> Bob');
+  });
+
+  // ── Object instantiation ─────────────────────────────────────────────────
+
+  it('newObject creates object in memory', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('no', 'newObject', { label: 'New', targetClassName: 'Dog', varName: 'myDog', argCount: 0 }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'no', 'exec-out', 'exec-in'),
+      makeEdge('no', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('no', 'p1', 'data-out', 'data-in'),
+    ];
+    // No Dog class defined — should produce an object reference or null without crash
+    const output = executeGraph(nodes, edges);
+    expect(output).not.toContain('FATAL');
+  });
+
+  // ── Custom code ───────────────────────────────────────────────────────────
+
+  it('customCode node in expression mode returns value', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('cc', 'customCode', { label: 'Custom', mode: 'expression', code: '42 + 1' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('cc', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 43');
+  });
+
+  // ── Tree Nodes ────────────────────────────────────────────────────────────
+
+  it('BST: create, insert, and inorder traversal', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('b1', 'bstOp', { label: 'BST', operation: 'create', variableName: 'root', valueType: 'int' }),
+      makeNode('v5', 'java', { label: 'five', type: 'int', value: '5' }),
+      makeNode('v3', 'java', { label: 'three', type: 'int', value: '3' }),
+      makeNode('v7', 'java', { label: 'seven', type: 'int', value: '7' }),
+      makeNode('b2', 'bstOp', { label: 'BST', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('b3', 'bstOp', { label: 'BST', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('b4', 'bstOp', { label: 'BST', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('qInorder', 'bstOp', { label: 'BST', operation: 'inorder', variableName: 'root', valueType: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'b1', 'exec-out', 'exec-in'),
+      makeEdge('b1', 'b2', 'exec-out', 'exec-in'),
+      makeEdge('b2', 'b3', 'exec-out', 'exec-in'),
+      makeEdge('b3', 'b4', 'exec-out', 'exec-in'),
+      makeEdge('b4', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v5', 'b2', 'data-out', 'data-in-value'),
+      makeEdge('v3', 'b3', 'data-out', 'data-in-value'),
+      makeEdge('v7', 'b4', 'data-out', 'data-in-value'),
+      makeEdge('qInorder', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 3,5,7');
+  });
+
+  it('BST: min/max queries', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('b1', 'bstOp', { label: 'BST', operation: 'create', variableName: 'root', valueType: 'int' }),
+      makeNode('v10', 'java', { label: 'ten', type: 'int', value: '10' }),
+      makeNode('v2', 'java', { label: 'two', type: 'int', value: '2' }),
+      makeNode('v20', 'java', { label: 'twenty', type: 'int', value: '20' }),
+      makeNode('b2', 'bstOp', { label: 'BST', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('b3', 'bstOp', { label: 'BST', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('b4', 'bstOp', { label: 'BST', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('qMin', 'bstOp', { label: 'BST', operation: 'min', variableName: 'root', valueType: 'int' }),
+      makeNode('qMax', 'bstOp', { label: 'BST', operation: 'max', variableName: 'root', valueType: 'int' }),
+      makeNode('p1', 'print', { label: 'Print Min' }),
+      makeNode('p2', 'print', { label: 'Print Max' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'b1', 'exec-out', 'exec-in'),
+      makeEdge('b1', 'b2', 'exec-out', 'exec-in'),
+      makeEdge('b2', 'b3', 'exec-out', 'exec-in'),
+      makeEdge('b3', 'b4', 'exec-out', 'exec-in'),
+      makeEdge('b4', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('p1', 'p2', 'exec-out', 'exec-in'),
+      makeEdge('v10', 'b2', 'data-out', 'data-in-value'),
+      makeEdge('v2', 'b3', 'data-out', 'data-in-value'),
+      makeEdge('v20', 'b4', 'data-out', 'data-in-value'),
+      makeEdge('qMin', 'p1', 'data-out', 'data-in'),
+      makeEdge('qMax', 'p2', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 2');
+    expect(output).toContain('> 20');
+  });
+
+  it('AVL: create and insert stays balanced', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('a1', 'avlTreeOp', { label: 'AVL', operation: 'create', variableName: 'root', valueType: 'int' }),
+      makeNode('v1', 'java', { label: 'one', type: 'int', value: '1' }),
+      makeNode('v2', 'java', { label: 'two', type: 'int', value: '2' }),
+      makeNode('v3', 'java', { label: 'three', type: 'int', value: '3' }),
+      makeNode('a2', 'avlTreeOp', { label: 'AVL', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('a3', 'avlTreeOp', { label: 'AVL', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('a4', 'avlTreeOp', { label: 'AVL', operation: 'insert', variableName: 'root', valueType: 'int' }),
+      makeNode('qInorder', 'avlTreeOp', { label: 'AVL', operation: 'inorder', variableName: 'root', valueType: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'a1', 'exec-out', 'exec-in'),
+      makeEdge('a1', 'a2', 'exec-out', 'exec-in'),
+      makeEdge('a2', 'a3', 'exec-out', 'exec-in'),
+      makeEdge('a3', 'a4', 'exec-out', 'exec-in'),
+      makeEdge('a4', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'a2', 'data-out', 'data-in-value'),
+      makeEdge('v2', 'a3', 'data-out', 'data-in-value'),
+      makeEdge('v3', 'a4', 'data-out', 'data-in-value'),
+      makeEdge('qInorder', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 1,2,3');
+  });
+
+  it('TreeNode: create and getValue', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '42' }),
+      makeNode('t1', 'treeNodeOp', { label: 'TN', operation: 'create', variableName: 'myNode', valueType: 'int' }),
+      makeNode('tGet', 'treeNodeOp', { label: 'TN', operation: 'getValue', variableName: 'myNode', valueType: 'int' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 't1', 'exec-out', 'exec-in'),
+      makeEdge('t1', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 't1', 'data-out', 'data-in-value'),
+      makeEdge('tGet', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 42');
+  });
+
+  it('Dijkstra algorithm node returns shortest distance', () => {
+    // Graph: 3 nodes. 0→1 (weight 4), 0→2 (weight 1), 2→1 (weight 2). Shortest 0→1 = 3
+    const graph = [[0,4,1],[0,0,0],[0,2,0]];
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('g1', 'java', { label: 'g', type: 'int', value: '0' }), // placeholder; graph comes from literal node
+      makeNode('s1', 'java', { label: 'start', type: 'int', value: '0' }),
+      makeNode('e1', 'java', { label: 'end', type: 'int', value: '1' }),
+      makeNode('alg', 'algorithm', { label: 'Dijkstra', operation: 'dijkstra' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    // We'll use customCode to supply the graph matrix
+    nodes.push(makeNode('cc', 'customCode', { label: 'Graph', mode: 'expression', code: JSON.stringify(graph), inputs: [] }));
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('cc', 'alg', 'data-out', 'data-in-graph'),
+      makeEdge('s1', 'alg', 'data-out', 'data-in-start'),
+      makeEdge('e1', 'alg', 'data-out', 'data-in-end'),
+      makeEdge('alg', 'p1', 'data-out', 'data-in'),
+    ];
+    const output = executeGraph(nodes, edges);
+    expect(output).toContain('> 3');
+  });
 });

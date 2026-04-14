@@ -3,6 +3,51 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* J-Flow theme tokens — dark by default */
+  --jf-canvas-bg: #121212;
+  --jf-panel-bg: #1a1a1a;
+  --jf-panel-border: #2a2a2a;
+  --jf-panel-border-strong: #333;
+  --jf-surface: #222;
+  --jf-surface-hover: #2a2a2a;
+  --jf-text-primary: #e0e0e0;
+  --jf-text-secondary: #999;
+  --jf-text-muted: #555;
+  --jf-input-bg: #1a1a1a;
+  --jf-input-border: #333;
+  --jf-scrollbar-thumb: #333;
+  --jf-minimap-bg: #1a1a1a;
+  --jf-minimap-mask: rgba(0,0,0,0.7);
+
+  /* Context menu */
+  --ctx-bg: #1e1e1e;
+  --ctx-border: rgba(255,255,255,0.12);
+  --ctx-text: #e0e0e0;
+  --ctx-hover: rgba(255,255,255,0.08);
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --jf-canvas-bg: #f0f0f0;
+  --jf-panel-bg: #ffffff;
+  --jf-panel-border: #e0e0e0;
+  --jf-panel-border-strong: #ccc;
+  --jf-surface: #f5f5f5;
+  --jf-surface-hover: #ebebeb;
+  --jf-text-primary: #1a1a1a;
+  --jf-text-secondary: #555;
+  --jf-text-muted: #aaa;
+  --jf-input-bg: #ffffff;
+  --jf-input-border: #ccc;
+  --jf-scrollbar-thumb: #ccc;
+  --jf-minimap-bg: #f5f5f5;
+  --jf-minimap-mask: rgba(200,200,200,0.5);
+
+  --ctx-bg: #ffffff;
+  --ctx-border: rgba(0,0,0,0.12);
+  --ctx-text: #1a1a1a;
+  --ctx-hover: rgba(0,0,0,0.06);
 }
 
 @theme inline {
@@ -23,6 +68,40 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Light theme: React Flow background */
+[data-theme="light"] .react-flow__background {
+  background-color: var(--jf-canvas-bg) !important;
+}
+
+[data-theme="light"] .react-flow__background pattern circle,
+[data-theme="light"] .react-flow__background pattern rect {
+  fill: #bbb !important;
+}
+
+/* Light theme: MiniMap */
+[data-theme="light"] .react-flow__minimap {
+  background: var(--jf-minimap-bg) !important;
+  border-color: var(--jf-panel-border) !important;
+}
+
+/* Light theme: Controls */
+[data-theme="light"] .react-flow__controls {
+  background: var(--jf-panel-bg) !important;
+  border-color: var(--jf-panel-border) !important;
+}
+
+[data-theme="light"] .react-flow__controls-button {
+  background: var(--jf-panel-bg) !important;
+  border-color: var(--jf-panel-border) !important;
+  color: var(--jf-text-primary) !important;
+  fill: var(--jf-text-primary) !important;
+}
+
+/* Scrollbar theming */
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--jf-scrollbar-thumb);
 }
 
 /* ═══════════════════════════════════════════════════════

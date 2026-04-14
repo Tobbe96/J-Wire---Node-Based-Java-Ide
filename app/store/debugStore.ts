@@ -8,6 +8,7 @@ interface DebugState {
   traceSteps: DebugStep[];
   currentStepIndex: number;
   isPlaying: boolean;
+  _playInterval: ReturnType<typeof setInterval> | null;
 }
 
 interface DebugActions {
@@ -23,14 +24,13 @@ interface DebugActions {
 
 export type DebugStore = DebugState & DebugActions;
 
-let playInterval: ReturnType<typeof setInterval> | null = null;
-
 export const useDebugStore = create<DebugStore>()((set, get) => ({
   isDebugging: false,
   breakpoints: [],
   traceSteps: [],
   currentStepIndex: -1,
   isPlaying: false,
+  _playInterval: null,
 
   startDebug: (nodes, edges) => {
     const hasScannerNodes = nodes.some((n: Node) => n.type === 'scanner');
@@ -47,12 +47,14 @@ export const useDebugStore = create<DebugStore>()((set, get) => ({
   },
 
   stopDebug: () => {
-    if (playInterval) { clearInterval(playInterval); playInterval = null; }
+    const { _playInterval } = get();
+    if (_playInterval) clearInterval(_playInterval);
     set({
       isDebugging: false,
       traceSteps: [],
       currentStepIndex: -1,
       isPlaying: false,
+      _playInterval: null,
     });
   },
 
@@ -92,28 +94,30 @@ export const useDebugStore = create<DebugStore>()((set, get) => ({
   },
 
   playAll: () => {
-    if (playInterval) clearInterval(playInterval);
-    set({ isPlaying: true });
-    playInterval = setInterval(() => {
+    const { _playInterval } = get();
+    if (_playInterval) clearInterval(_playInterval);
+    const interval = setInterval(() => {
       const { currentStepIndex, traceSteps, breakpoints } = get();
       if (currentStepIndex >= traceSteps.length - 1) {
-        if (playInterval) { clearInterval(playInterval); playInterval = null; }
-        set({ isPlaying: false });
+        clearInterval(interval);
+        set({ isPlaying: false, _playInterval: null });
         return;
       }
       const nextIndex = currentStepIndex + 1;
       // Pause at breakpoints
       if (breakpoints.includes(traceSteps[nextIndex].nodeId)) {
-        if (playInterval) { clearInterval(playInterval); playInterval = null; }
-        set({ isPlaying: false, currentStepIndex: nextIndex });
+        clearInterval(interval);
+        set({ isPlaying: false, currentStepIndex: nextIndex, _playInterval: null });
         return;
       }
       set({ currentStepIndex: nextIndex });
     }, 500);
+    set({ isPlaying: true, _playInterval: interval });
   },
 
   stopPlayback: () => {
-    if (playInterval) { clearInterval(playInterval); playInterval = null; }
-    set({ isPlaying: false });
+    const { _playInterval } = get();
+    if (_playInterval) clearInterval(_playInterval);
+    set({ isPlaying: false, _playInterval: null });
   },
 }));

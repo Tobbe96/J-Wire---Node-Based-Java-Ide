@@ -9,6 +9,7 @@ const ALL_ELEMENT_TYPES = [...ALL_NUMERIC, 'String', 'boolean'];
 interface ForEachNodeData extends Record<string, unknown> {
   label: string;
   elementType?: string;
+  loopLabel?: string;
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
 }
 
@@ -32,15 +33,31 @@ const selectStyle: React.CSSProperties = {
 const ForEachNode = ({ id, data, selected }: NodeProps<Node<ForEachNodeData>>) => {
   const elementType = (data.elementType as string) || 'int';
   const elemColor = getTypeColor(elementType);
+  const loopLabel = (data.loopLabel as string) || '';
   const updateNodeData = data.updateNodeData as ((id: string, d: Record<string, unknown>) => void) | undefined;
 
   const onTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     updateNodeData?.(id, { elementType: e.target.value });
   }, [id, updateNodeData]);
 
+  const onLabelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    updateNodeData?.(id, { loopLabel: e.target.value });
+  }, [id, updateNodeData]);
+
   return (
     <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '200px' }}>
       <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>FOR-EACH (Loop)</div>
+
+      <div style={{ padding: '4px 10px 2px', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: '10px', color: '#888' }}>label:</span>
+        <input
+          value={loopLabel}
+          onChange={onLabelChange}
+          placeholder="optional"
+          style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #555', color: '#f1c40f', fontSize: '10px', width: '80px', outline: 'none', padding: '1px 2px' }}
+          className="nodrag"
+        />
+      </div>
 
       <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
         {/* Left: inputs */}

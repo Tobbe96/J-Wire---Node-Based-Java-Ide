@@ -181,5 +181,41 @@ export function validateGraph(nodes: Node[], edges: Edge[]): GraphIssue[] {
     }
   }
 
+  // ── 7  Non-public main method ────────────────────────────────
+  // Java requires `public static void main(String[] args)`.
+  // The main node itself is always public, but a method named "main" with
+  // a non-public modifier is a common mistake.
+  for (const n of nodes) {
+    if (n.type === 'method' && (n.data.label as string)?.trim() === 'main') {
+      const mod = (n.data.modifier as string) || 'public';
+      if (!mod.startsWith('public')) {
+        issues.push({
+          severity: 'warning',
+          message: `Method "main" has modifier "${mod}" — Java requires the entry-point main to be public.`,
+          nodeId: n.id,
+        });
+      }
+    }
+  }
+
+  // ── 8  Private constructor instantiated from outside ─────────
+  // If a constructor node has modifier "private" and another class
+  // uses a newObject node targeting this class, warn the user.
+  const privateConstructorClasses = new Set<string>();
+  for (const n of nodes) {
+    if (n.type === 'constructor' && (n.data.modifier as string) === 'private') {
+      // We don't know the class name directly here, but we flag the node itself.
+      // When projectClasses context is available (cross-file), deeper checks
+      // apply. For now, emit a general advisory.
+      issues.push({
+        severity: 'warning',
+        message: 'This constructor is private — it cannot be called from outside the class (Singleton pattern or factory methods only).',
+        nodeId: n.id,
+      });
+      const label = (n.data.label as string) || '';
+      if (label) privateConstructorClasses.add(label);
+    }
+  }
+
   return issues;
 }

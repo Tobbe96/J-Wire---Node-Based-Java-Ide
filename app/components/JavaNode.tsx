@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Handle, Position, useReactFlow } from '@xyflow/react';
+import { Handle, Position } from '@xyflow/react';
 import { getTypeColor } from '../utils/theme';
 import { nodeContainer, nodeHeaderGradient, execHandleStyle, dataHandleStyle } from '../utils/nodeStyles';
 
@@ -19,7 +19,7 @@ const sanitizeJavaIdentifier = (value: string): string => {
 };
 
 const JavaNode = ({ id, data, selected }: { id: string; data: Record<string, unknown>; selected?: boolean }) => {
-  const { updateNodeData } = useReactFlow();
+  const updateNodeData = data.updateNodeData as (id: string, d: Record<string, unknown>) => void;
   const color = getTypeColor(data.type as string);
   const typeName = (data.type as string)?.toUpperCase() || 'VAR';
 
@@ -45,6 +45,37 @@ const JavaNode = ({ id, data, selected }: { id: string; data: Record<string, unk
           <span style={{ fontSize: '10px', color: '#666' }}>Value</span>
           <input className="nodrag" value={(data.value as string) || ''} onChange={(e) => updateNodeData(id, { value: e.target.value })} style={inputStyle} />
         </div>
+        {/* Access Modifier toggle */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#666' }}>Modifier</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['public', 'private', 'protected'] as const).map((mod) => {
+              const active = ((data.modifier as string) || 'public') === mod;
+              return (
+                <button
+                  key={mod}
+                  className="nodrag"
+                  onClick={() => updateNodeData(id, { modifier: mod })}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '9px',
+                    fontWeight: active ? 'bold' : 'normal',
+                    background: active ? `${color}cc` : 'rgba(0,0,0,0.4)',
+                    border: active ? `1px solid ${color}` : '1px solid rgba(255,255,255,0.08)',
+                    color: active ? '#fff' : '#666',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    letterSpacing: '0.3px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {mod}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Static / Instance toggle */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '10px', color: '#666' }}>Kind</span>

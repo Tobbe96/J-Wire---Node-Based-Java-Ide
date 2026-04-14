@@ -1151,4 +1151,521 @@ describe('generateJavaCode', () => {
     const code = generateJavaCode(nodes, edges, 'Main', projectClasses);
     expect(code).toContain('.bark()');
   });
+
+  // --- OOP Phase 2: Inheritance, Interfaces, Abstract, Enums ---
+
+  it('generates class with extends keyword', () => {
+    const code = generateJavaCode([], [], 'Dog', [], { classType: 'class', extendsClass: 'Animal' });
+    expect(code).toContain('public class Dog extends Animal');
+    expect(code).not.toContain('interface');
+  });
+
+  it('generates class with implements keyword', () => {
+    const code = generateJavaCode([], [], 'Dog', [], { classType: 'class', implementsInterfaces: ['Runnable', 'Serializable'] });
+    expect(code).toContain('public class Dog implements Runnable, Serializable');
+  });
+
+  it('generates class with both extends and implements', () => {
+    const code = generateJavaCode([], [], 'GuideDog', [], { classType: 'class', extendsClass: 'Dog', implementsInterfaces: ['Guide'] });
+    expect(code).toContain('public class GuideDog extends Dog implements Guide');
+  });
+
+  it('generates abstract class declaration', () => {
+    const code = generateJavaCode([], [], 'Shape', [], { classType: 'class', isAbstract: true });
+    expect(code).toContain('public abstract class Shape');
+  });
+
+  it('generates interface keyword instead of class', () => {
+    const code = generateJavaCode([], [], 'Drawable', [], { classType: 'interface' });
+    expect(code).toContain('public interface Drawable');
+    expect(code).not.toContain('public class');
+  });
+
+  it('generates interface with method signatures (no body)', () => {
+    const nodes: Node[] = [
+      makeNode('m1', 'method', { label: 'draw', returnType: 'void', parameters: [], isStatic: false }),
+      makeNode('m2', 'method', { label: 'getArea', returnType: 'double', parameters: [], isStatic: false }),
+    ];
+    const code = generateJavaCode(nodes, [], 'Drawable', [], { classType: 'interface' });
+    expect(code).toContain('void draw();');
+    expect(code).toContain('double getArea();');
+    expect(code).not.toContain('public void draw()');
+  });
+
+  it('generates interface extends another interface', () => {
+    const code = generateJavaCode([], [], 'Colorable', [], { classType: 'interface', implementsInterfaces: ['Drawable'] });
+    expect(code).toContain('public interface Colorable extends Drawable');
+  });
+
+  it('generates abstract method (no body, semicolon)', () => {
+    const nodes: Node[] = [
+      makeNode('m1', 'method', {
+        label: 'makeSound',
+        returnType: 'void',
+        parameters: [],
+        isStatic: false,
+        isAbstract: true,
+      }),
+    ];
+    const code = generateJavaCode(nodes, [], 'Animal', [], { classType: 'class', isAbstract: true });
+    expect(code).toContain('public abstract void makeSound();');
+    expect(code).not.toContain('makeSound() {');
+  });
+
+  it('generates enum with constants', () => {
+    const nodes: Node[] = [
+      makeNode('e1', 'enumConstants', { label: 'Enum Constants', constants: ['RED', 'GREEN', 'BLUE'] }),
+    ];
+    const code = generateJavaCode(nodes, [], 'Color', [], { classType: 'enum' });
+    expect(code).toContain('public enum Color');
+    expect(code).toContain('RED');
+    expect(code).toContain('GREEN');
+    expect(code).toContain('BLUE');
+    expect(code).not.toContain('public class');
+  });
+
+  it('generates empty enum when no constants node', () => {
+    const code = generateJavaCode([], [], 'Status', [], { classType: 'enum' });
+    expect(code).toContain('public enum Status');
+    expect(code).toContain('// Add enum constants');
+  });
+
+  it('generates super() call from superConstructorCall node', () => {
+    const nodes: Node[] = [
+      makeNode('c1', 'constructor', { label: 'Constructor', parameters: [{ id: 'p1', name: 'name', type: 'String', defaultValue: '' }], localVariables: [] }),
+      makeNode('s1', 'superConstructorCall', { label: 'Super', argCount: 1 }),
+      makeNode('v1', 'java', { label: 'petName', type: 'String', value: 'buddy', isStatic: false }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('c1', 's1', 'exec', 'exec-in'),
+      makeEdge('v1', 's1', 'data-out', 'arg-in-0'),
+    ];
+    const code = generateJavaCode(nodes, edges, 'Dog', [], { classType: 'class', extendsClass: 'Animal' });
+    expect(code).toContain('super(petName)');
+  });
+
+  it('abstract method with parameters', () => {
+    const nodes: Node[] = [
+      makeNode('m1', 'method', {
+        label: 'calculate',
+        returnType: 'double',
+        parameters: [{ id: 'p1', name: 'x', type: 'double', defaultValue: '0' }],
+        isStatic: false,
+        isAbstract: true,
+      }),
+    ];
+    const code = generateJavaCode(nodes, [], 'MathBase', [], { classType: 'class', isAbstract: true });
+    expect(code).toContain('public abstract double calculate(double x);');
+  });
+
+  // --- Access modifier tests ---
+
+  it('method with private modifier compiles correctly', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('m1', 'method', { label: 'helperMethod', returnType: 'void', modifier: 'private', isStatic: true, parameters: [], localVariables: [] }),
+    ];
+    const code = generateJavaCode(nodes, [], 'MyClass');
+    expect(code).toContain('private static void helperMethod()');
+    expect(code).not.toContain('public static void helperMethod()');
+  });
+
+  it('method with protected modifier compiles correctly', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('m1', 'method', { label: 'compute', returnType: 'int', modifier: 'protected', isStatic: false, parameters: [], localVariables: [] }),
+    ];
+    const code = generateJavaCode(nodes, [], 'MyClass');
+    expect(code).toContain('protected int compute()');
+  });
+
+  it('method defaults to public when no modifier set', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('m1', 'method', { label: 'greet', returnType: 'void', isStatic: true, parameters: [], localVariables: [] }),
+    ];
+    const code = generateJavaCode(nodes, [], 'MyClass');
+    expect(code).toContain('public static void greet()');
+  });
+
+  it('abstract method with protected modifier compiles correctly', () => {
+    const nodes: Node[] = [
+      makeNode('m1', 'method', { label: 'doWork', returnType: 'void', modifier: 'protected', isAbstract: true, parameters: [], localVariables: [] }),
+    ];
+    const code = generateJavaCode(nodes, [], 'Base', [], { classType: 'class', isAbstract: true });
+    expect(code).toContain('protected abstract void doWork();');
+    expect(code).not.toContain('public abstract void doWork();');
+  });
+
+  it('constructor with private modifier compiles correctly', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('c1', 'constructor', { label: 'Singleton', modifier: 'private', parameters: [], localVariables: [] }),
+    ];
+    const code = generateJavaCode(nodes, [], 'Singleton');
+    expect(code).toContain('private Singleton()');
+    expect(code).not.toContain('public Singleton()');
+  });
+
+  it('constructor with protected modifier compiles correctly', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('c1', 'constructor', { label: 'Base', modifier: 'protected', parameters: [], localVariables: [] }),
+    ];
+    const code = generateJavaCode(nodes, [], 'Base');
+    expect(code).toContain('protected Base()');
+  });
+
+  it('constructor defaults to public when no modifier set', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('c1', 'constructor', { label: 'MyClass', parameters: [], localVariables: [] }),
+    ];
+    const code = generateJavaCode(nodes, [], 'MyClass');
+    expect(code).toContain('public MyClass()');
+  });
+
+  // ── For-loop ─────────────────────────────────────────────────────────────
+
+  it('generates for loop with default comparison and step', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('f1', 'for', { label: 'FOR Loop', comparison: '<', step: '1' }),
+    ];
+    const edges: Edge[] = [makeEdge('main', 'f1', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('for (int i = 0; i < 10; i++)');
+  });
+
+  it('generates for loop with <= comparison and step 2', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('f1', 'for', { label: 'FOR Loop', comparison: '<=', step: '2' }),
+    ];
+    const edges: Edge[] = [makeEdge('main', 'f1', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('for (int i = 0; i <= 10; i += 2)');
+  });
+
+  it('generates for loop with > comparison and negative step', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('f1', 'for', { label: 'FOR Loop', comparison: '>', step: '-1' }),
+    ];
+    const edges: Edge[] = [makeEdge('main', 'f1', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('for (int i = 0; i > 10; i--)');
+  });
+
+  it('generates for loop with connected start/end', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('s', 'literal', { literalType: 'int', value: '5' }),
+      makeNode('e', 'literal', { literalType: 'int', value: '20' }),
+      makeNode('f1', 'for', { label: 'FOR Loop', comparison: '<', step: '1' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'f1', 'exec-out', 'exec-in'),
+      makeEdge('s', 'f1', 'data-out', 'data-start'),
+      makeEdge('e', 'f1', 'data-out', 'data-end'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('for (int i = 5; i < 20; i++)');
+  });
+
+  it('generates labelled for loop', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('f1', 'for', { label: 'FOR Loop', loopLabel: 'outer', comparison: '<', step: '1' }),
+    ];
+    const edges: Edge[] = [makeEdge('main', 'f1', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('outer: for (int i = 0; i < 10; i++)');
+  });
+
+  // ── Do-While ──────────────────────────────────────────────────────────────
+
+  it('generates do-while loop', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('cond', 'literal', { literalType: 'boolean', value: 'false' }),
+      makeNode('dw', 'doWhile', { label: 'Do-While' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'dw', 'exec-out', 'exec-in'),
+      makeEdge('cond', 'dw', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('do {');
+    expect(code).toContain('} while (false);');
+  });
+
+  // ── forEach ───────────────────────────────────────────────────────────────
+
+  it('generates forEach loop', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('arr', 'literal', { literalType: 'String', value: 'myArr' }),
+      makeNode('fe', 'forEach', { label: 'ForEach', elementType: 'int' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'fe', 'exec-out', 'exec-in'),
+      makeEdge('arr', 'fe', 'data-out', 'data-in-array'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('for (int __elem__ : "myArr")');
+  });
+
+  // ── Switch ────────────────────────────────────────────────────────────────
+
+  it('generates switch statement', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v', 'literal', { literalType: 'int', value: '1' }),
+      makeNode('sw', 'switch', { label: 'Switch', caseCount: 2, caseValues: ['1', '2'] }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'sw', 'exec-out', 'exec-in'),
+      makeEdge('v', 'sw', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('switch (1) {');
+    expect(code).toContain('case 1:');
+    expect(code).toContain('case 2:');
+  });
+
+  // ── Try-catch-finally ─────────────────────────────────────────────────────
+
+  it('generates try-catch-finally with default Exception', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('tc', 'tryCatchFinally', { label: 'Try/Catch', exceptionType: 'Exception', exceptionVarName: 'e' }),
+    ];
+    const edges: Edge[] = [makeEdge('main', 'tc', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('try {');
+    expect(code).toContain('} catch (Exception e) {');
+    expect(code).toContain('} finally {');
+  });
+
+  it('generates try-catch with custom exception type and var', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('tc', 'tryCatchFinally', { label: 'Try/Catch', exceptionType: 'IOException', exceptionVarName: 'ex' }),
+    ];
+    const edges: Edge[] = [makeEdge('main', 'tc', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('} catch (IOException ex) {');
+  });
+
+  // ── Throw ─────────────────────────────────────────────────────────────────
+
+  it('generates throw statement with inline message', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('th', 'throw', { label: 'Throw', inlineValue: 'bad input' }),
+    ];
+    const edges: Edge[] = [makeEdge('main', 'th', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('throw new RuntimeException("bad input")');
+  });
+
+  // ── Break / Continue ──────────────────────────────────────────────────────
+
+  it('generates break statement', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('f1', 'for', { label: 'FOR Loop', comparison: '<', step: '1' }),
+      makeNode('br', 'break', { label: 'Break' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'f1', 'exec-out', 'exec-in'),
+      makeEdge('f1', 'br', 'exec-body', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('break;');
+  });
+
+  it('generates continue with label', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('f1', 'for', { label: 'FOR Loop', loopLabel: 'loop', comparison: '<', step: '1' }),
+      makeNode('ct', 'continue', { label: 'Continue', targetLabel: 'loop' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'f1', 'exec-out', 'exec-in'),
+      makeEdge('f1', 'ct', 'exec-body', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('continue loop;');
+  });
+
+  // ── Array ops ─────────────────────────────────────────────────────────────
+
+  it('generates array set operation', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('arr', 'literal', { literalType: 'String', value: 'scores' }),
+      makeNode('idx', 'literal', { literalType: 'int', value: '0' }),
+      makeNode('val', 'literal', { literalType: 'int', value: '99' }),
+      makeNode('op', 'arrayOp', { label: 'ArraySet', operation: 'set' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'op', 'exec-out', 'exec-in'),
+      makeEdge('arr', 'op', 'data-out', 'data-in-array'),
+      makeEdge('idx', 'op', 'data-out', 'data-in-index'),
+      makeEdge('val', 'op', 'data-out', 'data-in-value'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('"scores"[0] = 99');
+  });
+
+  // ── Ternary ───────────────────────────────────────────────────────────────
+
+  it('generates ternary expression', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('cond', 'literal', { literalType: 'boolean', value: 'true' }),
+      makeNode('t', 'literal', { literalType: 'String', value: 'yes' }),
+      makeNode('f', 'literal', { literalType: 'String', value: 'no' }),
+      makeNode('tern', 'ternary', { label: 'Ternary', type: 'String' }),
+      makeNode('p1', 'print', { label: 'Print' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'p1', 'exec-out', 'exec-in'),
+      makeEdge('cond', 'tern', 'data-out', 'data-in-condition'),
+      makeEdge('t', 'tern', 'data-out', 'data-in-true'),
+      makeEdge('f', 'tern', 'data-out', 'data-in-false'),
+      makeEdge('tern', 'p1', 'data-out', 'data-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('(true ? "yes" : "no")');
+  });
+
+  // ── Static method ─────────────────────────────────────────────────────────
+
+  it('generates static method call', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('sm', 'callStaticMethod', { label: 'Static', targetClass: 'Math', methodName: 'sqrt', argCount: 0 }),
+    ];
+    const edges: Edge[] = [makeEdge('main', 'sm', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('Math.sqrt()');
+  });
+
+  // ── OOP / Inheritance ────────────────────────────────────────────────────
+
+  it('generates class with extends', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+    ];
+    const code = generateJavaCode(nodes, [], 'Dog', [], { extendsClass: 'Animal' });
+    expect(code).toContain('class Dog extends Animal');
+  });
+
+  it('generates constructor with super call', () => {
+    const nodes: Node[] = [
+      makeNode('c1', 'constructor', { label: 'Dog', parameters: [{ name: 'name', type: 'String' }], localVariables: [] }),
+      makeNode('sc', 'superConstructorCall', { label: 'Super', argCount: 0 }),
+    ];
+    const edges: Edge[] = [makeEdge('c1', 'sc', 'exec-out', 'exec-in')];
+    const code = generateJavaCode(nodes, edges, 'Dog');
+    expect(code).toContain('super(');
+  });
+
+  // ── Tree Nodes ────────────────────────────────────────────────────────────
+
+  it('generates BST create + insert + TreeNode inner class', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('b1', 'bstOp', { label: 'BST', operation: 'create', variableName: 'root', valueType: 'int' }),
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '5' }),
+      makeNode('b2', 'bstOp', { label: 'BST', operation: 'insert', variableName: 'root', valueType: 'int' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'b1', 'exec-out', 'exec-in'),
+      makeEdge('b1', 'b2', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'b2', 'data-out', 'data-in-value'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('TreeNode root = null;');
+    expect(code).toContain('root = bstInsert(root, x);');
+    expect(code).toContain('static class TreeNode');
+    expect(code).toContain('private static TreeNode bstInsert');
+    expect(code).toContain('import java.util.ArrayList;');
+  });
+
+  it('generates AVL create + insert + helper methods', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('a1', 'avlTreeOp', { label: 'AVL', operation: 'create', variableName: 'root', valueType: 'int' }),
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '10' }),
+      makeNode('a2', 'avlTreeOp', { label: 'AVL', operation: 'insert', variableName: 'root', valueType: 'int' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 'a1', 'exec-out', 'exec-in'),
+      makeEdge('a1', 'a2', 'exec-out', 'exec-in'),
+      makeEdge('v1', 'a2', 'data-out', 'data-in-value'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('TreeNode root = null;');
+    expect(code).toContain('root = avlInsert(root, x);');
+    expect(code).toContain('private static TreeNode avlInsert');
+    expect(code).toContain('avlRotateRight');
+  });
+
+  it('generates TreeNode create + getValue data op', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('v1', 'java', { label: 'x', type: 'int', value: '7' }),
+      makeNode('t1', 'treeNodeOp', { label: 'TN', operation: 'create', variableName: 'myNode', valueType: 'int' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('main', 't1', 'exec-out', 'exec-in'),
+      makeEdge('v1', 't1', 'data-out', 'data-in-value'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('TreeNode myNode = new TreeNode(x);');
+    expect(code).toContain('static class TreeNode');
+  });
+});
+
+describe('JavaFX compiler', () => {
+  it('generates extends Application and start method', () => {
+    const nodes: Node[] = [
+      makeNode('1', 'javafxApp', { label: 'App' }),
+    ];
+    const code = generateJavaCode(nodes, []);
+    expect(code).toContain('extends Application');
+    expect(code).toContain('public void start(Stage primaryStage)');
+    expect(code).toContain('import javafx.application.Application');
+    expect(code).toContain('launch(args)');
+  });
+
+  it('generates Button control', () => {
+    const nodes: Node[] = [
+      makeNode('1', 'javafxApp', { label: 'App' }),
+      makeNode('2', 'javafxControlOp', { label: 'Button', operation: 'create', controlType: 'Button', variableName: 'btn' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('1', '2', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('Button btn = new Button');
+    expect(code).toContain('import javafx.scene.control.*');
+  });
+
+  it('generates VBox layout', () => {
+    const nodes: Node[] = [
+      makeNode('1', 'javafxApp', { label: 'App' }),
+      makeNode('2', 'javafxLayoutOp', { label: 'Layout', operation: 'create', layoutType: 'VBox', variableName: 'vbox' }),
+    ];
+    const edges: Edge[] = [
+      makeEdge('1', '2', 'exec-out', 'exec-in'),
+    ];
+    const code = generateJavaCode(nodes, edges);
+    expect(code).toContain('VBox vbox = new VBox()');
+    expect(code).toContain('import javafx.scene.layout.*');
+  });
 });

@@ -200,3 +200,60 @@ describe('CallMethod to nonexistent method', () => {
     expect(issues.filter((i) => i.nodeId === 'c1' && i.severity === 'error')).toHaveLength(0);
   });
 });
+
+describe('validateGraph — access modifier warnings', () => {
+  it('warns when a method named "main" has a non-public modifier', () => {
+    const nodes: Node[] = [
+      makeNode('m1', 'method', { label: 'main', modifier: 'private' }),
+    ];
+    const issues = validateGraph(nodes, []);
+    expect(issues.some((i) => i.nodeId === 'm1' && i.severity === 'warning' && i.message.includes('main'))).toBe(true);
+  });
+
+  it('does not warn when method "main" has public modifier', () => {
+    const nodes: Node[] = [
+      makeNode('m1', 'method', { label: 'main', modifier: 'public' }),
+    ];
+    const issues = validateGraph(nodes, []);
+    const modWarnings = issues.filter((i) => i.nodeId === 'm1' && i.message.includes('public'));
+    expect(modWarnings).toHaveLength(0);
+  });
+
+  it('does not warn when method "main" has no modifier (defaults to public)', () => {
+    const nodes: Node[] = [
+      makeNode('m1', 'method', { label: 'main' }),
+    ];
+    const issues = validateGraph(nodes, []);
+    const modWarnings = issues.filter((i) => i.nodeId === 'm1' && i.message.includes('modifier'));
+    expect(modWarnings).toHaveLength(0);
+  });
+
+  it('warns when a constructor has private modifier', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('c1', 'constructor', { label: 'Singleton', modifier: 'private' }),
+    ];
+    const issues = validateGraph(nodes, []);
+    expect(issues.some((i) => i.nodeId === 'c1' && i.severity === 'warning' && i.message.includes('private'))).toBe(true);
+  });
+
+  it('does not warn when constructor has public modifier', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('c1', 'constructor', { label: 'MyClass', modifier: 'public' }),
+    ];
+    const issues = validateGraph(nodes, []);
+    const modWarnings = issues.filter((i) => i.nodeId === 'c1' && i.message.includes('private'));
+    expect(modWarnings).toHaveLength(0);
+  });
+
+  it('does not warn for non-main methods with private modifier', () => {
+    const nodes: Node[] = [
+      makeNode('main', 'main', { label: 'Main' }),
+      makeNode('m1', 'method', { label: 'helper', modifier: 'private' }),
+    ];
+    const issues = validateGraph(nodes, []);
+    const modWarnings = issues.filter((i) => i.nodeId === 'm1' && i.message.includes('modifier'));
+    expect(modWarnings).toHaveLength(0);
+  });
+});

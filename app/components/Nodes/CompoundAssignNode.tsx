@@ -5,16 +5,17 @@ import type { EnrichedData, CompoundAssignNodeData } from '../../utils/nodeTypes
 
 const CompoundAssignNode = ({ data, selected, id }: { data: EnrichedData<CompoundAssignNodeData>; selected: boolean; id: string }) => {
   const borderColor = '#e67e22';
+  const { updateNodeData } = data;
   const dataInConnections = useNodeConnections({ handleType: 'target', handleId: 'data-in' });
   const isConnected = dataInConnections.length > 0;
 
   const onInlineChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    data.updateNodeData?.(id, { inlineValue: e.target.value });
-  }, [id, data.updateNodeData]);
+    updateNodeData?.(id, { inlineValue: e.target.value });
+  }, [id, updateNodeData]);
 
   const onOperatorChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    data.updateNodeData?.(id, { operator: e.target.value });
-  }, [id, data.updateNodeData]);
+    updateNodeData?.(id, { operator: e.target.value });
+  }, [id, updateNodeData]);
 
   return (
     <div style={nodeContainer(borderColor, selected)}>
@@ -36,7 +37,7 @@ const CompoundAssignNode = ({ data, selected, id }: { data: EnrichedData<Compoun
           <span style={{ fontSize: '9px', color: '#888' }}>Variable Name:</span>
           <input
             value={data.variableName || ''}
-            onChange={(e) => data.updateNodeData?.(id, { variableName: e.target.value })}
+            onChange={(e) => updateNodeData?.(id, { variableName: e.target.value })}
             style={{ background: '#000', border: '1px solid #444', color: '#e67e22', padding: '4px', fontSize: '11px', outline: 'none', borderRadius: '3px' }}
           />
         </div>

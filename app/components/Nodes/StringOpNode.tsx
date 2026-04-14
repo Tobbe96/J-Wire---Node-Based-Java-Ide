@@ -7,6 +7,7 @@ import type { StringOpNodeData } from '../../utils/nodeTypes';
 const ACCENT = '#e67e22';
 const STRING_COLOR = getTypeColor('String');
 const INT_COLOR = getTypeColor('int');
+const BOOL_COLOR = getTypeColor('boolean');
 
 const handleStyle = (color: string, side: 'left' | 'right') => ({
   background: color,
@@ -105,12 +106,67 @@ const StringOpNode = ({ data, selected }: NodeProps<Node<StringOpNodeData>>) => 
             </div>
           </div>
         );
+      case 'equalsIgnoreCase':
+      case 'compareTo':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>String</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-other" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Other</span>
+            </div>
+          </div>
+        );
+      case 'matches':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>String</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-regex" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Regex</span>
+            </div>
+          </div>
+        );
+      case 'replaceAll':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>String</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-regex" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Regex</span>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in-replacement" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>Replace</span>
+            </div>
+          </div>
+        );
+      case 'isEmpty':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Handle type="target" position={Position.Left} id="data-in" style={handleStyle(STRING_COLOR, 'left')} />
+              <span style={{ fontSize: '11px', color: '#ccc' }}>String</span>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
   };
 
-  const outputColor = (op === 'length' || op === 'indexOf') ? INT_COLOR : STRING_COLOR;
+  const outputColor = (op === 'length' || op === 'indexOf' || op === 'compareTo') ? INT_COLOR
+    : (op === 'contains' || op === 'startsWith' || op === 'endsWith' || op === 'equalsIgnoreCase' || op === 'matches' || op === 'isEmpty') ? BOOL_COLOR
+    : STRING_COLOR;
   const headerLabel = `STRING: ${op.charAt(0).toUpperCase() + op.slice(1)}`;
 
   return (

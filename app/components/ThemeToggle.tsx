@@ -13,7 +13,7 @@ export default function ThemeToggle() {
       style={{
         height: 28,
         borderRadius: 5,
-        border: '1px solid #333',
+        border: '1px solid var(--jf-panel-border, #333)',
         cursor: 'pointer',
         fontSize: 11,
         fontWeight: 700,
@@ -22,17 +22,17 @@ export default function ThemeToggle() {
         justifyContent: 'center',
         gap: 4,
         padding: '0 8px',
-        backgroundColor: '#1e1e1e',
-        color: isDark ? '#ccc' : '#f59e0b',
+        backgroundColor: 'var(--jf-surface, #1e1e1e)',
+        color: isDark ? 'var(--jf-text-secondary, #ccc)' : '#f59e0b',
         transition: 'background 0.15s ease, border-color 0.15s ease',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = '#2a2a2a';
-        e.currentTarget.style.borderColor = '#555';
+        e.currentTarget.style.backgroundColor = 'var(--jf-surface-hover, #2a2a2a)';
+        e.currentTarget.style.borderColor = 'var(--jf-panel-border-strong, #555)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = '#1e1e1e';
-        e.currentTarget.style.borderColor = '#333';
+        e.currentTarget.style.backgroundColor = 'var(--jf-surface, #1e1e1e)';
+        e.currentTarget.style.borderColor = 'var(--jf-panel-border, #333)';
       }}
     >
       {isDark ? '\u2600' : '\u263E'}

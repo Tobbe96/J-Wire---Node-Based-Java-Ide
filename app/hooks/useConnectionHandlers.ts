@@ -1,11 +1,11 @@
 import { useRef, useState, useCallback } from 'react';
-import type { Node } from '@xyflow/react';
+import type { Node, Connection } from '@xyflow/react';
 import { getTypeColor } from '../utils/theme';
 import { triggerConnectionSpark } from '../components/vfx/ConnectionSpark';
 
 interface ConnectionHandlerDeps {
   nodes: Node[];
-  onConnect: (...args: any[]) => void;
+  onConnect: (connection: Connection) => void;
   vfxEnabled: boolean;
   setMenuPosition: (pos: { x: number; y: number }) => void;
   setMenuVisible: (v: boolean) => void;

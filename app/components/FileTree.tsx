@@ -4,6 +4,8 @@ import React, { memo, useState } from 'react';
 export interface ProjectFile {
   id: string;
   className: string;
+  classType?: 'class' | 'interface' | 'enum';
+  isAbstract?: boolean;
 }
 
 interface FileTreeProps {
@@ -13,6 +15,13 @@ interface FileTreeProps {
   onAdd: () => void;
   onRemove: (fileId: string) => void;
   onRename: (fileId: string, newName: string) => void;
+}
+
+function getFileIcon(file: ProjectFile): string {
+  if (file.classType === 'interface') return '🔷';
+  if (file.classType === 'enum') return '📋';
+  if (file.isAbstract) return '🔶';
+  return '☕';
 }
 
 const FileTree = ({ files, activeFileId, onSwitch, onAdd, onRemove, onRename }: FileTreeProps) => {
@@ -62,7 +71,7 @@ const FileTree = ({ files, activeFileId, onSwitch, onAdd, onRemove, onRename }: 
             />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
-              <span style={{ color: '#89ddff', fontSize: 11 }}>☕</span>
+              <span style={{ fontSize: 11 }}>{getFileIcon(file)}</span>
               <span style={{ fontSize: 11, color: '#ccc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {file.className}.java
               </span>

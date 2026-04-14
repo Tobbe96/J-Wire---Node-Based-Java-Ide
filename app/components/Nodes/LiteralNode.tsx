@@ -42,6 +42,7 @@ const LiteralNode = ({ id, data, selected }: NodeProps<Node<LiteralNodeData>>) =
           {JAVA_TYPES.map(t => (
             <option key={t} value={t}>{t}</option>
           ))}
+          <option value="enum">enum</option>
         </select>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -49,7 +50,7 @@ const LiteralNode = ({ id, data, selected }: NodeProps<Node<LiteralNodeData>>) =
             className="nodrag"
             value={(data.value as string) || ''}
             onChange={onValueChange}
-            placeholder={literalType === 'String' ? 'text...' : '0'}
+            placeholder={literalType === 'String' ? 'text...' : literalType === 'enum' ? 'Class.VALUE' : '0'}
             style={{ ...inputStyle, color: outputColor }}
           />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>

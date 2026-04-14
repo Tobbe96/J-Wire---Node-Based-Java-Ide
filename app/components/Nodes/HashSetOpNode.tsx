@@ -39,6 +39,29 @@ const rowStyle: React.CSSProperties = {
   alignItems: 'center',
 };
 
+const ELEM_TYPES_SET = ['int', 'double', 'float', 'long', 'String', 'boolean', 'char', 'Object'];
+
+const varInpStyle2: React.CSSProperties = {
+  background: 'rgba(0,0,0,0.4)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  color: '#ccc',
+  padding: '2px 5px',
+  fontSize: '10px',
+  outline: 'none',
+  borderRadius: '3px',
+  width: '78px',
+};
+
+const typeSelStyle2: React.CSSProperties = {
+  background: 'rgba(0,0,0,0.4)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  padding: '2px 3px',
+  fontSize: '10px',
+  outline: 'none',
+  cursor: 'pointer',
+  borderRadius: '3px',
+};
+
 const HashSetOpNode = ({
   data,
   selected,
@@ -49,12 +72,34 @@ const HashSetOpNode = ({
   id: string;
 }) => {
   const op = data.operation;
-  const elementType = data.elementType || 'Object';
+  const elementType = data.elementType || 'String';
   const variableName = data.variableName || 'set';
   const elementColor = getTypeColor(elementType);
+  const { updateNodeData } = data;
 
   const headerLabel = `HashSet: ${op}`;
-  const varLabel = `set: ${variableName}`;
+
+  const renderVarEdit = () => (
+    <div style={{ padding: '4px 10px 2px', display: 'flex', gap: '5px', alignItems: 'center' }}>
+      <input
+        className="nodrag"
+        value={variableName}
+        onChange={(e) => updateNodeData?.(id, { variableName: e.target.value })}
+        style={varInpStyle2}
+        placeholder="varName"
+      />
+      {op === 'create' && (
+        <select
+          className="nodrag"
+          value={elementType}
+          onChange={(e) => updateNodeData?.(id, { elementType: e.target.value })}
+          style={{ ...typeSelStyle2, color: ACCENT }}
+        >
+          {ELEM_TYPES_SET.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+      )}
+    </div>
+  );
 
   const renderExecIn = () => (
     <div style={rowStyle}>
@@ -73,9 +118,9 @@ const HashSetOpNode = ({
   // ─── create ─────────────────────────────────────────────
   if (op === 'create') {
     return (
-      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
+      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
         <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
-        <div style={{ padding: '4px 12px 0', fontSize: '10px', color: '#aaa' }}>{varLabel}</div>
+        {renderVarEdit()}
         <div style={bodyStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             {renderExecIn()}
@@ -89,9 +134,9 @@ const HashSetOpNode = ({
   // ─── add ────────────────────────────────────────────────
   if (op === 'add') {
     return (
-      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
+      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
         <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
-        <div style={{ padding: '4px 12px 0', fontSize: '10px', color: '#aaa' }}>{varLabel}</div>
+        {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {renderExecIn()}
@@ -108,12 +153,12 @@ const HashSetOpNode = ({
     );
   }
 
-  // ─── remove (takes a value, not an index) ───────────────
+  // ─── remove ─────────────────────────────────────────────
   if (op === 'remove') {
     return (
-      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
+      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
         <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
-        <div style={{ padding: '4px 12px 0', fontSize: '10px', color: '#aaa' }}>{varLabel}</div>
+        {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {renderExecIn()}
@@ -133,9 +178,9 @@ const HashSetOpNode = ({
   // ─── contains (data-only) ──────────────────────────────
   if (op === 'contains') {
     return (
-      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '170px' }}>
+      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
         <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
-        <div style={{ padding: '4px 12px 0', fontSize: '10px', color: '#aaa' }}>{varLabel}</div>
+        {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={rowStyle}>
@@ -155,9 +200,9 @@ const HashSetOpNode = ({
   // ─── size (data-only) ───────────────────────────────────
   if (op === 'size') {
     return (
-      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '150px' }}>
+      <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '160px' }}>
         <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
-        <div style={{ padding: '4px 12px 0', fontSize: '10px', color: '#aaa' }}>{varLabel}</div>
+        {renderVarEdit()}
         <div style={{ padding: '10px', display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ display: 'flex', alignItems: 'center', ...rowStyle }}>
             <span style={boldLabel}>int</span>
@@ -170,9 +215,9 @@ const HashSetOpNode = ({
 
   // ─── clear ──────────────────────────────────────────────
   return (
-    <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '180px' }}>
+    <div style={{ ...nodeContainer(ACCENT, !!selected), minWidth: '190px' }}>
       <div className="jflow-header-shimmer" style={nodeHeaderSolid(ACCENT)}>{headerLabel}</div>
-      <div style={{ padding: '4px 12px 0', fontSize: '10px', color: '#aaa' }}>{varLabel}</div>
+      {renderVarEdit()}
       <div style={bodyStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {renderExecIn()}

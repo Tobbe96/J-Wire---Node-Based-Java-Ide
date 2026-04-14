@@ -4,7 +4,10 @@ import DetailsPanel from './DetailsPanel';
 import ValidationPanel from './ValidationPanel';
 import TemplateGallery from './TemplateGallery';
 import FileTree, { type ProjectFile } from '../FileTree';
+import ClassSettingsPanel from '../ClassSettingsPanel';
 import { getTypeColor } from '../../utils/theme';
+import type { ProjectClassInfo } from '../../utils/nodeTypes';
+import type { Template } from '../../utils/templates';
 
 interface LeftSidebarProps {
   nodes: Node[];
@@ -20,13 +23,26 @@ interface LeftSidebarProps {
   onAddGetter: (variableNode: Node) => void;
   className: string;
   onClassNameChange: (name: string) => void;
+  classType?: 'class' | 'interface' | 'enum';
+  extendsClass?: string;
+  implementsInterfaces?: string[];
+  isAbstract?: boolean;
+  packageName?: string;
+  onUpdateClassMeta?: (meta: {
+    classType?: 'class' | 'interface' | 'enum';
+    extendsClass?: string;
+    implementsInterfaces?: string[];
+    isAbstract?: boolean;
+    packageName?: string;
+  }) => void;
+  allClasses?: ProjectClassInfo[];
   files: ProjectFile[];
   activeFileId: string;
   onSwitchFile: (fileId: string) => void;
   onAddFile: () => void;
   onRemoveFile: (fileId: string) => void;
   onRenameFile: (fileId: string, newName: string) => void;
-  onLoadTemplate: (nodes: Node[], edges: Edge[]) => void;
+  onLoadTemplate: (template: Template) => void;
   width?: number;
 }
 
@@ -44,6 +60,13 @@ const LeftSidebar = ({
   onAddGetter,
   className,
   onClassNameChange,
+  classType,
+  extendsClass,
+  implementsInterfaces,
+  isAbstract,
+  packageName,
+  onUpdateClassMeta,
+  allClasses = [],
   files,
   activeFileId,
   onSwitchFile,
@@ -132,11 +155,17 @@ const LeftSidebar = ({
           style={{ background: '#111', border: '1px solid #333', color: '#ccc', padding: '6px 8px', fontSize: '11px', borderRadius: '3px', outline: 'none', width: '100%', marginBottom: '12px', boxSizing: 'border-box' }}
         />
 
-        <div style={{ fontSize: '10px', color: '#555', marginBottom: '6px', fontWeight: 'bold' }}>CLASS NAME</div>
-        <input
-          value={className}
-          onChange={(e) => onClassNameChange(e.target.value)}
-          style={{ background: '#111', border: '1px solid #333', color: '#89ddff', padding: '6px', fontSize: '11px', borderRadius: '3px', outline: 'none', width: '100%', marginBottom: '15px', boxSizing: 'border-box' }}
+        <div style={{ fontSize: '10px', color: '#555', marginBottom: '0px', fontWeight: 'bold' }}>CLASS SETTINGS</div>
+        <ClassSettingsPanel
+          className={className}
+          classType={classType}
+          extendsClass={extendsClass}
+          implementsInterfaces={implementsInterfaces}
+          isAbstract={isAbstract}
+          packageName={packageName}
+          allClasses={allClasses}
+          onRename={onClassNameChange}
+          onUpdateMeta={onUpdateClassMeta || (() => {})}
         />
 
         <div style={{ fontSize: '10px', color: '#555', marginBottom: '10px', fontWeight: 'bold' }}>VARIABLES</div>
@@ -180,7 +209,7 @@ const LeftSidebar = ({
         ))}
       </div>
 
-      <DetailsPanel selectedNode={selectedNode} updateNodeModifier={updateNodeModifier} updateNodeData={updateNodeData} />
+      <DetailsPanel selectedNode={selectedNode ?? null} updateNodeModifier={updateNodeModifier} updateNodeData={updateNodeData} />
       <ValidationPanel nodes={nodes} edges={edges} onSelectNode={onSelectNode} />
     </div>
   );

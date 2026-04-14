@@ -19,6 +19,7 @@ import { executeGraph } from '../utils/executor';
 import { NODE_CONFIGS } from '../utils/nodeRegistry';
 import { isValidJavaConnection, resolveSourceType, resolveTargetAccepts, getAutoConvertType } from '../utils/validation';
 import type { ProjectClassInfo, Parameter } from '../utils/nodeTypes';
+import type { Template } from '../utils/templates';
 import { useToastStore } from './toastStore';
 
 const STORAGE_KEY = 'java-nodegraph-save';
@@ -26,6 +27,11 @@ const STORAGE_KEY = 'java-nodegraph-save';
 export interface ProjectFile {
   id: string;
   className: string;
+  classType?: 'class' | 'interface' | 'enum';
+  extendsClass?: string;
+  implementsInterfaces?: string[];
+  isAbstract?: boolean;
+  packageName?: string;
   nodes: Node[];
   edges: Edge[];
 }
@@ -140,10 +146,20 @@ export interface EditorActions {
   autoLayout: () => void;
 
   // Multi-file
-  addFile: (className?: string) => void;
+  addFile: (className?: string, classType?: 'class' | 'interface' | 'enum') => void;
   removeFile: (fileId: string) => void;
   switchFile: (fileId: string) => void;
   renameFile: (fileId: string, newName: string) => void;
+  updateClassMetadata: (fileId: string, meta: {
+    classType?: 'class' | 'interface' | 'enum';
+    extendsClass?: string;
+    implementsInterfaces?: string[];
+    isAbstract?: boolean;
+    packageName?: string;
+  }) => void;
+
+  // Templates
+  loadTemplate: (template: Template) => void;
 
   // Internal
   setRfInstance: (instance: EditorState['_rfInstance']) => void;
@@ -163,6 +179,10 @@ function buildProjectClasses(files: ProjectFile[], activeFileId: string, activeN
   return allFiles.map(f => ({
     id: f.id,
     className: f.className,
+    classType: f.classType || 'class',
+    extendsClass: f.extendsClass,
+    implementsInterfaces: f.implementsInterfaces || [],
+    isAbstract: f.isAbstract || false,
     methods: f.nodes
       .filter(n => n.type === 'method')
       .map(m => ({
@@ -308,7 +328,14 @@ export const useEditorStore = create<EditorStore>()(
       getGeneratedCode: () => {
         const { nodes, edges, className, files, activeFileId } = get();
         const projectClasses = buildProjectClasses(files, activeFileId, nodes, edges, className);
-        return generateJavaCode(nodes, edges, className, projectClasses);
+        const activeFile = files.find(f => f.id === activeFileId);
+        return generateJavaCode(nodes, edges, className, projectClasses, {
+          classType: activeFile?.classType,
+          extendsClass: activeFile?.extendsClass,
+          implementsInterfaces: activeFile?.implementsInterfaces,
+          isAbstract: activeFile?.isAbstract,
+          packageName: activeFile?.packageName,
+        });
       },
 
       runScript: () => {
@@ -367,7 +394,12 @@ export const useEditorStore = create<EditorStore>()(
 
         // Generate code for all files in the project
         const javaFiles = syncedFiles.map(f => ({
-          code: generateJavaCode(f.nodes, f.edges, f.className, projectClasses),
+          code: generateJavaCode(f.nodes, f.edges, f.className, projectClasses, {
+            classType: f.classType,
+            extendsClass: f.extendsClass,
+            implementsInterfaces: f.implementsInterfaces,
+            isAbstract: f.isAbstract,
+          }),
           className: f.className,
         }));
 
@@ -716,8 +748,14 @@ export const useEditorStore = create<EditorStore>()(
         const allFiles = files.map(f =>
           f.id === activeFileId ? { ...f, nodes, edges, className } : f
         );
+        const projectClasses = buildProjectClasses(allFiles, '', [], [], '');
         allFiles.forEach(f => {
-          const code = generateJavaCode(f.nodes, f.edges, f.className);
+          const code = generateJavaCode(f.nodes, f.edges, f.className, projectClasses, {
+            classType: f.classType,
+            extendsClass: f.extendsClass,
+            implementsInterfaces: f.implementsInterfaces,
+            isAbstract: f.isAbstract,
+          });
           const blob = new Blob([code], { type: 'text/x-java-source' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -779,11 +817,11 @@ export const useEditorStore = create<EditorStore>()(
       },
 
       // --- Multi-file ---
-      addFile: (name) => {
+      addFile: (name, classType = 'class') => {
         const id = `file-${Date.now()}`;
         const className = name || `Class${get().files.length + 1}`;
         set((state) => ({
-          files: [...state.files, { id, className, nodes: [], edges: [] }],
+          files: [...state.files, { id, className, classType, nodes: [], edges: [] }],
         }));
         get().switchFile(id);
         useToastStore.getState().addToast(`Created ${className}.java`, 'success');
@@ -824,6 +862,41 @@ export const useEditorStore = create<EditorStore>()(
           files: state.files.map(f => f.id === fileId ? { ...f, className: newName } : f),
           ...(state.activeFileId === fileId ? { className: newName } : {}),
         }));
+      },
+
+      updateClassMetadata: (fileId, meta) => {
+        set((state) => ({
+          files: state.files.map(f => f.id === fileId ? { ...f, ...meta } : f),
+        }));
+      },
+
+      // --- Templates ---
+      loadTemplate: (template) => {
+        if (template.files && template.files.length > 0) {
+          const newFiles: ProjectFile[] = template.files.map((f, idx) => ({
+            id: `file-${Date.now()}-${idx}`,
+            className: f.className,
+            classType: f.classType || 'class',
+            extendsClass: f.extendsClass,
+            implementsInterfaces: f.implementsInterfaces,
+            nodes: f.nodes,
+            edges: f.edges,
+          }));
+          set({
+            files: newFiles,
+            activeFileId: newFiles[0].id,
+            nodes: newFiles[0].nodes,
+            edges: newFiles[0].edges,
+            className: newFiles[0].className,
+          });
+          useToastStore.getState().addToast(`Loaded template with ${newFiles.length} files`, 'success');
+        } else {
+          set({
+            nodes: template.nodes,
+            edges: template.edges,
+            className: template.className,
+          });
+        }
       },
 
       // --- Internal ---

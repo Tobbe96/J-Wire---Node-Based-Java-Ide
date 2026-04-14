@@ -1,22 +1,23 @@
 'use client';
 import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
-import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow, SelectionMode } from '@xyflow/react';
-import type { Node, Edge } from '@xyflow/react';
-import type { Parameter } from './utils/nodeTypes';
+import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+
+// Node & Edge type registries (complete)
+import { nodeTypes, edgeTypes } from './utils/nodeTypeMap';
 
 // Panels & UI
 import LeftSidebar from './components/Panels/LeftSidebar';
 import LivePreview from './components/LivePreview';
 import Terminal from './components/Panels/Terminal';
 import NodeBrowser from './components/NodeBrowse';
+import ContextMenu from './components/ContextMenu';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toast } from './components/Toast';
 import ThemeToggle from './components/ThemeToggle';
 import VfxToggle from './components/VfxToggle';
 import DocsModal from './components/DocsModal';
 import DebugPanel from './components/DebugPanel';
-import ResizeHandle from './components/ResizeHandle';
 
 // VFX
 import AmbientParticles from './components/vfx/AmbientParticles';
@@ -27,12 +28,14 @@ import CanvasRipple from './components/vfx/CanvasRipple';
 import { useEditorStore } from './store/editorStore';
 import { useDebugStore } from './store/debugStore';
 import { useVfxStore } from './store/vfxStore';
-import { getTypeColor } from './utils/theme';
+import { useThemeStore } from './store/themeStore';
 
-// Extracted modules
-import { nodeTypes, edgeTypes } from './utils/nodeTypeMap';
+// Hooks
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useConnectionHandlers } from './hooks/useConnectionHandlers';
+
+// Utilities
+import { getCompatibleNodeKinds } from './utils/validation';
 
 function JavaNodeEditor() {
   const {
@@ -72,6 +75,7 @@ function JavaNodeEditor() {
     removeFile,
     switchFile,
     renameFile,
+    loadTemplate,
     copySelection,
     pasteClipboard,
     duplicateSelection,
@@ -81,7 +85,7 @@ function JavaNodeEditor() {
   const { isDebugging, currentStepIndex, traceSteps, breakpoints, startDebug, stopDebug, toggleBreakpoint } = useDebugStore();
   const activeDebugNodeId = isDebugging && currentStepIndex >= 0 ? traceSteps[currentStepIndex]?.nodeId : null;
   const vfxEnabled = useVfxStore((s) => s.vfxEnabled);
-  const hydrateVfx = useVfxStore((s) => s.hydrate);
+  const { theme } = useThemeStore();
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const { screenToFlowPosition, toObject } = useReactFlow();
@@ -95,96 +99,100 @@ function JavaNodeEditor() {
   const { undo, redo } = useEditorStore.temporal.getState();
 
   // Load on mount
-  useEffect(() => { loadNodeGraph(); hydrateVfx(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadNodeGraph(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keyboard shortcuts (extracted hook)
+  // ── Keyboard shortcuts (replaces inline useEffect) ──────────────────────
   useKeyboardShortcuts({
-    menuVisible, setMenuVisible, setMenuPosition, setSelectedSidebarNodeId,
-    undo, redo, saveNodeGraph, copySelection, pasteClipboard, duplicateSelection, groupSelection,
+    menuVisible,
+    setMenuVisible,
+    setMenuPosition,
+    setSelectedSidebarNodeId,
+    undo,
+    redo,
+    saveNodeGraph,
+    copySelection,
+    pasteClipboard,
+    duplicateSelection,
+    groupSelection,
   });
 
-  // Connection handling (extracted hook)
+  // ── Connection drag handlers (replaces inline logic) ─────────────────────
   const {
-    connectionLineColor, onConnectStart, onConnectEnd, onPaneClick, handleConnect, dragConnectStart,
+    connectionLineColor,
+    onConnectStart,
+    onConnectEnd,
+    onPaneClick,
+    handleConnect,
+    dragConnectStart,
   } = useConnectionHandlers({
-    nodes, onConnect, vfxEnabled, setMenuPosition, setMenuVisible, setSelectedSidebarNodeId,
+    nodes,
+    onConnect,
+    vfxEnabled,
+    setMenuPosition,
+    setMenuVisible,
+    setSelectedSidebarNodeId,
   });
+
+  // ── Context menu state ────────────────────────────────────────────────────
+  const [contextMenu, setContextMenu] = useState<{
+    x: number; y: number; type: 'node' | 'pane'; nodeId?: string;
+  } | null>(null);
 
   const [showDocs, setShowDocs] = useState(false);
 
-  // Resizable panel dimensions
-  const [leftWidth, setLeftWidth] = useState(240);
-  const [rightWidth, setRightWidth] = useState(350);
-  const [terminalHeight, setTerminalHeight] = useState(250);
-
-  const onResizeLeft = useCallback((delta: number) => {
-    setLeftWidth((w) => Math.max(160, Math.min(500, w + delta)));
-  }, []);
-  const onResizeRight = useCallback((delta: number) => {
-    setRightWidth((w) => Math.max(250, Math.min(600, w - delta)));
-  }, []);
-  const onResizeTerminal = useCallback((delta: number) => {
-    setTerminalHeight((h) => Math.max(120, Math.min(500, h - delta)));
-  }, []);
-
   const handleDebugToggle = useCallback(() => {
-    if (isDebugging) {
-      stopDebug();
-    } else {
-      startDebug(nodes, edges);
-    }
+    if (isDebugging) stopDebug();
+    else startDebug(nodes, edges);
   }, [isDebugging, stopDebug, startDebug, nodes, edges]);
-
-  const handleLoadTemplate = useCallback((tplNodes: Node[], tplEdges: Edge[]) => {
-    useEditorStore.setState({ nodes: tplNodes, edges: tplEdges });
-  }, []);
 
   const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: { id: string }) => {
     toggleBreakpoint(node.id);
   }, [toggleBreakpoint]);
+
+  const onNodeContextMenu = useCallback((e: React.MouseEvent, node: { id: string }) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, type: 'node', nodeId: node.id });
+  }, []);
+
+  const onPaneContextMenu = useCallback((e: React.MouseEvent | MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: (e as React.MouseEvent).clientX, y: (e as React.MouseEvent).clientY, type: 'pane' });
+  }, []);
+
+  const handleDeleteSelected = useCallback(() => {
+    const removeChanges = nodes
+      .filter(n => n.selected)
+      .map(n => ({ id: n.id, type: 'remove' as const }));
+    if (removeChanges.length) onNodesChange(removeChanges);
+  }, [nodes, onNodesChange]);
+
+  const handleSelectAll = useCallback(() => {
+    onNodesChange(nodes.map(n => ({ id: n.id, type: 'select' as const, selected: true })));
+  }, [nodes, onNodesChange]);
+
+  // ── Connection-aware NodeBrowser filtering ────────────────────────────────
+  const compatibleKinds = useMemo(() => {
+    const dc = dragConnectStart.current;
+    if (!dc || !menuVisible) return undefined;
+    const sourceNode = nodes.find(n => n.id === dc.nodeId);
+    if (!sourceNode) return undefined;
+    return getCompatibleNodeKinds(sourceNode, dc.handleId, nodes);
+  }, [menuVisible, nodes]); // dragConnectStart is a ref, menuVisible change triggers recalc
 
   const handleAddNodeAndConnect = useCallback((nodeKind: string) => {
     if (dragConnectStart.current) {
       addNodeAndConnect(nodeKind, dragConnectStart.current.nodeId, dragConnectStart.current.handleId);
       dragConnectStart.current = null;
     } else {
-      // No drag — just add node at menu position
-      const config = useEditorStore.getState();
-      const flowPos = screenToFlowPosition(config.menuPosition);
+      const flowPos = screenToFlowPosition(useEditorStore.getState().menuPosition);
       useEditorStore.getState().addNode(nodeKind, flowPos);
       setMenuVisible(false);
     }
   }, [addNodeAndConnect, screenToFlowPosition, setMenuVisible]);
 
-  // Enrich nodes with callbacks + debug state + cross-class info
+  // Enrich nodes with callbacks + debug state
   const enrichedNodes = useMemo(() => {
     const methodNodes = nodes.filter(n => n.type === 'method');
-
-    // Build projectFiles for cross-class method calls (sync current file state)
-    const allFilesSync = files.map(f =>
-      f.id === activeFileId ? { ...f, nodes, edges, className } : f
-    );
-    const projectFiles = allFilesSync
-      .filter(f => f.id !== activeFileId)
-      .map(f => ({
-        id: f.id,
-        className: f.className,
-        methods: f.nodes
-          .filter((n: Node) => n.type === 'method')
-          .map((m: Node) => ({
-            name: m.data.label as string,
-            returnType: (m.data.returnType as string) || 'void',
-            parameters: (m.data.parameters as Parameter[]) || [],
-            isStatic: m.data.isStatic !== false,
-          })),
-        constructors: f.nodes
-          .filter((n: Node) => n.type === 'constructor')
-          .map((c: Node, index: number) => ({
-            index,
-            parameters: (c.data.parameters as Parameter[]) || [],
-          })),
-      }));
-
     return nodes.map(node => ({
       ...node,
       data: {
@@ -192,7 +200,6 @@ function JavaNodeEditor() {
         updateNodeData,
         isValidConnection: validateConnection,
         methodNodes,
-        projectFiles,
       },
       style: {
         ...(node.style || {}),
@@ -204,7 +211,7 @@ function JavaNodeEditor() {
           : {}),
       },
     }));
-  }, [nodes, edges, updateNodeData, validateConnection, activeDebugNodeId, breakpoints, files, activeFileId, className]);
+  }, [nodes, updateNodeData, validateConnection, activeDebugNodeId, breakpoints]);
 
   // Enrich edges with animated type when VFX enabled
   const enrichedEdges = useMemo(() => {
@@ -220,9 +227,12 @@ function JavaNodeEditor() {
   return (
     <div
       data-vfx={vfxEnabled ? 'on' : 'off'}
-      style={{ width: '100vw', height: '100vh', background: '#121212', display: 'flex', overflow: 'hidden' }}
+      data-theme={theme}
+      style={{ width: '100vw', height: '100vh', background: 'var(--jf-canvas-bg)', position: 'relative', overflow: 'hidden' }}
     >
       {vfxEnabled && <AmbientParticles />}
+
+      <div style={{ display: 'flex', width: '100%', height: '100%', position: 'relative', zIndex: 1 }}>
       <ErrorBoundary fallbackLabel="Sidebar">
         <LeftSidebar
           nodes={nodes}
@@ -244,53 +254,28 @@ function JavaNodeEditor() {
           onAddFile={addFile}
           onRemoveFile={removeFile}
           onRenameFile={renameFile}
-          onLoadTemplate={handleLoadTemplate}
-          width={leftWidth}
+          onLoadTemplate={loadTemplate}
         />
       </ErrorBoundary>
 
-      <ResizeHandle direction="vertical" onResize={onResizeLeft} />
-
       <div ref={canvasContainerRef} style={{ flexGrow: 1, position: 'relative' }}>
-        <div style={{
-          position: 'absolute', top: 10, right: 10, zIndex: 20,
-          display: 'flex', gap: 6, alignItems: 'center',
-          background: '#1a1a1acc', backdropFilter: 'blur(8px)',
-          borderRadius: 8, padding: '4px 6px',
-          border: '1px solid #333',
-        }}>
-          <button
-            onClick={autoLayout}
-            style={{
-              height: 28, borderRadius: 5, border: '1px solid #333',
-              cursor: 'pointer', fontSize: 11, fontWeight: 700,
-              display: 'flex', alignItems: 'center', gap: 4,
-              padding: '0 8px', backgroundColor: '#1e1e1e', color: '#3b82f6',
-              transition: 'background 0.15s ease, border-color 0.15s ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#2a2a2a'; e.currentTarget.style.borderColor = '#555'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1e1e1e'; e.currentTarget.style.borderColor = '#333'; }}
-          >
-            ⊞ Layout
-          </button>
-          <VfxToggle />
+        <div style={{ position: 'absolute', top: 10, right: 290, zIndex: 20, display: 'flex', gap: 6 }}>
           <ThemeToggle />
-          <button
-            onClick={() => setShowDocs(true)}
-            title="Help / Documentation"
-            style={{
-              height: 28, width: 28, borderRadius: 5, border: '1px solid #333',
-              cursor: 'pointer', fontSize: 11, fontWeight: 700,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: 0, backgroundColor: '#1e1e1e', color: '#999',
-              transition: 'background 0.15s ease, border-color 0.15s ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#2a2a2a'; e.currentTarget.style.borderColor = '#555'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1e1e1e'; e.currentTarget.style.borderColor = '#333'; }}
-          >
-            ?
-          </button>
+          <VfxToggle />
         </div>
+        <button
+          onClick={autoLayout}
+          style={{ position: 'absolute', top: 10, right: 170, zIndex: 20, background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
+        >
+          Auto Layout
+        </button>
+        <button
+          onClick={() => setShowDocs(true)}
+          title="Help / Documentation"
+          style={{ position: 'absolute', top: 10, right: 50, zIndex: 20, background: '#333', color: '#fff', border: '1px solid #555', borderRadius: '6px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', fontWeight: 700, lineHeight: 1 }}
+        >
+          ?
+        </button>
 
         <CanvasRipple containerRef={canvasContainerRef} />
 
@@ -306,14 +291,13 @@ function JavaNodeEditor() {
             onConnectStart={onConnectStart}
             onConnectEnd={onConnectEnd}
             onPaneClick={onPaneClick}
+            onPaneContextMenu={onPaneContextMenu}
             onSelectionChange={onSelectionChange}
             onNodeDoubleClick={onNodeDoubleClick}
+            onNodeContextMenu={onNodeContextMenu}
             isValidConnection={validateConnection}
             connectionLineStyle={{ stroke: connectionLineColor, strokeWidth: 2 }}
             deleteKeyCode={['Backspace', 'Delete']}
-            selectionOnDrag
-            panOnDrag={[1, 2]}
-            selectionMode={SelectionMode.Partial}
             fitView
           >
             <Background color="#333" gap={20} />
@@ -327,7 +311,7 @@ function JavaNodeEditor() {
                 return '#666';
               }}
               maskColor="rgba(0,0,0,0.7)"
-              style={{ background: '#1a1a1a', border: '1px solid #333' }}
+              style={{ background: 'var(--jf-minimap-bg)', border: '1px solid var(--jf-panel-border)' }}
             />
           </ReactFlow>
         </ErrorBoundary>
@@ -337,6 +321,25 @@ function JavaNodeEditor() {
             position={menuPosition}
             onAddNode={handleAddNodeAndConnect}
             onClose={() => setMenuVisible(false)}
+            compatibleKinds={compatibleKinds}
+          />
+        )}
+
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            type={contextMenu.type}
+            onClose={() => setContextMenu(null)}
+            onCopy={copySelection}
+            onDuplicate={duplicateSelection}
+            onDelete={handleDeleteSelected}
+            onPaste={pasteClipboard}
+            onSelectAll={handleSelectAll}
+            onOpenNodeBrowser={() => {
+              setMenuPosition({ x: contextMenu.x, y: contextMenu.y });
+              setMenuVisible(true);
+            }}
           />
         )}
 
@@ -344,16 +347,12 @@ function JavaNodeEditor() {
         <ConnectionSpark />
       </div>
 
-      <ResizeHandle direction="vertical" onResize={onResizeRight} />
-
-      <div style={{ display: 'flex', flexDirection: 'column', width: rightWidth, borderLeft: '1px solid #000' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', width: '350px', borderLeft: '1px solid #000' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ErrorBoundary fallbackLabel="Preview">
             <LivePreview code={generatedJavaCode} />
           </ErrorBoundary>
         </div>
-
-        <ResizeHandle direction="horizontal" onResize={onResizeTerminal} />
 
         <ErrorBoundary fallbackLabel="Terminal">
           <Terminal
@@ -363,15 +362,15 @@ function JavaNodeEditor() {
             onDebug={handleDebugToggle}
             isCompiling={isCompiling}
             isDebugging={isDebugging}
-            height={terminalHeight}
           />
         </ErrorBoundary>
       </div>
 
       {showDocs && <DocsModal onClose={() => setShowDocs(false)} />}
     </div>
+    </div>
   );
-  }
+}
 
 export default function App() {
   return (

@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { memo, useEffect, useState, useCallback } from 'react';
 import { TYPE_COLORS } from '../utils/theme';
 
 interface DocsModalProps {
@@ -313,7 +313,7 @@ function TypeSystem() {
 
 // --- Main Modal ---
 
-export default function DocsModal({ onClose }: DocsModalProps) {
+function DocsModal({ onClose }: DocsModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>('getting-started');
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -368,3 +368,5 @@ export default function DocsModal({ onClose }: DocsModalProps) {
     </div>
   );
 }
+
+export default memo(DocsModal);

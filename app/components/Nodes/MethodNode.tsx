@@ -84,6 +84,59 @@ const MethodNode = ({ id, data, selected }: NodeProps<Node<MethodNodeData>>) => 
           </select>
         </div>
 
+        {/* Access Modifier */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '10px' }}>
+          <span style={{ fontSize: '10px', color: '#888' }}>Access Modifier</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['public', 'private', 'protected'] as const).map((mod) => {
+              const active = (data.modifier || 'public') === mod;
+              return (
+                <button
+                  key={mod}
+                  className="nodrag"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    data.updateNodeData?.(id, { modifier: mod });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '4px 4px',
+                    fontSize: '9px',
+                    fontWeight: active ? 'bold' : 'normal',
+                    background: active ? `${ACCENT}cc` : 'rgba(0,0,0,0.4)',
+                    border: active ? `1px solid ${ACCENT}` : '1px solid rgba(255,255,255,0.08)',
+                    color: active ? '#fff' : '#888',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.3px',
+                  }}
+                >
+                  {mod}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Abstract toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '10px' }}>
+          <input
+            type="checkbox"
+            id={`abstract-${id}`}
+            className="nodrag"
+            checked={data.isAbstract === true}
+            onChange={(e) => {
+              e.stopPropagation();
+              data.updateNodeData?.(id, { isAbstract: e.target.checked });
+            }}
+            style={{ accentColor: '#e67e22' }}
+          />
+          <label htmlFor={`abstract-${id}`} style={{ fontSize: '10px', color: '#e67e22', cursor: 'pointer' }}>
+            ABSTRACT (no body)
+          </label>
+        </div>
+
         {/* Static / Instance toggle */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '15px' }}>
           <span style={{ fontSize: '10px', color: '#888' }}>Kind</span>
@@ -199,7 +252,9 @@ const MethodNode = ({ id, data, selected }: NodeProps<Node<MethodNodeData>>) => 
       {/* Execution Out */}
       <div style={{ padding: '10px', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #333' }}>
         <span style={{ fontSize: '10px', color: '#fff', opacity: 0.5, marginRight: '10px' }}>BODY START</span>
-        <Handle type="source" position={Position.Right} id="exec-out" style={{ ...execHandleStyle('right'), top: '75%' }} />
+        {!data.isAbstract && (
+          <Handle type="source" position={Position.Right} id="exec-out" style={{ ...execHandleStyle('right'), top: '75%' }} />
+        )}
       </div>
     </div>
   );

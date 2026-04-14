@@ -1,6 +1,7 @@
 import { Connection, Node, Edge } from '@xyflow/react';
 import type { Parameter, LocalVariable } from './nodeTypes';
 import { ALL_NUMERIC, ALL_TYPES, isNumericType } from './theme';
+import { NODE_CONFIGS } from './nodeRegistry';
 
 /**
  * Resolves the data type of a source handle on a given node.
@@ -76,6 +77,7 @@ export function resolveSourceType(node: Node, sourceHandle: string): string | un
   // ArrayListOp output types
   if (node.type === 'arrayListOp') {
     const op = node.data.operation as string;
+    if (op === 'create') return 'ArrayList';
     if (op === 'size') return 'int';
     if (op === 'contains') return 'boolean';
     if (op === 'get') return (node.data.elementType as string) || 'int';
@@ -242,6 +244,13 @@ export function resolveTargetAccepts(node: Node, targetHandle: string, allNodes:
     if (targetHandle.startsWith('arg-in-')) return ALL_TYPES;
   }
 
+  // Algorithm nodes: data-in-list accepts ArrayList connections
+  if (node.type === 'algorithm') {
+    if (targetHandle === 'data-in-list') return ['ArrayList'];
+    if (targetHandle === 'data-in-array') return ALL_TYPES;
+    if (targetHandle === 'data-in-target') return ALL_NUMERIC;
+  }
+
   return node.data.accepts as string[] | undefined;
 }
 
@@ -319,3 +328,74 @@ export const isValidJavaConnection = (
   if (!!sourceDataType && targetType && getAutoConvertType(sourceDataType, [targetType]) !== null) return true;
   return false;
 };
+
+/** Node types that accept exec-in connections (have execution flow handles). */
+const EXEC_TARGET_TYPES = new Set([
+  'print', 'branch', 'callMethod', 'callStaticMethod', 'callInstanceMethod',
+  'setVar', 'setLocalVar', 'increment', 'compoundAssign', 'while', 'for',
+  'doWhile', 'forEach', 'switch', 'tryCatchFinally', 'throw', 'break', 'continue',
+  'return', 'newObject', 'arrayListOp', 'hashMapOp', 'hashSetOp', 'stackOp',
+  'queueOp', 'dequeOp', 'priorityQueueOp', 'algorithm', 'scanner', 'arrayOp',
+  'comment', 'customCode', 'superConstructorCall',
+]);
+
+/** Common data-flow target handles to probe when testing compatibility. */
+const PROBE_HANDLES = [
+  'data-in', 'data-in-a', 'data-in-b', 'data-in-value', 'data-in-array',
+  'data-in-condition', 'data-in-true', 'data-in-false', 'data-in-index',
+  'data-in-target', 'data-in-start', 'data-in-end', 'data-in-key',
+  'obj-in', 'data-in-list', 'arg-in-0', 'data-in-prompt', 'custom-in-0',
+];
+
+/**
+ * Returns the set of NODE_CONFIGS kind keys that are compatible as a drop target
+ * when dragging from `sourceHandle` on `sourceNode`.
+ *
+ * - For exec source handles: returns all exec-accepting node kinds.
+ * - For data source handles: returns node kinds where at least one data handle
+ *   accepts the source type (or can auto-convert).
+ */
+export function getCompatibleNodeKinds(
+  sourceNode: Node,
+  sourceHandle: string,
+  allNodes: Node[],
+): Set<string> {
+  const compatible = new Set<string>();
+  const isExecSource = sourceHandle.startsWith('exec');
+  const sourceType = isExecSource ? undefined : resolveSourceType(sourceNode, sourceHandle);
+
+  for (const [kind, config] of Object.entries(NODE_CONFIGS)) {
+    if (isExecSource) {
+      if (EXEC_TARGET_TYPES.has(config.type)) compatible.add(kind);
+      continue;
+    }
+
+    if (!sourceType) continue;
+
+    const mockTarget = {
+      id: '__compat_mock__',
+      type: config.type,
+      data: { ...config.data },
+      position: { x: 0, y: 0 },
+    } as Node;
+
+    for (const handle of PROBE_HANDLES) {
+      const accepted = resolveTargetAccepts(mockTarget, handle, [...allNodes, mockTarget]);
+      if (accepted) {
+        if (accepted.includes(sourceType) || getAutoConvertType(sourceType, accepted) !== null) {
+          compatible.add(kind);
+          break;
+        }
+      } else {
+        // Fallback: check node.data.type
+        const targetType = mockTarget.data.type as string | undefined;
+        if (targetType && (targetType === sourceType || getAutoConvertType(sourceType, [targetType]) !== null)) {
+          compatible.add(kind);
+          break;
+        }
+      }
+    }
+  }
+
+  return compatible;
+}

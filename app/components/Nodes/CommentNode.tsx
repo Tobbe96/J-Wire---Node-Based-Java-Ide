@@ -5,9 +5,10 @@ import type { EnrichedData, CommentNodeData } from '../../utils/nodeTypes';
 const ACCENT = '#f59e0b';
 
 const CommentNode = ({ data, selected, id }: { data: EnrichedData<CommentNodeData>; selected: boolean; id: string }) => {
+  const { updateNodeData } = data;
   const onTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    data.updateNodeData?.(id, { text: e.target.value });
-  }, [id, data.updateNodeData]);
+    updateNodeData?.(id, { text: e.target.value });
+  }, [id, updateNodeData]);
 
   return (
     <div style={{

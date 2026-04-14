@@ -73,6 +73,41 @@ const ConstructorNode = ({ id, data, selected }: NodeProps<Node<ConstructorNodeD
       </div>
 
       <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* Access Modifier */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <span style={{ fontSize: '10px', color: '#888' }}>Access Modifier</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['public', 'private', 'protected'] as const).map((mod) => {
+              const active = (data.modifier || 'public') === mod;
+              return (
+                <button
+                  key={mod}
+                  className="nodrag"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    data.updateNodeData?.(id, { modifier: mod });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '4px 4px',
+                    fontSize: '9px',
+                    fontWeight: active ? 'bold' : 'normal',
+                    background: active ? `${ACCENT}cc` : 'rgba(0,0,0,0.4)',
+                    border: active ? `1px solid ${ACCENT}` : '1px solid rgba(255,255,255,0.08)',
+                    color: active ? '#fff' : '#888',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.3px',
+                  }}
+                >
+                  {mod}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Parameters */}
         <div style={sectionBox}>
           <div style={sectionHeader(ACCENT)}>

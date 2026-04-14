@@ -103,6 +103,11 @@ export function traceExecution(nodes: Node[], edges: Edge[], inputProvider?: (pr
     }
 
     if (node.type === 'java') return runtimeMemory[node.data.label as string];
+    if (node.type === 'getter') {
+      const varName = node.data.label as string;
+      if (localScope && varName in localScope) return localScope[varName];
+      return runtimeMemory[varName] ?? 0;
+    }
 
     if (node.type === 'literal') {
       const litType = (node.data.literalType as string) || 'String';

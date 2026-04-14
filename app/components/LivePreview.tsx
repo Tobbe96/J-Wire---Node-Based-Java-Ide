@@ -57,8 +57,8 @@ export default function LivePreview({ code }: { code: string }) {
       ...codePanelStyle,
       ...(vfxEnabled ? {
         borderImage: 'linear-gradient(180deg, #6366f144, #a855f744, #06b6d444) 1',
-        borderWidth: '0 0 0 2px',
-        borderStyle: 'solid',
+        borderLeftWidth: '2px',
+        borderLeftStyle: 'solid',
       } : {}),
     }}>
       <div style={headerStyle}>

@@ -1,18 +1,18 @@
 import React, { memo, useState, useCallback } from 'react';
 import type { Node, Edge } from '@xyflow/react';
-import { TEMPLATES } from '../../utils/templates';
+import { TEMPLATES, type Template } from '../../utils/templates';
 
 interface TemplateGalleryProps {
-  onLoadTemplate: (nodes: Node[], edges: Edge[]) => void;
+  onLoadTemplate: (template: Template) => void;
 }
 
 const TemplateGallery = ({ onLoadTemplate }: TemplateGalleryProps) => {
   const [open, setOpen] = useState(false);
 
   const handleSelect = useCallback(
-    (nodes: Node[], edges: Edge[]) => {
+    (template: Template) => {
       if (window.confirm('This will replace your current graph. Continue?')) {
-        onLoadTemplate(nodes, edges);
+        onLoadTemplate(template);
         setOpen(false);
       }
     },
@@ -54,7 +54,7 @@ const TemplateGallery = ({ onLoadTemplate }: TemplateGalleryProps) => {
                 return (
                   <div
                     key={t.id}
-                    onClick={() => handleSelect(t.nodes, t.edges)}
+                    onClick={() => handleSelect(t)}
                     style={{ ...cardStyle, borderLeft: `3px solid ${accent}` }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderTopColor = '#555';
