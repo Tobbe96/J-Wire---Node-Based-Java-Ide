@@ -19,7 +19,6 @@ const OP_LABELS: Record<string, string> = {
   addMenu: 'Add Menu', addMenuItem: 'Add MenuItem', setOnAction: 'On Action',
 };
 const OPS = Object.keys(OP_LABELS);
-const REF_OPS = new Set(['createMenuBar', 'createMenu', 'createMenuItem', 'createCheckMenuItem', 'createSeparatorMenuItem']);
 const TITLE_OPS = new Set(['createMenu', 'createMenuItem', 'createCheckMenuItem']);
 const CHILD_OPS = new Set(['addMenu', 'addMenuItem']);
 

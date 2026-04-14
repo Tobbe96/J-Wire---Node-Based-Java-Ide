@@ -8,7 +8,6 @@ import {
   sectionHeader,
   paramHandleStyle,
   execHandleStyle,
-  nodeInputStyle,
   smallButton,
   pinRow,
   typeDot,

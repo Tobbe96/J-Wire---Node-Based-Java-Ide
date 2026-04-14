@@ -454,7 +454,6 @@ export function createEvaluateDataNode(
     if (node.type === 'treeNodeOp') {
       const op = node.data.operation as string;
       const varName = (node.data.variableName as string) || 'node';
-      const ev = (h: string) => { const e = edgeAt(nodeId, h); return e ? evaluateDataNode(e.source, e.sourceHandle || undefined) : 'null'; };
       if (op === 'getValue')  return `${varName}.val`;
       if (op === 'getLeft')   return `${varName}.left`;
       if (op === 'getRight')  return `${varName}.right`;

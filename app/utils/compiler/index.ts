@@ -1,6 +1,6 @@
 import { Node, Edge } from '@xyflow/react';
 import type { Parameter, LocalVariable, ProjectClassInfo } from '../nodeTypes';
-import { ClassMeta, SCANNER_JAVA_TYPES, boxedType } from './types';
+import { ClassMeta } from './types';
 import { createEvaluateDataNode } from './evaluateData';
 import { createBuildMethodBody } from './buildBody';
 

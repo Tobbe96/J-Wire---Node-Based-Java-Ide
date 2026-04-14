@@ -5,7 +5,6 @@ import { getTypeColor } from '../../utils/theme';
 import { SWING_COLOR } from './SwingAppNode';
 
 const STR_COLOR = getTypeColor('String');
-const BOOL_COLOR = getTypeColor('boolean');
 const NUM_COLOR = getTypeColor('double');
 
 const bold: React.CSSProperties = { fontSize: '11px', color: '#fff', fontWeight: 'bold' };
@@ -13,8 +12,7 @@ const lbl: React.CSSProperties = { fontSize: '11px', color: '#ccc' };
 const row: React.CSSProperties = { display: 'flex', alignItems: 'center', position: 'relative' };
 const between: React.CSSProperties = { display: 'flex', justifyContent: 'space-between' };
 const col: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '12px' };
-const varInp: React.CSSProperties = { background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.15)', color: '#ccc', padding: '2px 5px', fontSize: '10px', outline: 'none', borderRadius: '3px', width: '75px' };
-const opSel: React.CSSProperties = { background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#ccc', padding: '2px 3px', fontSize: '10px', outline: 'none', cursor: 'pointer', borderRadius: '3px', marginTop: '3px' };
+const opSel: React.CSSProperties= { background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#ccc', padding: '2px 3px', fontSize: '10px', outline: 'none', cursor: 'pointer', borderRadius: '3px', marginTop: '3px' };
 
 const OP_LABELS: Record<string, string> = {
   showMessageDialog: 'Message Dialog', showConfirmDialog: 'Confirm Dialog',

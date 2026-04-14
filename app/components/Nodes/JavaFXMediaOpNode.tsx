@@ -24,7 +24,6 @@ const OPS = Object.keys(OP_LABELS);
 const REF_OPS = new Set(['createImageView', 'createMediaPlayer', 'createMediaView']);
 const STR_OPS = new Set(['setImage']);
 const NUM_OPS = new Set(['setFitWidth', 'setFitHeight']);
-const NO_INPUT_OPS = new Set(['play', 'pause', 'stop']);
 
 const EXEC_OUT = (
   <><span style={{ ...bold, marginRight: '5px' }}>Out</span>

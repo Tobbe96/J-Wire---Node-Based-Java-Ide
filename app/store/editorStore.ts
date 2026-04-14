@@ -591,7 +591,7 @@ export const useEditorStore = create<EditorStore>()(
           idMap.set(n.id, `paste-${ts}-${i}`);
         });
 
-        const newNodes: Node[] = clipboard.nodes.map((n, i) => ({
+        const newNodes: Node[] = clipboard.nodes.map((n) => ({
           ...n,
           id: idMap.get(n.id)!,
           position: { x: n.position.x + 40, y: n.position.y + 40 },

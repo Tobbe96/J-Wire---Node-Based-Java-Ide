@@ -7,7 +7,6 @@ const ACCENT = '#27ae60';
 export const TREE_NODE_COLOR = '#27ae60';
 const BOOL_COLOR = getTypeColor('boolean');
 const INT_COLOR = getTypeColor('int');
-const LIST_COLOR = '#2dd4bf';
 
 const lbl: React.CSSProperties = { fontSize: '11px', color: '#ccc' };
 const bold: React.CSSProperties = { fontSize: '11px', color: '#fff', fontWeight: 'bold' };

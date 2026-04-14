@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { nodeContainer, nodeHeaderSolid, execHandleStyle, smallButton } from '../../utils/nodeStyles';
 import { getTypeColor } from '../../utils/theme';
@@ -15,7 +15,7 @@ interface SwitchNodeData extends Record<string, unknown> {
 
 const SwitchNode = ({ id, data, selected }: NodeProps<Node<SwitchNodeData>>) => {
   const caseCount = (data.caseCount as number) || 2;
-  const fallThrough = (data.fallThrough as boolean[]) || [];
+  const fallThrough = useMemo(() => (data.fallThrough as boolean[]) || [], [data.fallThrough]);
 
   const addCase = useCallback(() => {
     const update = data.updateNodeData as ((id: string, d: Record<string, unknown>) => void) | undefined;

@@ -1,5 +1,4 @@
 import React, { memo, useState, useCallback } from 'react';
-import type { Node, Edge } from '@xyflow/react';
 import { TEMPLATES, type Template } from '../../utils/templates';
 
 interface TemplateGalleryProps {

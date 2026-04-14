@@ -15,7 +15,7 @@ interface ConnectionHandlerDeps {
 export function useConnectionHandlers(deps: ConnectionHandlerDeps) {
   const { nodes, onConnect, vfxEnabled, setMenuPosition, setMenuVisible, setSelectedSidebarNodeId } = deps;
 
-  const dragConnectStart = useRef<{ nodeId: string; handleId: string } | null>(null);
+  const [dragConnectStart, setDragConnectStart] = useState<{ nodeId: string; handleId: string } | null>(null);
   const lastConnectEnd = useRef<number>(0);
   const [connectionLineColor, setConnectionLineColor] = useState('#fff');
 
@@ -37,7 +37,7 @@ export function useConnectionHandlers(deps: ConnectionHandlerDeps) {
 
   const onConnectStart = useCallback((_: unknown, { nodeId, handleId }: { nodeId: string | null; handleId: string | null }) => {
     if (nodeId && handleId) {
-      dragConnectStart.current = { nodeId, handleId };
+      setDragConnectStart({ nodeId, handleId });
       if (handleId.includes('exec')) {
         setConnectionLineColor('#fff');
       } else {
@@ -49,20 +49,20 @@ export function useConnectionHandlers(deps: ConnectionHandlerDeps) {
   }, [nodes]);
 
   const onConnectEnd = useCallback((event: MouseEvent | TouchEvent) => {
-    if (!dragConnectStart.current) return;
+    if (!dragConnectStart) return;
     const target = event.target as HTMLElement;
-    if (target.closest('.react-flow__node')) { dragConnectStart.current = null; return; }
+    if (target.closest('.react-flow__node')) { setDragConnectStart(null); return; }
     lastConnectEnd.current = Date.now();
     const x = 'clientX' in event ? event.clientX : event.touches?.[0]?.clientX ?? 0;
     const y = 'clientY' in event ? event.clientY : event.touches?.[0]?.clientY ?? 0;
     setMenuPosition({ x, y });
     setMenuVisible(true);
-  }, [setMenuPosition, setMenuVisible]);
+  }, [dragConnectStart, setMenuPosition, setMenuVisible]);
 
   const onPaneClick = useCallback(() => {
     if (Date.now() - lastConnectEnd.current < 100) return;
     setMenuVisible(false);
-    dragConnectStart.current = null;
+    setDragConnectStart(null);
     setSelectedSidebarNodeId(null);
   }, [setMenuVisible, setSelectedSidebarNodeId]);
 

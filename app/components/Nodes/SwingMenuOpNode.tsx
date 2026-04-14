@@ -5,10 +5,8 @@ import { getTypeColor } from '../../utils/theme';
 import { SWING_COLOR } from './SwingAppNode';
 
 const STR_COLOR = getTypeColor('String');
-const BOOL_COLOR = getTypeColor('boolean');
-const NUM_COLOR = getTypeColor('double');
 
-const bold: React.CSSProperties = { fontSize: '11px', color: '#fff', fontWeight: 'bold' };
+const bold: React.CSSProperties= { fontSize: '11px', color: '#fff', fontWeight: 'bold' };
 const lbl: React.CSSProperties = { fontSize: '11px', color: '#ccc' };
 const row: React.CSSProperties = { display: 'flex', alignItems: 'center', position: 'relative' };
 const between: React.CSSProperties = { display: 'flex', justifyContent: 'space-between' };

@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { nodeContainer, nodeHeaderSolid, execHandleStyle, dataHandleStyle } from '../../utils/nodeStyles';
 import { getTypeColor } from '../../utils/theme';
@@ -33,9 +33,10 @@ const TryCatchFinallyNode = ({ id, data, selected }: NodeProps<Node<TryCatchFina
   const updateNodeData = (data as Record<string, unknown>).updateNodeData as ((id: string, d: Record<string, unknown>) => void) | undefined;
 
   const rawCatches = data.catches as CatchEntry[] | undefined;
-  const catches: CatchEntry[] = rawCatches && rawCatches.length > 0
+  const catches: CatchEntry[] = useMemo(() => rawCatches && rawCatches.length > 0
     ? rawCatches
-    : [{ exceptionType: (data.exceptionType as string) || 'Exception', exceptionVarName: (data.exceptionVarName as string) || 'e' }];
+    : [{ exceptionType: (data.exceptionType as string) || 'Exception', exceptionVarName: (data.exceptionVarName as string) || 'e' }],
+  [rawCatches, data.exceptionType, data.exceptionVarName]);
 
   const syncCatches = useCallback((newCatches: CatchEntry[]) => {
     updateNodeData?.(id, {

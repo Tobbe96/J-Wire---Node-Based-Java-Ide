@@ -1,13 +1,13 @@
 'use client';
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { NodeProps } from '@xyflow/react';
 import { EnumConstantsNodeData } from '../../utils/nodeTypes';
 
 function EnumConstantsNode({ id, data }: NodeProps) {
   const nodeData = data as EnumConstantsNodeData;
   const { updateNodeData } = nodeData;
-  const constants: string[] = nodeData.constants || [];
+  const constants: string[] = useMemo(() => nodeData.constants || [], [nodeData.constants]);
 
   const addConstant = useCallback(() => {
     const name = `CONSTANT_${constants.length + 1}`;

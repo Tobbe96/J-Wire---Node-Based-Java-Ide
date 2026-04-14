@@ -1,6 +1,6 @@
 import { Node, Edge } from '@xyflow/react';
 import { getDefaultLiteral } from '../theme';
-import type { Parameter, LocalVariable, ProjectClassInfo } from '../nodeTypes';
+import type { Parameter, ProjectClassInfo } from '../nodeTypes';
 import { boxedType, SCANNER_JAVA_TYPES } from './types';
 
 /** Returns the inline value of a node's data field as a Java literal, or null if empty. */

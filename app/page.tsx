@@ -172,23 +172,21 @@ function JavaNodeEditor() {
 
   // ── Connection-aware NodeBrowser filtering ────────────────────────────────
   const compatibleKinds = useMemo(() => {
-    const dc = dragConnectStart.current;
-    if (!dc || !menuVisible) return undefined;
-    const sourceNode = nodes.find(n => n.id === dc.nodeId);
+    if (!dragConnectStart || !menuVisible) return undefined;
+    const sourceNode = nodes.find(n => n.id === dragConnectStart.nodeId);
     if (!sourceNode) return undefined;
-    return getCompatibleNodeKinds(sourceNode, dc.handleId, nodes);
-  }, [menuVisible, nodes]); // dragConnectStart is a ref, menuVisible change triggers recalc
+    return getCompatibleNodeKinds(sourceNode, dragConnectStart.handleId, nodes);
+  }, [menuVisible, nodes, dragConnectStart]);
 
   const handleAddNodeAndConnect = useCallback((nodeKind: string) => {
-    if (dragConnectStart.current) {
-      addNodeAndConnect(nodeKind, dragConnectStart.current.nodeId, dragConnectStart.current.handleId);
-      dragConnectStart.current = null;
+    if (dragConnectStart) {
+      addNodeAndConnect(nodeKind, dragConnectStart.nodeId, dragConnectStart.handleId);
     } else {
       const flowPos = screenToFlowPosition(useEditorStore.getState().menuPosition);
       useEditorStore.getState().addNode(nodeKind, flowPos);
       setMenuVisible(false);
     }
-  }, [addNodeAndConnect, screenToFlowPosition, setMenuVisible]);
+  }, [addNodeAndConnect, screenToFlowPosition, setMenuVisible, dragConnectStart]);
 
   // Enrich nodes with callbacks + debug state
   const enrichedNodes = useMemo(() => {

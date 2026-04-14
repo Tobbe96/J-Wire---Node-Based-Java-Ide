@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Node, Edge } from '@xyflow/react';
-import { validateGraph, type GraphIssue } from '../graphValidator';
+import { validateGraph } from '../graphValidator';
 
 /* ── helpers ────────────────────────────────────────────────────── */
 

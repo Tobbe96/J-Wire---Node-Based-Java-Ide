@@ -2,12 +2,10 @@ import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { nodeContainer, nodeHeaderSolid, execHandleStyle, dataHandleStyle } from '../../utils/nodeStyles';
 import { getTypeColor } from '../../utils/theme';
-import { TREE_NODE_COLOR } from './TreeNodeOpNode';
 
 const ACCENT = '#8e44ad';
 const BOOL_COLOR = getTypeColor('boolean');
 const INT_COLOR = getTypeColor('int');
-const LIST_COLOR = '#2dd4bf';
 
 const lbl: React.CSSProperties = { fontSize: '11px', color: '#ccc' };
 const bold: React.CSSProperties = { fontSize: '11px', color: '#fff', fontWeight: 'bold' };
@@ -26,15 +24,12 @@ const OP_LABELS: Record<string, string> = {
 };
 
 // exec-chain operations
-const EXEC_OPS = new Set(['create', 'insert', 'delete']);
-// data-only ops that return boolean
 const BOOL_OPS = new Set(['search', 'contains']);
 // data-only ops that return int
 const INT_OPS = new Set(['height', 'size']);
 // data-only ops that return the value type
 const VAL_OPS = new Set(['min', 'max']);
 // data-only ops that return list
-const LIST_OPS = new Set(['inorder', 'preorder', 'postorder']);
 
 type Props = { id: string; data: Record<string, unknown>; selected?: boolean };
 
