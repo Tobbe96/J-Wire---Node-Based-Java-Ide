@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
+import { z } from 'zod';
 import { isValidJavaIdentifier } from '../../utils/validators';
 
 export const dynamic = 'force-dynamic';
@@ -10,27 +11,36 @@ export const dynamic = 'force-dynamic';
 const EXECUTION_TIMEOUT_MS = 10_000;
 const MAX_BODY_SIZE = 500 * 1024; // 500KB
 
+const rateLimit = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 30; // max 30 compiles per minute
+
+const javaFileSchema = z.object({
+  code: z.string().min(1).max(500_000),
+  className: z.string().min(1).max(256),
+});
+
+const compileRequestSchema = z.object({
+  code: z.string().min(1).max(500_000).optional(),
+  className: z.string().min(1).max(256).optional(),
+  files: z.array(javaFileSchema).min(1).optional(),
+  mainClass: z.string().min(1).max(256).optional(),
+  inputs: z.array(z.string()).optional(),
+  sessionId: z.string().max(100).optional(),
+});
+
 type ErrorCode =
   | 'INVALID_INPUT'
   | 'COMPILATION_ERROR'
   | 'RUNTIME_ERROR'
   | 'TIMEOUT'
   | 'JDK_MISSING'
+  | 'RATE_LIMITED'
   | 'INTERNAL_ERROR';
 
 interface JavaFile {
   code: string;
   className: string;
-}
-
-interface CompileRequest {
-  /** Multi-file mode */
-  files?: JavaFile[];
-  mainClass?: string;
-  /** Legacy single-file mode */
-  code?: string;
-  className?: string;
-  inputs?: string[];
 }
 
 interface CompileResponse {
@@ -39,16 +49,42 @@ interface CompileResponse {
   error?: string;
   errorCode?: ErrorCode;
   compilationError?: string;
+  details?: Record<string, string[]>;
 }
 
 function sanitizeClassName(name: string): string {
   return name.replace(/[^a-zA-Z0-9_]/g, '');
 }
 
+function sanitizeErrorOutput(output: string, workDirPath: string | null): string {
+  if (!workDirPath) return output;
+  // Strip temp directory paths, leaving just the filename
+  return output.replaceAll(workDirPath.replace(/\\/g, '/') + '/', '')
+    .replaceAll(workDirPath + '\\', '')
+    .replaceAll(workDirPath + '/', '')
+    .replaceAll(workDirPath, '');
+}
+
 export async function POST(request: Request): Promise<Response> {
   let workDir: string | null = null;
 
   try {
+    // Rate limiting
+    const clientIP = request.headers.get('x-forwarded-for') ?? 'unknown';
+    const now = Date.now();
+    const limiter = rateLimit.get(clientIP);
+    if (limiter && now < limiter.resetTime) {
+      if (limiter.count >= RATE_LIMIT_MAX) {
+        return Response.json(
+          { success: false, error: 'Too many requests. Please try again later.', errorCode: 'RATE_LIMITED' } satisfies CompileResponse,
+          { status: 429 }
+        );
+      }
+      limiter.count++;
+    } else {
+      rateLimit.set(clientIP, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    }
+
     // Body size validation
     const contentLength = request.headers.get('content-length');
     if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
@@ -66,19 +102,26 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const body = JSON.parse(rawBody) as CompileRequest;
-    const { inputs } = body;
+    const body = JSON.parse(rawBody);
+    const parseResult = compileRequestSchema.safeParse(body);
+    if (!parseResult.success) {
+      return Response.json(
+        { success: false, error: 'Invalid request body', errorCode: 'INVALID_INPUT', details: parseResult.error.flatten().fieldErrors } satisfies CompileResponse,
+        { status: 400 }
+      );
+    }
+    const { code, className, files, mainClass: reqMainClass, inputs } = parseResult.data;
 
     // Normalize to multi-file format (support legacy single-file requests)
     let javaFiles: JavaFile[];
     let mainClass: string;
 
-    if (body.files && body.files.length > 0) {
-      javaFiles = body.files;
-      mainClass = body.mainClass || body.files[0].className;
-    } else if (body.code && body.className) {
-      javaFiles = [{ code: body.code, className: body.className }];
-      mainClass = body.className;
+    if (files && files.length > 0) {
+      javaFiles = files;
+      mainClass = reqMainClass || files[0].className;
+    } else if (code && className) {
+      javaFiles = [{ code, className }];
+      mainClass = className;
     } else {
       return Response.json(
         { success: false, error: 'Missing code/className or files array', errorCode: 'INVALID_INPUT' } satisfies CompileResponse,
@@ -141,7 +184,7 @@ export async function POST(request: Request): Promise<Response> {
           : String(compileErr);
       return Response.json({
         success: false,
-        compilationError: stderr,
+        compilationError: sanitizeErrorOutput(stderr, workDir),
         errorCode: 'COMPILATION_ERROR',
       } satisfies CompileResponse);
     }
@@ -171,13 +214,14 @@ export async function POST(request: Request): Promise<Response> {
       const message = runErr instanceof Error ? runErr.message : String(runErr);
 
       const isTimeout = message.includes('ETIMEDOUT') || message.includes('timed out');
+      const sanitizedError = isTimeout
+        ? 'Execution timed out (10 s limit)'
+        : sanitizeErrorOutput(stderr || message, workDir);
       return Response.json({
         success: false,
         output: stdout || undefined,
         errorCode: isTimeout ? 'TIMEOUT' : 'RUNTIME_ERROR',
-        error: isTimeout
-          ? 'Execution timed out (10 s limit)'
-          : stderr || message,
+        error: sanitizedError,
       } satisfies CompileResponse);
     }
   } catch (err: unknown) {
@@ -201,7 +245,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     return Response.json(
-      { success: false, error: message, errorCode: 'INTERNAL_ERROR' } satisfies CompileResponse,
+      { success: false, error: 'An internal error occurred', errorCode: 'INTERNAL_ERROR' } satisfies CompileResponse,
       { status: 500 }
     );
   } finally {
