@@ -1156,15 +1156,15 @@ const swingRegistration: Template = {
         // ═══ validateUser method exec chain ═══
         { id: 'e-mval-branch1', source: 'method-validate', target: 'branch-user', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
         // branch true (username empty) → print error → return false
-        { id: 'e-branch1-true', source: 'branch-user', target: 'print-user-err', sourceHandle: 'true-out', targetHandle: 'exec-in' },
+        { id: 'e-branch1-true', source: 'branch-user', target: 'print-user-err', sourceHandle: 'exec-out-true', targetHandle: 'exec-in' },
         { id: 'e-printerr1-ret1', source: 'print-user-err', target: 'return-false-1', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
         // branch false (username ok) → check password
-        { id: 'e-branch1-false', source: 'branch-user', target: 'branch-pass', sourceHandle: 'false-out', targetHandle: 'exec-in' },
+        { id: 'e-branch1-false', source: 'branch-user', target: 'branch-pass', sourceHandle: 'exec-out-false', targetHandle: 'exec-in' },
         // branch true (password short) → print error → return false
-        { id: 'e-branch2-true', source: 'branch-pass', target: 'print-pass-err', sourceHandle: 'true-out', targetHandle: 'exec-in' },
+        { id: 'e-branch2-true', source: 'branch-pass', target: 'print-pass-err', sourceHandle: 'exec-out-true', targetHandle: 'exec-in' },
         { id: 'e-printerr2-ret2', source: 'print-pass-err', target: 'return-false-2', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
         // branch false (password ok) → print success → return true
-        { id: 'e-branch2-false', source: 'branch-pass', target: 'print-ok', sourceHandle: 'false-out', targetHandle: 'exec-in' },
+        { id: 'e-branch2-false', source: 'branch-pass', target: 'print-ok', sourceHandle: 'exec-out-false', targetHandle: 'exec-in' },
         { id: 'e-printok-rettrue', source: 'print-ok', target: 'return-true', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
 
         // ═══ validateUser data connections ═══
