@@ -45,6 +45,8 @@ export function generateJavaCode(
   const hasFxMedia = nodes.some(n => n.type === 'javafxMediaOp');
   const hasFxCharts = nodes.some(n => n.type === 'javafxChartOp');
   const javafxAppNode = nodes.find(n => n.type === 'javafxApp');
+  const hasSwingNodes = nodes.some(n => ['swingApp','swingFrameOp','swingPanelOp','swingControlOp','swingEventOp','swingStyleOp','swingDialogOp','swingMenuOp'].includes(n.type as string));
+  const swingAppNode = nodes.find(n => n.type === 'swingApp');
   // Tree traversals output ArrayList, so we need it imported even without arrayListOp nodes
   const needsArrayList = hasArrayListNodes || hasTreeNodes;
 
@@ -75,8 +77,13 @@ export function generateJavaCode(
   if (hasFxCharts) {
     code += 'import javafx.scene.chart.*;\n';
   }
+  if (hasSwingNodes) {
+    code += 'import javax.swing.*;\n';
+    code += 'import java.awt.*;\n';
+    code += 'import java.awt.event.*;\n';
+  }
   if (hasScannerNodes || needsArrayList || hasHashMapNodes || hasHashSetNodes ||
-      hasCollectionsUtil || hasStackNodes || hasQueueNodes || hasDequeNodes || hasPriorityQueueNodes || hasFxNodes) {
+      hasCollectionsUtil || hasStackNodes || hasQueueNodes || hasDequeNodes || hasPriorityQueueNodes || hasFxNodes || hasSwingNodes) {
     code += '\n';
   }
 
@@ -84,7 +91,8 @@ export function generateJavaCode(
   const abstractMod = (classType === 'class' && isAbstract) ? 'abstract ' : '';
   const keyword = classType === 'interface' ? 'interface' : 'class';
   const extendsPart = (classType === 'class' && extendsClass) ? ` extends ${extendsClass}`
-    : (classType === 'class' && hasFxNodes && !extendsClass) ? ' extends Application' : '';
+    : (classType === 'class' && hasFxNodes && !extendsClass) ? ' extends Application'
+    : (classType === 'class' && hasSwingNodes && swingAppNode && !extendsClass) ? ' extends JFrame' : '';
   const implementsPart = (classType === 'class' && implementsInterfaces?.length)
     ? ` implements ${implementsInterfaces.join(', ')}` : '';
   const extendsInterfacePart = (classType === 'interface' && implementsInterfaces?.length)
@@ -187,6 +195,14 @@ export function generateJavaCode(
     code += `  @Override\n  public void start(Stage primaryStage) {\n${buildMethodBody(javafxAppNode.id)}  }\n\n`;
     if (!mainNode) {
       code += `  public static void main(String[] args) {\n    launch(args);\n  }\n\n`;
+    }
+  }
+
+  // Swing constructor + main
+  if (swingAppNode) {
+    code += `  public ${className}() {\n${buildMethodBody(swingAppNode.id)}  }\n\n`;
+    if (!mainNode) {
+      code += `  public static void main(String[] args) {\n    SwingUtilities.invokeLater(() -> new ${className}());\n  }\n\n`;
     }
   }
 

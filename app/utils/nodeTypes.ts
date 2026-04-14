@@ -447,6 +447,63 @@ export interface JavaFXChartOpNodeData extends Record<string, unknown> {
   updateNodeData?: (id: string, data: Record<string, unknown>) => void;
 }
 
+// ─── Java Swing GUI Node Interfaces ────────────────────────────
+
+export interface SwingAppNodeData extends Record<string, unknown> {
+  label: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface SwingFrameOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'setTitle' | 'setSize' | 'setDefaultCloseOperation' | 'setVisible' | 'setResizable' | 'pack' | 'setLocationRelativeTo';
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface SwingPanelOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'create' | 'add' | 'setLayout' | 'setBorder';
+  layoutType: 'FlowLayout' | 'BorderLayout' | 'GridLayout' | 'BoxLayout';
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface SwingControlOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'create' | 'setText' | 'getText' | 'setEnabled' | 'setVisible' | 'setSelected' | 'isSelected';
+  controlType: 'JButton' | 'JLabel' | 'JTextField' | 'JTextArea' | 'JCheckBox' | 'JRadioButton' | 'JComboBox' | 'JSlider' | 'JProgressBar' | 'JPasswordField' | 'JSpinner';
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface SwingEventOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'addActionListener' | 'addMouseListener' | 'addKeyListener' | 'addChangeListener' | 'addItemListener';
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface SwingStyleOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'setFont' | 'setForeground' | 'setBackground' | 'setPreferredSize' | 'setBorder' | 'setToolTipText' | 'setOpaque';
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface SwingDialogOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'showMessageDialog' | 'showConfirmDialog' | 'showInputDialog' | 'showOptionDialog';
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
+export interface SwingMenuOpNodeData extends Record<string, unknown> {
+  label: string;
+  operation: 'createMenuBar' | 'createMenu' | 'createMenuItem' | 'createCheckBoxMenuItem' | 'addSeparator' | 'addMenu' | 'addMenuItem';
+  variableName: string;
+  updateNodeData?: (id: string, data: Record<string, unknown>) => void;
+}
+
 // ─── Cross-class method info ───────────────────────────────────
 
 export interface ProjectMethodInfo {

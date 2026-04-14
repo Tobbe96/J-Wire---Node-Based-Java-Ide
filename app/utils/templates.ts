@@ -880,12 +880,12 @@ const stringFormatter: Template = {
   ],
 };
 
-// ─── 11. JavaFX Registration Form (Multi-File) ────────────────
+// ─── 11. Swing Registration Form (Multi-File) ────────────────
 
-const javafxRegistration: Template = {
-  id: 'javafx-registration',
-  name: 'JavaFX Registration Form',
-  description: 'Multi-file JavaFX app with registration GUI (frontend) and user validation service (backend)',
+const swingRegistration: Template = {
+  id: 'swing-registration',
+  name: 'Swing Registration Form',
+  description: 'Multi-file Swing app with registration GUI (frontend) and user validation service (backend). Works with any JDK 8+.',
   className: 'RegistrationApp',
   nodes: [],
   edges: [],
@@ -894,185 +894,177 @@ const javafxRegistration: Template = {
     {
       className: 'RegistrationApp',
       classType: 'class',
-      extendsClass: 'Application',
       nodes: [
-        // Entry point
-        { id: 'fx-app', type: 'javafxApp', position: { x: 0, y: 0 }, data: { label: 'JavaFX Application' } },
+        // Swing entry point
+        { id: 'sw-app', type: 'swingApp', position: { x: 0, y: 0 }, data: { label: 'Swing Application' } },
 
-        // Stage: create (uses primaryStage from start method)
-        { id: 'stage-title', type: 'javafxStageOp', position: { x: 300, y: 0 },
-          data: { label: 'Stage: setTitle', operation: 'setTitle', variableName: 'primaryStage' } },
-        { id: 'lit-title', type: 'literal', position: { x: 200, y: 150 },
+        // Frame: setTitle
+        { id: 'frame-title', type: 'swingFrameOp', position: { x: 300, y: 0 },
+          data: { label: 'JFrame: Set Title', operation: 'setTitle', variableName: 'this' } },
+        { id: 'lit-title', type: 'literal', position: { x: 200, y: 120 },
           data: { label: 'Literal', literalType: 'String', value: 'User Registration' } },
 
-        // Layout: VBox
-        { id: 'layout-create', type: 'javafxLayoutOp', position: { x: 600, y: 0 },
-          data: { label: 'VBox: Create', operation: 'create', layoutType: 'VBox', variableName: 'root' } },
-        { id: 'layout-spacing', type: 'javafxLayoutOp', position: { x: 900, y: 0 },
-          data: { label: 'VBox: setSpacing', operation: 'setSpacing', layoutType: 'VBox', variableName: 'root' } },
-        { id: 'lit-spacing', type: 'literal', position: { x: 850, y: 150 },
-          data: { label: 'Literal', literalType: 'double', value: '15' } },
-        { id: 'layout-padding', type: 'javafxLayoutOp', position: { x: 1200, y: 0 },
-          data: { label: 'VBox: setPadding', operation: 'setPadding', layoutType: 'VBox', variableName: 'root' } },
-        { id: 'lit-padding', type: 'literal', position: { x: 1150, y: 150 },
-          data: { label: 'Literal', literalType: 'double', value: '20' } },
+        // Frame: setSize
+        { id: 'frame-size', type: 'swingFrameOp', position: { x: 600, y: 0 },
+          data: { label: 'JFrame: Set Size', operation: 'setSize', variableName: 'this' } },
+        { id: 'lit-w', type: 'literal', position: { x: 500, y: 100 },
+          data: { label: 'Literal', literalType: 'int', value: '400' } },
+        { id: 'lit-h', type: 'literal', position: { x: 500, y: 170 },
+          data: { label: 'Literal', literalType: 'int', value: '350' } },
 
-        // Title Label
-        { id: 'lbl-title', type: 'javafxControlOp', position: { x: 1500, y: 0 },
-          data: { label: 'Label: Create', operation: 'create', controlType: 'Label', variableName: 'titleLabel' } },
-        { id: 'style-title', type: 'javafxStyleOp', position: { x: 1800, y: 0 },
-          data: { label: 'Style: setFont', operation: 'setFont', variableName: 'titleLabel' } },
-        { id: 'lit-font-size', type: 'literal', position: { x: 1750, y: 150 },
-          data: { label: 'Literal', literalType: 'double', value: '20' } },
-        { id: 'add-title-lbl', type: 'javafxLayoutOp', position: { x: 2100, y: 0 },
-          data: { label: 'VBox: addChild', operation: 'addChild', layoutType: 'VBox', variableName: 'root' } },
+        // Frame: setDefaultCloseOperation
+        { id: 'frame-close', type: 'swingFrameOp', position: { x: 900, y: 0 },
+          data: { label: 'JFrame: Default Close', operation: 'setDefaultCloseOperation', variableName: 'this' } },
 
-        // Username TextField
-        { id: 'tf-user', type: 'javafxControlOp', position: { x: 2400, y: 0 },
-          data: { label: 'TextField: Create', operation: 'create', controlType: 'TextField', variableName: 'usernameField' } },
-        { id: 'tf-user-prompt', type: 'javafxControlOp', position: { x: 2700, y: 0 },
-          data: { label: 'Control: Set Prompt', operation: 'setPromptText', controlType: 'TextField', variableName: 'usernameField' } },
-        { id: 'lit-user-prompt', type: 'literal', position: { x: 2600, y: 150 },
-          data: { label: 'Literal', literalType: 'String', value: 'Enter username' } },
-        { id: 'add-tf-user', type: 'javafxLayoutOp', position: { x: 3000, y: 0 },
-          data: { label: 'VBox: addChild', operation: 'addChild', layoutType: 'VBox', variableName: 'root' } },
+        // Panel: create GridLayout
+        { id: 'panel-create', type: 'swingPanelOp', position: { x: 1200, y: 0 },
+          data: { label: 'JPanel: GridLayout', operation: 'create', layoutType: 'GridLayout', variableName: 'panel' } },
 
-        // Email TextField
-        { id: 'tf-email', type: 'javafxControlOp', position: { x: 3300, y: 0 },
-          data: { label: 'TextField: Create', operation: 'create', controlType: 'TextField', variableName: 'emailField' } },
-        { id: 'tf-email-prompt', type: 'javafxControlOp', position: { x: 3600, y: 0 },
-          data: { label: 'Control: Set Prompt', operation: 'setPromptText', controlType: 'TextField', variableName: 'emailField' } },
-        { id: 'lit-email-prompt', type: 'literal', position: { x: 3500, y: 150 },
-          data: { label: 'Literal', literalType: 'String', value: 'Enter email' } },
-        { id: 'add-tf-email', type: 'javafxLayoutOp', position: { x: 3900, y: 0 },
-          data: { label: 'VBox: addChild', operation: 'addChild', layoutType: 'VBox', variableName: 'root' } },
+        // Panel: setBorder
+        { id: 'panel-border', type: 'swingPanelOp', position: { x: 1500, y: 0 },
+          data: { label: 'JPanel: Set Border', operation: 'setBorder', layoutType: 'GridLayout', variableName: 'panel' } },
+        { id: 'lit-border', type: 'literal', position: { x: 1400, y: 150 },
+          data: { label: 'Literal', literalType: 'int', value: '20, 20, 20, 20' } },
 
-        // Password Field
-        { id: 'pf-pass', type: 'javafxControlOp', position: { x: 4200, y: 0 },
-          data: { label: 'PasswordField: Create', operation: 'create', controlType: 'PasswordField', variableName: 'passwordField' } },
-        { id: 'pf-pass-prompt', type: 'javafxControlOp', position: { x: 4500, y: 0 },
-          data: { label: 'Control: Set Prompt', operation: 'setPromptText', controlType: 'PasswordField', variableName: 'passwordField' } },
-        { id: 'lit-pass-prompt', type: 'literal', position: { x: 4400, y: 150 },
-          data: { label: 'Literal', literalType: 'String', value: 'Enter password' } },
-        { id: 'add-pf-pass', type: 'javafxLayoutOp', position: { x: 4800, y: 0 },
-          data: { label: 'VBox: addChild', operation: 'addChild', layoutType: 'VBox', variableName: 'root' } },
+        // Controls: create labels and fields
+        { id: 'ctrl-user-label', type: 'swingControlOp', position: { x: 1800, y: 0 },
+          data: { label: 'JLabel: Create', operation: 'create', controlType: 'JLabel', variableName: 'usernameLabel' } },
+        { id: 'ctrl-user-setText', type: 'swingControlOp', position: { x: 2100, y: 0 },
+          data: { label: 'JLabel: Set Text', operation: 'setText', controlType: 'JLabel', variableName: 'usernameLabel' } },
+        { id: 'lit-user-text', type: 'literal', position: { x: 2000, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'Username:' } },
 
-        // Register Button
-        { id: 'btn-register', type: 'javafxControlOp', position: { x: 5100, y: 0 },
-          data: { label: 'Button: Create', operation: 'create', controlType: 'Button', variableName: 'registerBtn' } },
-        { id: 'btn-set-text', type: 'javafxControlOp', position: { x: 5400, y: 0 },
-          data: { label: 'Control: Set Text', operation: 'setText', controlType: 'Button', variableName: 'registerBtn' } },
-        { id: 'lit-btn-text', type: 'literal', position: { x: 5300, y: 150 },
+        { id: 'ctrl-user-field', type: 'swingControlOp', position: { x: 2400, y: 0 },
+          data: { label: 'JTextField: Create', operation: 'create', controlType: 'JTextField', variableName: 'usernameField' } },
+
+        { id: 'ctrl-email-label', type: 'swingControlOp', position: { x: 2700, y: 0 },
+          data: { label: 'JLabel: Create', operation: 'create', controlType: 'JLabel', variableName: 'emailLabel' } },
+        { id: 'ctrl-email-setText', type: 'swingControlOp', position: { x: 3000, y: 0 },
+          data: { label: 'JLabel: Set Text', operation: 'setText', controlType: 'JLabel', variableName: 'emailLabel' } },
+        { id: 'lit-email-text', type: 'literal', position: { x: 2900, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'Email:' } },
+
+        { id: 'ctrl-email-field', type: 'swingControlOp', position: { x: 3300, y: 0 },
+          data: { label: 'JTextField: Create', operation: 'create', controlType: 'JTextField', variableName: 'emailField' } },
+
+        { id: 'ctrl-pass-label', type: 'swingControlOp', position: { x: 3600, y: 0 },
+          data: { label: 'JLabel: Create', operation: 'create', controlType: 'JLabel', variableName: 'passwordLabel' } },
+        { id: 'ctrl-pass-setText', type: 'swingControlOp', position: { x: 3900, y: 0 },
+          data: { label: 'JLabel: Set Text', operation: 'setText', controlType: 'JLabel', variableName: 'passwordLabel' } },
+        { id: 'lit-pass-text', type: 'literal', position: { x: 3800, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'Password:' } },
+
+        { id: 'ctrl-pass-field', type: 'swingControlOp', position: { x: 4200, y: 0 },
+          data: { label: 'JPasswordField: Create', operation: 'create', controlType: 'JPasswordField', variableName: 'passwordField' } },
+
+        // Register button
+        { id: 'ctrl-btn', type: 'swingControlOp', position: { x: 4500, y: 0 },
+          data: { label: 'JButton: Create', operation: 'create', controlType: 'JButton', variableName: 'registerBtn' } },
+        { id: 'ctrl-btn-text', type: 'swingControlOp', position: { x: 4800, y: 0 },
+          data: { label: 'JButton: Set Text', operation: 'setText', controlType: 'JButton', variableName: 'registerBtn' } },
+        { id: 'lit-btn-text', type: 'literal', position: { x: 4700, y: 150 },
           data: { label: 'Literal', literalType: 'String', value: 'Register' } },
-        { id: 'add-btn', type: 'javafxLayoutOp', position: { x: 5700, y: 0 },
-          data: { label: 'VBox: addChild', operation: 'addChild', layoutType: 'VBox', variableName: 'root' } },
 
-        // Button event handler
-        { id: 'btn-event', type: 'javafxEventOp', position: { x: 6000, y: 0 },
-          data: { label: 'Event: setOnAction', operation: 'setOnAction', variableName: 'registerBtn' } },
+        // Add components to panel
+        { id: 'panel-add-ul', type: 'swingPanelOp', position: { x: 5100, y: 0 },
+          data: { label: 'JPanel: Add', operation: 'add', layoutType: 'GridLayout', variableName: 'panel' } },
+        { id: 'panel-add-uf', type: 'swingPanelOp', position: { x: 5400, y: 0 },
+          data: { label: 'JPanel: Add', operation: 'add', layoutType: 'GridLayout', variableName: 'panel' } },
+        { id: 'panel-add-el', type: 'swingPanelOp', position: { x: 5700, y: 0 },
+          data: { label: 'JPanel: Add', operation: 'add', layoutType: 'GridLayout', variableName: 'panel' } },
+        { id: 'panel-add-ef', type: 'swingPanelOp', position: { x: 6000, y: 0 },
+          data: { label: 'JPanel: Add', operation: 'add', layoutType: 'GridLayout', variableName: 'panel' } },
+        { id: 'panel-add-pl', type: 'swingPanelOp', position: { x: 6300, y: 0 },
+          data: { label: 'JPanel: Add', operation: 'add', layoutType: 'GridLayout', variableName: 'panel' } },
+        { id: 'panel-add-pf', type: 'swingPanelOp', position: { x: 6600, y: 0 },
+          data: { label: 'JPanel: Add', operation: 'add', layoutType: 'GridLayout', variableName: 'panel' } },
+        { id: 'panel-add-btn', type: 'swingPanelOp', position: { x: 6900, y: 0 },
+          data: { label: 'JPanel: Add', operation: 'add', layoutType: 'GridLayout', variableName: 'panel' } },
 
-        // Inside the event handler body: show success alert
-        { id: 'dlg-success', type: 'javafxDialogOp', position: { x: 6000, y: 250 },
-          data: { label: 'Dialog: Alert Info', operation: 'alertInfo' } },
-        { id: 'lit-dlg-title', type: 'literal', position: { x: 5800, y: 400 },
+        // Event: button action listener
+        { id: 'btn-event', type: 'swingEventOp', position: { x: 7200, y: 0 },
+          data: { label: 'Action Listener', operation: 'addActionListener', variableName: 'registerBtn' } },
+
+        // Dialog: show success
+        { id: 'dialog-success', type: 'swingDialogOp', position: { x: 7500, y: 200 },
+          data: { label: 'Message Dialog', operation: 'showMessageDialog' } },
+        { id: 'lit-success-title', type: 'literal', position: { x: 7350, y: 350 },
           data: { label: 'Literal', literalType: 'String', value: 'Success' } },
-        { id: 'lit-dlg-msg', type: 'literal', position: { x: 6200, y: 400 },
+        { id: 'lit-success-msg', type: 'literal', position: { x: 7350, y: 420 },
           data: { label: 'Literal', literalType: 'String', value: 'Registration complete!' } },
 
-        // Scene and Stage finalization
-        { id: 'scene-create', type: 'javafxSceneOp', position: { x: 6300, y: 0 },
-          data: { label: 'Scene: Create', operation: 'create', variableName: 'scene' } },
-        { id: 'stage-scene', type: 'javafxStageOp', position: { x: 6600, y: 0 },
-          data: { label: 'Stage: setScene', operation: 'setScene', variableName: 'primaryStage' } },
-        { id: 'stage-show', type: 'javafxStageOp', position: { x: 6900, y: 0 },
-          data: { label: 'Stage: show', operation: 'show', variableName: 'primaryStage' } },
-
-        // Data literals for scene size
-        { id: 'lit-scene-root', type: 'getter', position: { x: 6100, y: 150 },
-          data: { label: 'root', type: 'VBox' } },
-        { id: 'lit-scene-w', type: 'literal', position: { x: 6200, y: 250 },
-          data: { label: 'Literal', literalType: 'double', value: '400' } },
-        { id: 'lit-scene-h', type: 'literal', position: { x: 6400, y: 250 },
-          data: { label: 'Literal', literalType: 'double', value: '450' } },
-
-        // Data for setScene
-        { id: 'get-scene', type: 'getter', position: { x: 6500, y: 150 },
-          data: { label: 'scene', type: 'Scene' } },
-
-        // Data for addChild nodes — variable references
-        { id: 'get-title-lbl', type: 'getter', position: { x: 2000, y: 150 },
-          data: { label: 'titleLabel', type: 'Label' } },
-        { id: 'get-tf-user', type: 'getter', position: { x: 2900, y: 150 },
-          data: { label: 'usernameField', type: 'TextField' } },
-        { id: 'get-tf-email', type: 'getter', position: { x: 3800, y: 150 },
-          data: { label: 'emailField', type: 'TextField' } },
-        { id: 'get-pf-pass', type: 'getter', position: { x: 4700, y: 150 },
-          data: { label: 'passwordField', type: 'PasswordField' } },
-        { id: 'get-btn-reg', type: 'getter', position: { x: 5600, y: 150 },
-          data: { label: 'registerBtn', type: 'Button' } },
+        // Add panel to frame + center + show
+        { id: 'frame-add', type: 'swingPanelOp', position: { x: 7800, y: 0 },
+          data: { label: 'Add to Frame', operation: 'add', layoutType: 'BorderLayout', variableName: 'this' } },
+        { id: 'lit-center', type: 'literal', position: { x: 7700, y: 150 },
+          data: { label: 'Literal', literalType: 'String', value: 'Center' } },
+        { id: 'frame-center', type: 'swingFrameOp', position: { x: 8100, y: 0 },
+          data: { label: 'JFrame: Center', operation: 'setLocationRelativeTo', variableName: 'this' } },
+        { id: 'frame-visible', type: 'swingFrameOp', position: { x: 8400, y: 0 },
+          data: { label: 'JFrame: Set Visible', operation: 'setVisible', variableName: 'this' } },
+        { id: 'lit-true', type: 'literal', position: { x: 8300, y: 150 },
+          data: { label: 'Literal', literalType: 'boolean', value: 'true' } },
       ],
       edges: [
-        // ═══ EXEC CHAIN ═══
-        { id: 'e-app-stitle', source: 'fx-app', target: 'stage-title', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-stitle-lcreate', source: 'stage-title', target: 'layout-create', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-lcreate-lspacing', source: 'layout-create', target: 'layout-spacing', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-lspacing-lpadding', source: 'layout-spacing', target: 'layout-padding', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-lpadding-lbltitle', source: 'layout-padding', target: 'lbl-title', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-lbltitle-stitle', source: 'lbl-title', target: 'style-title', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-stitle2-addtitle', source: 'style-title', target: 'add-title-lbl', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-addtitle-tfuser', source: 'add-title-lbl', target: 'tf-user', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-tfuser-tfprompt', source: 'tf-user', target: 'tf-user-prompt', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-tfprompt-addtf', source: 'tf-user-prompt', target: 'add-tf-user', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-addtf-tfemail', source: 'add-tf-user', target: 'tf-email', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-tfemail-tfemailp', source: 'tf-email', target: 'tf-email-prompt', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-tfemailp-addtfe', source: 'tf-email-prompt', target: 'add-tf-email', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-addtfe-pfpass', source: 'add-tf-email', target: 'pf-pass', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-pfpass-pfprompt', source: 'pf-pass', target: 'pf-pass-prompt', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-pfprompt-addpf', source: 'pf-pass-prompt', target: 'add-pf-pass', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-addpf-btnreg', source: 'add-pf-pass', target: 'btn-register', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-btnreg-btntext', source: 'btn-register', target: 'btn-set-text', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-btntext-addbtn', source: 'btn-set-text', target: 'add-btn', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-addbtn-btnevt', source: 'add-btn', target: 'btn-event', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-btnevt-scene', source: 'btn-event', target: 'scene-create', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-scene-sscene', source: 'scene-create', target: 'stage-scene', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
-        { id: 'e-sscene-sshow', source: 'stage-scene', target: 'stage-show', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        // Exec chain
+        { id: 'e1', source: 'sw-app', target: 'frame-title', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e2', source: 'frame-title', target: 'frame-size', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e3', source: 'frame-size', target: 'frame-close', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e4', source: 'frame-close', target: 'panel-create', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e5', source: 'panel-create', target: 'panel-border', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e6', source: 'panel-border', target: 'ctrl-user-label', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e7', source: 'ctrl-user-label', target: 'ctrl-user-setText', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e8', source: 'ctrl-user-setText', target: 'ctrl-user-field', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e9', source: 'ctrl-user-field', target: 'ctrl-email-label', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e10', source: 'ctrl-email-label', target: 'ctrl-email-setText', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e11', source: 'ctrl-email-setText', target: 'ctrl-email-field', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e12', source: 'ctrl-email-field', target: 'ctrl-pass-label', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e13', source: 'ctrl-pass-label', target: 'ctrl-pass-setText', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e14', source: 'ctrl-pass-setText', target: 'ctrl-pass-field', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e15', source: 'ctrl-pass-field', target: 'ctrl-btn', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e16', source: 'ctrl-btn', target: 'ctrl-btn-text', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e17', source: 'ctrl-btn-text', target: 'panel-add-ul', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e18', source: 'panel-add-ul', target: 'panel-add-uf', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e19', source: 'panel-add-uf', target: 'panel-add-el', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e20', source: 'panel-add-el', target: 'panel-add-ef', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e21', source: 'panel-add-ef', target: 'panel-add-pl', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e22', source: 'panel-add-pl', target: 'panel-add-pf', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e23', source: 'panel-add-pf', target: 'panel-add-btn', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e24', source: 'panel-add-btn', target: 'btn-event', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e25', source: 'btn-event', target: 'frame-add', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e26', source: 'frame-add', target: 'frame-center', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e27', source: 'frame-center', target: 'frame-visible', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
 
-        // Event handler body (lambda body for button click)
-        { id: 'e-btnevt-dlg', source: 'btn-event', target: 'dlg-success', sourceHandle: 'event-body', targetHandle: 'exec-in' },
+        // Event body
+        { id: 'e-evt', source: 'btn-event', target: 'dialog-success', sourceHandle: 'event-body', targetHandle: 'exec-in' },
 
-        // ═══ DATA CONNECTIONS ═══
-        // Stage title
-        { id: 'e-d-littitle-stitle', source: 'lit-title', target: 'stage-title', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
-        // Layout spacing & padding
-        { id: 'e-d-litspacing-lspacing', source: 'lit-spacing', target: 'layout-spacing', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
-        { id: 'e-d-litpadding-lpadding', source: 'lit-padding', target: 'layout-padding', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
-        // Font size for title label
-        { id: 'e-d-litfont-stitle', source: 'lit-font-size', target: 'style-title', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
-        // addChild data: titleLabel → root
-        { id: 'e-d-gettitlelbl-add', source: 'get-title-lbl', target: 'add-title-lbl', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
-        // TextField prompts
-        { id: 'e-d-lituserprompt-tf', source: 'lit-user-prompt', target: 'tf-user-prompt', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
-        { id: 'e-d-gettfuser-add', source: 'get-tf-user', target: 'add-tf-user', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
-        { id: 'e-d-litemailprompt-tf', source: 'lit-email-prompt', target: 'tf-email-prompt', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
-        { id: 'e-d-gettfemail-add', source: 'get-tf-email', target: 'add-tf-email', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
-        // Password prompt
-        { id: 'e-d-litpassprompt-pf', source: 'lit-pass-prompt', target: 'pf-pass-prompt', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
-        { id: 'e-d-getpfpass-add', source: 'get-pf-pass', target: 'add-pf-pass', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
-        // Button text
-        { id: 'e-d-litbtntext-btn', source: 'lit-btn-text', target: 'btn-set-text', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
-        { id: 'e-d-getbtnreg-add', source: 'get-btn-reg', target: 'add-btn', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        // Data edges
+        { id: 'd1', source: 'lit-title', target: 'frame-title', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
+        { id: 'd2', source: 'lit-w', target: 'frame-size', sourceHandle: 'data-out', targetHandle: 'data-in-w' },
+        { id: 'd3', source: 'lit-h', target: 'frame-size', sourceHandle: 'data-out', targetHandle: 'data-in-h' },
+        { id: 'd4', source: 'lit-border', target: 'panel-border', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
+        { id: 'd5', source: 'lit-user-text', target: 'ctrl-user-setText', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
+        { id: 'd6', source: 'lit-email-text', target: 'ctrl-email-setText', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
+        { id: 'd7', source: 'lit-pass-text', target: 'ctrl-pass-setText', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
+        { id: 'd8', source: 'lit-btn-text', target: 'ctrl-btn-text', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
+        // Add component refs to panel
+        { id: 'd-add-ul', source: 'ctrl-user-label', target: 'panel-add-ul', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-add-uf', source: 'ctrl-user-field', target: 'panel-add-uf', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-add-el', source: 'ctrl-email-label', target: 'panel-add-el', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-add-ef', source: 'ctrl-email-field', target: 'panel-add-ef', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-add-pl', source: 'ctrl-pass-label', target: 'panel-add-pl', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-add-pf', source: 'ctrl-pass-field', target: 'panel-add-pf', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-add-btn', source: 'ctrl-btn', target: 'panel-add-btn', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        // Panel ref → add to frame
+        { id: 'd-panel-frame', source: 'panel-create', target: 'frame-add', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
+        { id: 'd-center-frame', source: 'lit-center', target: 'frame-add', sourceHandle: 'data-out', targetHandle: 'data-in-constraint' },
         // Dialog data
-        { id: 'e-d-litdlgtitle-dlg', source: 'lit-dlg-title', target: 'dlg-success', sourceHandle: 'data-out', targetHandle: 'data-in-title' },
-        { id: 'e-d-litdlgmsg-dlg', source: 'lit-dlg-msg', target: 'dlg-success', sourceHandle: 'data-out', targetHandle: 'data-in-msg' },
-        // Scene data: root, width, height
-        { id: 'e-d-getroot-scene', source: 'lit-scene-root', target: 'scene-create', sourceHandle: 'data-out', targetHandle: 'data-in-root' },
-        { id: 'e-d-litscenew-scene', source: 'lit-scene-w', target: 'scene-create', sourceHandle: 'data-out', targetHandle: 'data-in-width' },
-        { id: 'e-d-litsceneh-scene', source: 'lit-scene-h', target: 'scene-create', sourceHandle: 'data-out', targetHandle: 'data-in-height' },
-        // Stage setScene data
-        { id: 'e-d-getscene-sscene', source: 'get-scene', target: 'stage-scene', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
+        { id: 'd-success-title', source: 'lit-success-title', target: 'dialog-success', sourceHandle: 'data-out', targetHandle: 'data-in-title' },
+        { id: 'd-success-msg', source: 'lit-success-msg', target: 'dialog-success', sourceHandle: 'data-out', targetHandle: 'data-in-msg' },
+        // Visible
+        { id: 'd-true', source: 'lit-true', target: 'frame-visible', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
       ],
     },
-
     // ─── File 2: UserService.java ──────────────────────────────
     {
       className: 'UserService',
@@ -1217,5 +1209,5 @@ export const TEMPLATES: Template[] = [
   factorial,
   arraySumForEach,
   stringFormatter,
-  javafxRegistration,
+  swingRegistration,
 ];

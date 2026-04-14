@@ -68,6 +68,13 @@ export const NODE_CATEGORIES: Record<string, CategoryContent> = {
     'Lists': ['fx-list-create', 'fx-list-setItems', 'fx-list-addItem', 'fx-list-removeItem', 'fx-list-getSelectedItem', 'fx-list-setOrientation', 'fx-list-setCellFactory'],
     'Media': ['fx-media-createImageView', 'fx-media-setImage', 'fx-media-setFitWidth', 'fx-media-setFitHeight', 'fx-media-createMediaPlayer', 'fx-media-createMediaView', 'fx-media-play', 'fx-media-pause', 'fx-media-stop'],
     'Charts': ['fx-chart-createLineChart', 'fx-chart-createBarChart', 'fx-chart-createPieChart', 'fx-chart-createAreaChart', 'fx-chart-addSeries', 'fx-chart-addData', 'fx-chart-setTitle', 'fx-chart-setAxisLabels'],
+    'Swing App': ['sw-app', 'sw-frame-setTitle', 'sw-frame-setSize', 'sw-frame-setDefaultCloseOperation', 'sw-frame-setVisible', 'sw-frame-setResizable', 'sw-frame-pack', 'sw-frame-setLocationRelativeTo'],
+    'Swing Panels': ['sw-panel-create-flow', 'sw-panel-create-border', 'sw-panel-create-grid', 'sw-panel-create-box', 'sw-panel-add', 'sw-panel-setLayout', 'sw-panel-setBorder'],
+    'Swing Controls': ['sw-control-jbutton', 'sw-control-jlabel', 'sw-control-jtextfield', 'sw-control-jtextarea', 'sw-control-jcheckbox', 'sw-control-jradiobutton', 'sw-control-jcombobox', 'sw-control-jslider', 'sw-control-jprogressbar', 'sw-control-jpasswordfield', 'sw-control-jspinner', 'sw-control-setText', 'sw-control-getText', 'sw-control-setEnabled', 'sw-control-setVisible', 'sw-control-setSelected', 'sw-control-isSelected'],
+    'Swing Events': ['sw-event-addActionListener', 'sw-event-addMouseListener', 'sw-event-addKeyListener', 'sw-event-addChangeListener', 'sw-event-addItemListener'],
+    'Swing Styling': ['sw-style-setFont', 'sw-style-setForeground', 'sw-style-setBackground', 'sw-style-setPreferredSize', 'sw-style-setBorder', 'sw-style-setToolTipText', 'sw-style-setOpaque'],
+    'Swing Dialogs': ['sw-dialog-showMessageDialog', 'sw-dialog-showConfirmDialog', 'sw-dialog-showInputDialog', 'sw-dialog-showOptionDialog'],
+    'Swing Menus': ['sw-menu-createMenuBar', 'sw-menu-createMenu', 'sw-menu-createMenuItem', 'sw-menu-createCheckBoxMenuItem', 'sw-menu-addSeparator', 'sw-menu-addMenu', 'sw-menu-addMenuItem'],
   },
   Input: ['scanner-nextLine', 'scanner-nextInt', 'scanner-nextFloat', 'scanner-nextDouble', 'scanner-nextLong', 'scanner-nextBoolean'],
   Utility: ['comment', 'customCode', 'enumConstants'],
@@ -705,6 +712,77 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
   'fx-chart-addData':         { type: 'javafxChartOp', data: { label: 'Chart: Add Data',    operation: 'addData',         variableName: 'chart' } },
   'fx-chart-setTitle':        { type: 'javafxChartOp', data: { label: 'Chart: Set Title',      operation: 'setTitle',        variableName: 'chart' } },
   'fx-chart-setAxisLabels':   { type: 'javafxChartOp', data: { label: 'Chart: Set Axis Labels', operation: 'setAxisLabels',   variableName: 'chart' } },
+
+  // ─── SWING APPLICATION ───
+  'sw-app': { type: 'swingApp', data: { label: 'Swing Application' } },
+
+  // ─── SWING FRAME ───
+  'sw-frame-setTitle': { type: 'swingFrameOp', data: { label: 'JFrame: Set Title', operation: 'setTitle', variableName: 'this' } },
+  'sw-frame-setSize': { type: 'swingFrameOp', data: { label: 'JFrame: Set Size', operation: 'setSize', variableName: 'this' } },
+  'sw-frame-setDefaultCloseOperation': { type: 'swingFrameOp', data: { label: 'JFrame: Default Close', operation: 'setDefaultCloseOperation', variableName: 'this' } },
+  'sw-frame-setVisible': { type: 'swingFrameOp', data: { label: 'JFrame: Set Visible', operation: 'setVisible', variableName: 'this' } },
+  'sw-frame-setResizable': { type: 'swingFrameOp', data: { label: 'JFrame: Set Resizable', operation: 'setResizable', variableName: 'this' } },
+  'sw-frame-pack': { type: 'swingFrameOp', data: { label: 'JFrame: Pack', operation: 'pack', variableName: 'this' } },
+  'sw-frame-setLocationRelativeTo': { type: 'swingFrameOp', data: { label: 'JFrame: Center', operation: 'setLocationRelativeTo', variableName: 'this' } },
+
+  // ─── SWING PANELS ───
+  'sw-panel-create-flow': { type: 'swingPanelOp', data: { label: 'JPanel: FlowLayout', operation: 'create', layoutType: 'FlowLayout', variableName: 'panel' } },
+  'sw-panel-create-border': { type: 'swingPanelOp', data: { label: 'JPanel: BorderLayout', operation: 'create', layoutType: 'BorderLayout', variableName: 'panel' } },
+  'sw-panel-create-grid': { type: 'swingPanelOp', data: { label: 'JPanel: GridLayout', operation: 'create', layoutType: 'GridLayout', variableName: 'panel' } },
+  'sw-panel-create-box': { type: 'swingPanelOp', data: { label: 'JPanel: BoxLayout', operation: 'create', layoutType: 'BoxLayout', variableName: 'panel' } },
+  'sw-panel-add': { type: 'swingPanelOp', data: { label: 'JPanel: Add', operation: 'add', layoutType: 'FlowLayout', variableName: 'panel' } },
+  'sw-panel-setLayout': { type: 'swingPanelOp', data: { label: 'JPanel: Set Layout', operation: 'setLayout', layoutType: 'FlowLayout', variableName: 'panel' } },
+  'sw-panel-setBorder': { type: 'swingPanelOp', data: { label: 'JPanel: Set Border', operation: 'setBorder', layoutType: 'FlowLayout', variableName: 'panel' } },
+
+  // ─── SWING CONTROLS ───
+  'sw-control-jbutton': { type: 'swingControlOp', data: { label: 'JButton: Create', operation: 'create', controlType: 'JButton', variableName: 'button' } },
+  'sw-control-jlabel': { type: 'swingControlOp', data: { label: 'JLabel: Create', operation: 'create', controlType: 'JLabel', variableName: 'label' } },
+  'sw-control-jtextfield': { type: 'swingControlOp', data: { label: 'JTextField: Create', operation: 'create', controlType: 'JTextField', variableName: 'textField' } },
+  'sw-control-jtextarea': { type: 'swingControlOp', data: { label: 'JTextArea: Create', operation: 'create', controlType: 'JTextArea', variableName: 'textArea' } },
+  'sw-control-jcheckbox': { type: 'swingControlOp', data: { label: 'JCheckBox: Create', operation: 'create', controlType: 'JCheckBox', variableName: 'checkBox' } },
+  'sw-control-jradiobutton': { type: 'swingControlOp', data: { label: 'JRadioButton: Create', operation: 'create', controlType: 'JRadioButton', variableName: 'radioBtn' } },
+  'sw-control-jcombobox': { type: 'swingControlOp', data: { label: 'JComboBox: Create', operation: 'create', controlType: 'JComboBox', variableName: 'comboBox' } },
+  'sw-control-jslider': { type: 'swingControlOp', data: { label: 'JSlider: Create', operation: 'create', controlType: 'JSlider', variableName: 'slider' } },
+  'sw-control-jprogressbar': { type: 'swingControlOp', data: { label: 'JProgressBar: Create', operation: 'create', controlType: 'JProgressBar', variableName: 'progressBar' } },
+  'sw-control-jpasswordfield': { type: 'swingControlOp', data: { label: 'JPasswordField: Create', operation: 'create', controlType: 'JPasswordField', variableName: 'passwordField' } },
+  'sw-control-jspinner': { type: 'swingControlOp', data: { label: 'JSpinner: Create', operation: 'create', controlType: 'JSpinner', variableName: 'spinner' } },
+  'sw-control-setText': { type: 'swingControlOp', data: { label: 'Swing: Set Text', operation: 'setText', controlType: 'JButton', variableName: 'control' } },
+  'sw-control-getText': { type: 'swingControlOp', data: { label: 'Swing: Get Text', operation: 'getText', controlType: 'JTextField', variableName: 'control' } },
+  'sw-control-setEnabled': { type: 'swingControlOp', data: { label: 'Swing: Set Enabled', operation: 'setEnabled', controlType: 'JButton', variableName: 'control' } },
+  'sw-control-setVisible': { type: 'swingControlOp', data: { label: 'Swing: Set Visible', operation: 'setVisible', controlType: 'JButton', variableName: 'control' } },
+  'sw-control-setSelected': { type: 'swingControlOp', data: { label: 'Swing: Set Selected', operation: 'setSelected', controlType: 'JCheckBox', variableName: 'control' } },
+  'sw-control-isSelected': { type: 'swingControlOp', data: { label: 'Swing: Is Selected', operation: 'isSelected', controlType: 'JCheckBox', variableName: 'control' } },
+
+  // ─── SWING EVENTS ───
+  'sw-event-addActionListener': { type: 'swingEventOp', data: { label: 'Action Listener', operation: 'addActionListener', variableName: 'button' } },
+  'sw-event-addMouseListener': { type: 'swingEventOp', data: { label: 'Mouse Listener', operation: 'addMouseListener', variableName: 'component' } },
+  'sw-event-addKeyListener': { type: 'swingEventOp', data: { label: 'Key Listener', operation: 'addKeyListener', variableName: 'component' } },
+  'sw-event-addChangeListener': { type: 'swingEventOp', data: { label: 'Change Listener', operation: 'addChangeListener', variableName: 'slider' } },
+  'sw-event-addItemListener': { type: 'swingEventOp', data: { label: 'Item Listener', operation: 'addItemListener', variableName: 'comboBox' } },
+
+  // ─── SWING STYLING ───
+  'sw-style-setFont': { type: 'swingStyleOp', data: { label: 'Swing: Set Font', operation: 'setFont', variableName: 'component' } },
+  'sw-style-setForeground': { type: 'swingStyleOp', data: { label: 'Swing: Set Foreground', operation: 'setForeground', variableName: 'component' } },
+  'sw-style-setBackground': { type: 'swingStyleOp', data: { label: 'Swing: Set Background', operation: 'setBackground', variableName: 'component' } },
+  'sw-style-setPreferredSize': { type: 'swingStyleOp', data: { label: 'Swing: Set Preferred Size', operation: 'setPreferredSize', variableName: 'component' } },
+  'sw-style-setBorder': { type: 'swingStyleOp', data: { label: 'Swing: Set Border', operation: 'setBorder', variableName: 'panel' } },
+  'sw-style-setToolTipText': { type: 'swingStyleOp', data: { label: 'Swing: Set Tooltip', operation: 'setToolTipText', variableName: 'component' } },
+  'sw-style-setOpaque': { type: 'swingStyleOp', data: { label: 'Swing: Set Opaque', operation: 'setOpaque', variableName: 'component' } },
+
+  // ─── SWING DIALOGS ───
+  'sw-dialog-showMessageDialog': { type: 'swingDialogOp', data: { label: 'Message Dialog', operation: 'showMessageDialog' } },
+  'sw-dialog-showConfirmDialog': { type: 'swingDialogOp', data: { label: 'Confirm Dialog', operation: 'showConfirmDialog' } },
+  'sw-dialog-showInputDialog': { type: 'swingDialogOp', data: { label: 'Input Dialog', operation: 'showInputDialog' } },
+  'sw-dialog-showOptionDialog': { type: 'swingDialogOp', data: { label: 'Option Dialog', operation: 'showOptionDialog' } },
+
+  // ─── SWING MENUS ───
+  'sw-menu-createMenuBar': { type: 'swingMenuOp', data: { label: 'Create Menu Bar', operation: 'createMenuBar', variableName: 'menuBar' } },
+  'sw-menu-createMenu': { type: 'swingMenuOp', data: { label: 'Create Menu', operation: 'createMenu', variableName: 'menu' } },
+  'sw-menu-createMenuItem': { type: 'swingMenuOp', data: { label: 'Create Menu Item', operation: 'createMenuItem', variableName: 'menuItem' } },
+  'sw-menu-createCheckBoxMenuItem': { type: 'swingMenuOp', data: { label: 'Create Check Item', operation: 'createCheckBoxMenuItem', variableName: 'checkItem' } },
+  'sw-menu-addSeparator': { type: 'swingMenuOp', data: { label: 'Add Separator', operation: 'addSeparator', variableName: 'menu' } },
+  'sw-menu-addMenu': { type: 'swingMenuOp', data: { label: 'Add Menu', operation: 'addMenu', variableName: 'menuBar' } },
+  'sw-menu-addMenuItem': { type: 'swingMenuOp', data: { label: 'Add Item', operation: 'addMenuItem', variableName: 'menu' } },
 
   // --- NEW ALGORITHM NODES ---
   'algo-inorderTraversal':   { type: 'algorithm', data: { label: 'Inorder Traversal',   operation: 'inorderTraversal'   } },

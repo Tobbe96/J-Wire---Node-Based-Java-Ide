@@ -693,5 +693,22 @@ export function evalDataImpl(
     return null;
   }
 
+  // ── Swing data evaluation ──
+  if (['swingControlOp', 'swingFrameOp', 'swingPanelOp',
+       'swingMenuOp', 'swingStyleOp', 'swingEventOp'].includes(node.type as string)) {
+    const op = node.data.operation as string;
+    const varName = (node.data.variableName as string) || 'swingNode';
+    if (op === 'getText') return '';
+    if (op === 'isSelected') return false;
+    return exec.fxMemory.get(varName) ?? null;
+  }
+
+  if (node.type === 'swingDialogOp') {
+    const op = node.data.operation as string;
+    if (op === 'showInputDialog') return '';
+    if (op === 'showConfirmDialog' || op === 'showOptionDialog') return 0;
+    return null;
+  }
+
   return '';
 }

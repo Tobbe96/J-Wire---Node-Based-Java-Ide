@@ -538,6 +538,27 @@ export function createEvaluateDataNode(
       return (node.data.variableName as string) || 'fxNode';
     }
 
+    // --- Swing data-only ops ---
+    if (node.type === 'swingControlOp') {
+      const op = node.data.operation as string;
+      const varName = (node.data.variableName as string) || 'control';
+      if (op === 'getText') return `${varName}.getText()`;
+      if (op === 'isSelected') return `${varName}.isSelected()`;
+      return varName;
+    }
+
+    if (node.type === 'swingDialogOp') {
+      const op = node.data.operation as string;
+      if (op === 'showConfirmDialog' || op === 'showOptionDialog') return '__confirmResult';
+      if (op === 'showInputDialog') return '__inputResult';
+      return 'null';
+    }
+
+    if (node.type === 'swingFrameOp' || node.type === 'swingPanelOp' ||
+        node.type === 'swingMenuOp') {
+      return (node.data.variableName as string) || 'swingNode';
+    }
+
     return '""';
   };
 

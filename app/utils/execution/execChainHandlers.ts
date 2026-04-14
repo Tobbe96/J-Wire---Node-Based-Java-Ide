@@ -768,6 +768,13 @@ export function runLogicChainImpl(
       const varName = (nextNode.data.variableName as string) || 'fxNode';
       exec.fxMemory.set(varName, { type: nextNode.type, op: nextNode.data.operation });
     }
+
+    // ── Swing Ops (exec-chain) ──
+    if (['swingApp', 'swingFrameOp', 'swingPanelOp', 'swingControlOp',
+         'swingEventOp', 'swingStyleOp', 'swingDialogOp', 'swingMenuOp'].includes(nextNode.type as string)) {
+      const varName = (nextNode.data.variableName as string) || 'swingNode';
+      exec.fxMemory.set(varName, { type: nextNode.type, op: nextNode.data.operation });
+    }
     currentNodeId = nextNode.id;
     currentHandle = 'exec';
   }

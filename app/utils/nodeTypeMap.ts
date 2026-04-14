@@ -68,6 +68,14 @@ import JavaFXTableOpNode from '../components/Nodes/JavaFXTableOpNode';
 import JavaFXListOpNode from '../components/Nodes/JavaFXListOpNode';
 import JavaFXMediaOpNode from '../components/Nodes/JavaFXMediaOpNode';
 import JavaFXChartOpNode from '../components/Nodes/JavaFXChartOpNode';
+import SwingAppNode from '../components/Nodes/SwingAppNode';
+import SwingFrameOpNode from '../components/Nodes/SwingFrameOpNode';
+import SwingPanelOpNode from '../components/Nodes/SwingPanelOpNode';
+import SwingControlOpNode from '../components/Nodes/SwingControlOpNode';
+import SwingEventOpNode from '../components/Nodes/SwingEventOpNode';
+import SwingStyleOpNode from '../components/Nodes/SwingStyleOpNode';
+import SwingDialogOpNode from '../components/Nodes/SwingDialogOpNode';
+import SwingMenuOpNode from '../components/Nodes/SwingMenuOpNode';
 
 // Edge Components
 import AnimatedEdge from '../components/AnimatedEdge';
@@ -140,6 +148,14 @@ export const nodeTypes = {
   javafxListOp: JavaFXListOpNode,
   javafxMediaOp: JavaFXMediaOpNode,
   javafxChartOp: JavaFXChartOpNode,
+  swingApp: SwingAppNode,
+  swingFrameOp: SwingFrameOpNode,
+  swingPanelOp: SwingPanelOpNode,
+  swingControlOp: SwingControlOpNode,
+  swingEventOp: SwingEventOpNode,
+  swingStyleOp: SwingStyleOpNode,
+  swingDialogOp: SwingDialogOpNode,
+  swingMenuOp: SwingMenuOpNode,
 };
 
 export const edgeTypes = {

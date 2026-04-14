@@ -892,6 +892,155 @@ export function createBuildMethodBody(
           methodBody += `    // setAxisLabels: x=${ev2('data-in-x')}, y=${ev2('data-in-y')}\n`;
         }
       }
+
+      // ─── Swing Frame Ops ───
+      if (nextNode.type === 'swingFrameOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'this';
+        const ev2 = (h: string) => { const e2 = edgeAt(nextNode.id, h); return e2 ? evaluateDataNode(e2.source, e2.sourceHandle || undefined) : 'null'; };
+        if (op === 'setTitle') {
+          methodBody += `    ${varName}.setTitle(${ev2('data-in-text')});\n`;
+        } else if (op === 'setSize') {
+          methodBody += `    ${varName}.setSize(${ev2('data-in-w')}, ${ev2('data-in-h')});\n`;
+        } else if (op === 'setDefaultCloseOperation') {
+          methodBody += `    ${varName}.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);\n`;
+        } else if (op === 'setVisible') {
+          methodBody += `    ${varName}.setVisible(${ev2('data-in-value')});\n`;
+        } else if (op === 'setResizable') {
+          methodBody += `    ${varName}.setResizable(${ev2('data-in-value')});\n`;
+        } else if (op === 'pack') {
+          methodBody += `    ${varName}.pack();\n`;
+        } else if (op === 'setLocationRelativeTo') {
+          methodBody += `    ${varName}.setLocationRelativeTo(null);\n`;
+        }
+      }
+
+      // ─── Swing Panel Ops ───
+      if (nextNode.type === 'swingPanelOp') {
+        const op = nextNode.data.operation as string;
+        const layoutType = (nextNode.data.layoutType as string) || 'FlowLayout';
+        const varName = (nextNode.data.variableName as string) || 'panel';
+        const ev2 = (h: string) => { const e2 = edgeAt(nextNode.id, h); return e2 ? evaluateDataNode(e2.source, e2.sourceHandle || undefined) : 'null'; };
+        if (op === 'create') {
+          if (layoutType === 'BoxLayout') {
+            methodBody += `    JPanel ${varName} = new JPanel();\n    ${varName}.setLayout(new BoxLayout(${varName}, BoxLayout.Y_AXIS));\n`;
+          } else {
+            methodBody += `    JPanel ${varName} = new JPanel(new ${layoutType}());\n`;
+          }
+        } else if (op === 'add') {
+          const child = ev2('data-in-child');
+          const constraint = ev2('data-in-constraint');
+          if (constraint !== 'null') {
+            methodBody += `    ${varName}.add(${child}, ${constraint});\n`;
+          } else {
+            methodBody += `    ${varName}.add(${child});\n`;
+          }
+        } else if (op === 'setLayout') {
+          methodBody += `    ${varName}.setLayout(new ${layoutType}());\n`;
+        } else if (op === 'setBorder') {
+          methodBody += `    ${varName}.setBorder(BorderFactory.createEmptyBorder(${ev2('data-in-value')}));\n`;
+        }
+      }
+
+      // ─── Swing Control Ops ───
+      if (nextNode.type === 'swingControlOp') {
+        const op = nextNode.data.operation as string;
+        const controlType = (nextNode.data.controlType as string) || 'JButton';
+        const varName = (nextNode.data.variableName as string) || 'control';
+        const ev2 = (h: string) => { const e2 = edgeAt(nextNode.id, h); return e2 ? evaluateDataNode(e2.source, e2.sourceHandle || undefined) : 'null'; };
+        if (op === 'create') {
+          if (['JButton', 'JLabel', 'JCheckBox', 'JRadioButton'].includes(controlType)) {
+            methodBody += `    ${controlType} ${varName} = new ${controlType}("");\n`;
+          } else {
+            methodBody += `    ${controlType} ${varName} = new ${controlType}();\n`;
+          }
+        } else if (op === 'setText') {
+          methodBody += `    ${varName}.setText(${ev2('data-in-text')});\n`;
+        } else if (op === 'setEnabled') {
+          methodBody += `    ${varName}.setEnabled(${ev2('data-in-value')});\n`;
+        } else if (op === 'setVisible') {
+          methodBody += `    ${varName}.setVisible(${ev2('data-in-value')});\n`;
+        } else if (op === 'setSelected') {
+          methodBody += `    ${varName}.setSelected(${ev2('data-in-value')});\n`;
+        }
+      }
+
+      // ─── Swing Event Ops ───
+      if (nextNode.type === 'swingEventOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'component';
+        const lambdaBody = buildMethodBody(nextNode.id, 'event-body', visited);
+        if (op === 'addActionListener') {
+          methodBody += `    ${varName}.addActionListener((ActionEvent e) -> {\n${lambdaBody}    });\n`;
+        } else if (op === 'addMouseListener') {
+          methodBody += `    ${varName}.addMouseListener(new java.awt.event.MouseAdapter() {\n      @Override public void mouseClicked(java.awt.event.MouseEvent e) {\n${lambdaBody}      }\n    });\n`;
+        } else if (op === 'addKeyListener') {
+          methodBody += `    ${varName}.addKeyListener(new java.awt.event.KeyAdapter() {\n      @Override public void keyPressed(java.awt.event.KeyEvent e) {\n${lambdaBody}      }\n    });\n`;
+        } else if (op === 'addChangeListener') {
+          methodBody += `    ${varName}.addChangeListener(e -> {\n${lambdaBody}    });\n`;
+        } else if (op === 'addItemListener') {
+          methodBody += `    ${varName}.addItemListener(e -> {\n${lambdaBody}    });\n`;
+        }
+      }
+
+      // ─── Swing Style Ops ───
+      if (nextNode.type === 'swingStyleOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'component';
+        const ev2 = (h: string) => { const e2 = edgeAt(nextNode.id, h); return e2 ? evaluateDataNode(e2.source, e2.sourceHandle || undefined) : 'null'; };
+        if (op === 'setFont') {
+          methodBody += `    ${varName}.setFont(new Font("Arial", Font.PLAIN, ${ev2('data-in-value')}));\n`;
+        } else if (op === 'setForeground') {
+          methodBody += `    ${varName}.setForeground(Color.decode(${ev2('data-in-value')}));\n`;
+        } else if (op === 'setBackground') {
+          methodBody += `    ${varName}.setBackground(Color.decode(${ev2('data-in-value')}));\n`;
+        } else if (op === 'setPreferredSize') {
+          methodBody += `    ${varName}.setPreferredSize(new Dimension(${ev2('data-in-w')}, ${ev2('data-in-h')}));\n`;
+        } else if (op === 'setBorder') {
+          methodBody += `    ${varName}.setBorder(BorderFactory.createTitledBorder(${ev2('data-in-value')}));\n`;
+        } else if (op === 'setToolTipText') {
+          methodBody += `    ${varName}.setToolTipText(${ev2('data-in-value')});\n`;
+        } else if (op === 'setOpaque') {
+          methodBody += `    ${varName}.setOpaque(${ev2('data-in-value')});\n`;
+        }
+      }
+
+      // ─── Swing Dialog Ops ───
+      if (nextNode.type === 'swingDialogOp') {
+        const op = nextNode.data.operation as string;
+        const ev2 = (h: string) => { const e2 = edgeAt(nextNode.id, h); return e2 ? evaluateDataNode(e2.source, e2.sourceHandle || undefined) : '"Dialog"'; };
+        if (op === 'showMessageDialog') {
+          methodBody += `    JOptionPane.showMessageDialog(this, ${ev2('data-in-msg')}, ${ev2('data-in-title')}, JOptionPane.INFORMATION_MESSAGE);\n`;
+        } else if (op === 'showConfirmDialog') {
+          methodBody += `    int __confirmResult = JOptionPane.showConfirmDialog(this, ${ev2('data-in-msg')}, ${ev2('data-in-title')}, JOptionPane.YES_NO_OPTION);\n`;
+        } else if (op === 'showInputDialog') {
+          methodBody += `    String __inputResult = JOptionPane.showInputDialog(this, ${ev2('data-in-msg')});\n`;
+        } else if (op === 'showOptionDialog') {
+          methodBody += `    int __optionResult = JOptionPane.showOptionDialog(this, ${ev2('data-in-msg')}, ${ev2('data-in-title')}, JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);\n`;
+        }
+      }
+
+      // ─── Swing Menu Ops ───
+      if (nextNode.type === 'swingMenuOp') {
+        const op = nextNode.data.operation as string;
+        const varName = (nextNode.data.variableName as string) || 'menuBar';
+        const ev2 = (h: string) => { const e2 = edgeAt(nextNode.id, h); return e2 ? evaluateDataNode(e2.source, e2.sourceHandle || undefined) : 'null'; };
+        if (op === 'createMenuBar') {
+          methodBody += `    JMenuBar ${varName} = new JMenuBar();\n`;
+        } else if (op === 'createMenu') {
+          methodBody += `    JMenu ${varName} = new JMenu(${ev2('data-in-title')});\n`;
+        } else if (op === 'createMenuItem') {
+          methodBody += `    JMenuItem ${varName} = new JMenuItem(${ev2('data-in-title')});\n`;
+        } else if (op === 'createCheckBoxMenuItem') {
+          methodBody += `    JCheckBoxMenuItem ${varName} = new JCheckBoxMenuItem(${ev2('data-in-title')});\n`;
+        } else if (op === 'addSeparator') {
+          methodBody += `    ${varName}.addSeparator();\n`;
+        } else if (op === 'addMenu') {
+          methodBody += `    ${varName}.add(${ev2('data-in-item')});\n`;
+        } else if (op === 'addMenuItem') {
+          methodBody += `    ${varName}.add(${ev2('data-in-item')});\n`;
+        }
+      }
       currentNodeId = nextNode.id;
       currentHandle = 'exec';
     }
