@@ -1,0 +1,46 @@
+appId: com.tobbe96.devflow
+productName: DevFlow
+copyright: Copyright © 2025 Tobias Boström
+
+directories:
+  output: dist-electron
+
+files:
+  - electron/**/*
+  - .next/standalone/**/*
+  - .next/static/**/*
+  - public/**/*
+  - "!node_modules"
+  - "!e2e"
+  - "!docs"
+  - "!test-results"
+
+extraResources:
+  - from: .next/static
+    to: .next/standalone/.next/static
+  - from: public
+    to: .next/standalone/public
+
+win:
+  target:
+    - nsis
+  icon: public/icons/icon-512x512.png
+
+mac:
+  target:
+    - dmg
+  icon: public/icons/icon-512x512.png
+  category: public.app-category.developer-tools
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: public/icons/icon-512x512.png
+  category: Development
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
