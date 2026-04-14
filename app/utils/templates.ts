@@ -1200,7 +1200,7 @@ const swingRegistration: Template = {
 const swingTodoList: Template = {
   id: 'swing-todo-list',
   name: 'Swing To-Do List Manager',
-  description: 'Multi-file Swing app: To-Do GUI with BorderLayout, multiple event listeners, and a backend service with for-loop, branching, and ArrayList operations. JDK 8+.',
+  description: 'Multi-file Swing app: GUI calls TaskManager backend via callInstanceMethod. Features BorderLayout, event listeners, for-loop, branching, and ArrayList ops. JDK 8+.',
   className: 'TodoApp',
   nodes: [],
   edges: [],
@@ -1210,6 +1210,10 @@ const swingTodoList: Template = {
       className: 'TodoApp',
       classType: 'class',
       nodes: [
+        // TaskManager field
+        { id: 'field-mgr', type: 'java', position: { x: 0, y: 130 },
+          data: { label: 'manager', type: 'TaskManager', value: 'new TaskManager()', modifier: 'private', isStatic: false } },
+
         // Swing entry point
         { id: 'sw-app', type: 'swingApp', position: { x: 0, y: 0 }, data: { label: 'Swing Application' } },
 
@@ -1301,34 +1305,44 @@ const swingTodoList: Template = {
         { id: 'lit-center', type: 'literal', position: { x: 5600, y: 150 },
           data: { label: 'Literal', literalType: 'String', value: 'Center' } },
 
-        // Event: Add button → message dialog
+        // Event: Add button → call addTask then show dialog
         { id: 'evt-add', type: 'swingEventOp', position: { x: 6000, y: 0 },
           data: { label: 'Add Listener', operation: 'addActionListener', variableName: 'addBtn' } },
-        { id: 'dialog-add', type: 'swingDialogOp', position: { x: 6200, y: 200 },
+        { id: 'call-add', type: 'callInstanceMethod', position: { x: 6200, y: 200 },
+          data: { label: 'Call addTask', methodName: 'TaskManager.addTask' } },
+        { id: 'get-mgr-add', type: 'getter', position: { x: 6050, y: 300 },
+          data: { label: 'manager', type: 'TaskManager' } },
+        { id: 'get-text-add', type: 'swingControlOp', position: { x: 6050, y: 400 },
+          data: { label: 'getText', operation: 'getText', controlType: 'JTextField', variableName: 'inputField' } },
+        { id: 'dialog-add', type: 'swingDialogOp', position: { x: 6500, y: 200 },
           data: { label: 'Message Dialog', operation: 'showMessageDialog' } },
-        { id: 'lit-add-dlg-title', type: 'literal', position: { x: 6050, y: 350 },
+        { id: 'lit-add-dlg-title', type: 'literal', position: { x: 6350, y: 350 },
           data: { label: 'Literal', literalType: 'String', value: 'Added' } },
-        { id: 'lit-add-dlg-msg', type: 'literal', position: { x: 6050, y: 420 },
+        { id: 'lit-add-dlg-msg', type: 'literal', position: { x: 6350, y: 420 },
           data: { label: 'Literal', literalType: 'String', value: 'Task has been added!' } },
 
-        // Event: Remove button → confirm dialog
-        { id: 'evt-remove', type: 'swingEventOp', position: { x: 6500, y: 0 },
+        // Event: Remove button → call clearTasks then show dialog
+        { id: 'evt-remove', type: 'swingEventOp', position: { x: 6800, y: 0 },
           data: { label: 'Remove Listener', operation: 'addActionListener', variableName: 'removeBtn' } },
-        { id: 'dialog-confirm', type: 'swingDialogOp', position: { x: 6700, y: 200 },
-          data: { label: 'Confirm Dialog', operation: 'showConfirmDialog' } },
-        { id: 'lit-confirm-title', type: 'literal', position: { x: 6550, y: 350 },
-          data: { label: 'Literal', literalType: 'String', value: 'Confirm' } },
-        { id: 'lit-confirm-msg', type: 'literal', position: { x: 6550, y: 420 },
-          data: { label: 'Literal', literalType: 'String', value: 'Remove selected task?' } },
+        { id: 'call-clear', type: 'callInstanceMethod', position: { x: 7000, y: 200 },
+          data: { label: 'Call clearTasks', methodName: 'TaskManager.clearTasks' } },
+        { id: 'get-mgr-clear', type: 'getter', position: { x: 6850, y: 300 },
+          data: { label: 'manager', type: 'TaskManager' } },
+        { id: 'dialog-remove', type: 'swingDialogOp', position: { x: 7300, y: 200 },
+          data: { label: 'Message Dialog', operation: 'showMessageDialog' } },
+        { id: 'lit-remove-title', type: 'literal', position: { x: 7150, y: 350 },
+          data: { label: 'Literal', literalType: 'String', value: 'Cleared' } },
+        { id: 'lit-remove-msg', type: 'literal', position: { x: 7150, y: 420 },
+          data: { label: 'Literal', literalType: 'String', value: 'All tasks cleared!' } },
 
         // Add main panel to frame + center + show
-        { id: 'frame-add', type: 'swingPanelOp', position: { x: 7000, y: 0 },
+        { id: 'frame-add', type: 'swingPanelOp', position: { x: 7600, y: 0 },
           data: { label: 'Add to Frame', operation: 'add', variableName: 'this' } },
-        { id: 'frame-center', type: 'swingFrameOp', position: { x: 7300, y: 0 },
+        { id: 'frame-center', type: 'swingFrameOp', position: { x: 7900, y: 0 },
           data: { label: 'JFrame: Center', operation: 'setLocationRelativeTo', variableName: 'this' } },
-        { id: 'frame-visible', type: 'swingFrameOp', position: { x: 7600, y: 0 },
+        { id: 'frame-visible', type: 'swingFrameOp', position: { x: 8200, y: 0 },
           data: { label: 'JFrame: Set Visible', operation: 'setVisible', variableName: 'this' } },
-        { id: 'lit-true', type: 'literal', position: { x: 7500, y: 150 },
+        { id: 'lit-true', type: 'literal', position: { x: 8100, y: 150 },
           data: { label: 'Literal', literalType: 'boolean', value: 'true' } },
       ],
       edges: [
@@ -1359,8 +1373,10 @@ const swingTodoList: Template = {
         { id: 'e24', source: 'frame-center', target: 'frame-visible', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
 
         // ═══ Event bodies ═══
-        { id: 'e-evt-add', source: 'evt-add', target: 'dialog-add', sourceHandle: 'event-body', targetHandle: 'exec-in' },
-        { id: 'e-evt-remove', source: 'evt-remove', target: 'dialog-confirm', sourceHandle: 'event-body', targetHandle: 'exec-in' },
+        { id: 'e-evt-add-body', source: 'evt-add', target: 'call-add', sourceHandle: 'event-body', targetHandle: 'exec-in' },
+        { id: 'e-call-add-dlg', source: 'call-add', target: 'dialog-add', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e-evt-remove-body', source: 'evt-remove', target: 'call-clear', sourceHandle: 'event-body', targetHandle: 'exec-in' },
+        { id: 'e-call-clear-dlg', source: 'call-clear', target: 'dialog-remove', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
 
         // ═══ Data edges ═══
         { id: 'd1', source: 'lit-title', target: 'frame-title', sourceHandle: 'data-out', targetHandle: 'data-in-text' },
@@ -1383,8 +1399,13 @@ const swingTodoList: Template = {
         // Dialog data
         { id: 'd-add-dlg-title', source: 'lit-add-dlg-title', target: 'dialog-add', sourceHandle: 'data-out', targetHandle: 'data-in-title' },
         { id: 'd-add-dlg-msg', source: 'lit-add-dlg-msg', target: 'dialog-add', sourceHandle: 'data-out', targetHandle: 'data-in-msg' },
-        { id: 'd-confirm-title', source: 'lit-confirm-title', target: 'dialog-confirm', sourceHandle: 'data-out', targetHandle: 'data-in-title' },
-        { id: 'd-confirm-msg', source: 'lit-confirm-msg', target: 'dialog-confirm', sourceHandle: 'data-out', targetHandle: 'data-in-msg' },
+        { id: 'd-remove-title', source: 'lit-remove-title', target: 'dialog-remove', sourceHandle: 'data-out', targetHandle: 'data-in-title' },
+        { id: 'd-remove-msg', source: 'lit-remove-msg', target: 'dialog-remove', sourceHandle: 'data-out', targetHandle: 'data-in-msg' },
+
+        // callInstanceMethod data edges
+        { id: 'd-mgr-add-obj', source: 'get-mgr-add', target: 'call-add', sourceHandle: 'data-out', targetHandle: 'obj-in' },
+        { id: 'd-text-add-arg', source: 'get-text-add', target: 'call-add', sourceHandle: 'data-out', targetHandle: 'arg-in-0' },
+        { id: 'd-mgr-clear-obj', source: 'get-mgr-clear', target: 'call-clear', sourceHandle: 'data-out', targetHandle: 'obj-in' },
         // Frame add main panel
         { id: 'd-panel-frame', source: 'panel-main', target: 'frame-add', sourceHandle: 'data-out', targetHandle: 'data-in-child' },
         // Visible
@@ -1433,6 +1454,16 @@ const swingTodoList: Template = {
         { id: 'get-task-3', type: 'getter', position: { x: 650, y: -100 },
           data: { label: 'task', type: 'String' } },
 
+        // ═══ Method: clearTasks() ═══
+        { id: 'method-clear-tm', type: 'method', position: { x: 1200, y: 200 },
+          data: { label: 'clearTasks', returnType: 'void', isStatic: false, parameters: [] } },
+        { id: 'al-clear-tm', type: 'arrayListOp', position: { x: 1500, y: 200 },
+          data: { label: 'ArrayList Clear', operation: 'clear', variableName: 'tasks', elementType: 'String' } },
+        { id: 'print-cleared-tm', type: 'print', position: { x: 1800, y: 200 },
+          data: { label: 'Print', accepts: ALL_TYPES } },
+        { id: 'lit-cleared-tm', type: 'literal', position: { x: 1650, y: 350 },
+          data: { label: 'Literal', literalType: 'String', value: 'All tasks cleared' } },
+
         // ═══ Method: listTasks() ═══
         { id: 'method-list', type: 'method', position: { x: 50, y: 600 },
           data: { label: 'listTasks', returnType: 'void', isStatic: false, parameters: [] } },
@@ -1479,6 +1510,12 @@ const swingTodoList: Template = {
         { id: 'e-d-gettask2-aladd', source: 'get-task-2', target: 'al-add', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
         { id: 'e-d-gettask3-strfmt', source: 'get-task-3', target: 'str-fmt-add', sourceHandle: 'data-out', targetHandle: 'data-in-arg-0' },
         { id: 'e-d-strfmt-printadd', source: 'str-fmt-add', target: 'print-added', sourceHandle: 'data-out', targetHandle: 'data-in' },
+
+        // ═══ clearTasks exec chain ═══
+        { id: 'e-clear-alclear', source: 'method-clear-tm', target: 'al-clear-tm', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        { id: 'e-alclear-printcleared', source: 'al-clear-tm', target: 'print-cleared-tm', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
+        // clearTasks data
+        { id: 'e-d-litcleared-print', source: 'lit-cleared-tm', target: 'print-cleared-tm', sourceHandle: 'data-out', targetHandle: 'data-in' },
 
         // ═══ listTasks exec chain ═══
         { id: 'e-list-for', source: 'method-list', target: 'for-loop', sourceHandle: 'exec-out', targetHandle: 'exec-in' },
