@@ -1076,7 +1076,7 @@ const swingRegistration: Template = {
 
         // Method: validateUser
         { id: 'method-validate', type: 'method', position: { x: 50, y: 200 },
-          data: { label: 'validateUser', returnType: 'boolean',
+          data: { label: 'validateUser', returnType: 'boolean', isStatic: false,
                   parameters: [
                     { name: 'username', type: 'String' },
                     { name: 'email', type: 'String' },
@@ -1131,7 +1131,7 @@ const swingRegistration: Template = {
 
         // Method: registerUser
         { id: 'method-register', type: 'method', position: { x: 50, y: 750 },
-          data: { label: 'registerUser', returnType: 'void',
+          data: { label: 'registerUser', returnType: 'void', isStatic: false,
                   parameters: [{ name: 'username', type: 'String' }] } },
         { id: 'al-add', type: 'arrayListOp', position: { x: 350, y: 750 },
           data: { label: 'ArrayList Add', operation: 'add', variableName: 'users', elementType: 'String' } },
