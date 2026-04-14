@@ -150,8 +150,12 @@ export function createBuildMethodBody(
 
       if (nextNode.type === 'return') {
         const dataEdge = edgeAt(nextNode.id, 'data-in');
-        const returnVal = dataEdge ? evaluateDataNode(dataEdge.source, dataEdge.sourceHandle || undefined) : 'null';
-        methodBody += `    return ${returnVal};\n`;
+        if (dataEdge) {
+          const returnVal = evaluateDataNode(dataEdge.source, dataEdge.sourceHandle || undefined);
+          methodBody += `    return ${returnVal};\n`;
+        } else {
+          methodBody += `    return;\n`;
+        }
         break;
       }
 

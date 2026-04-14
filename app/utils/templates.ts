@@ -1486,7 +1486,7 @@ const swingTodoList: Template = {
 
         // ═══ listTasks data ═══
         { id: 'e-d-alsize-for', source: 'al-size-list', target: 'for-loop', sourceHandle: 'data-out', targetHandle: 'data-end' },
-        { id: 'e-d-getteri-alget', source: 'getter-i', target: 'al-get', sourceHandle: 'data-out', targetHandle: 'data-in-value' },
+        { id: 'e-d-getteri-alget', source: 'getter-i', target: 'al-get', sourceHandle: 'data-out', targetHandle: 'data-in-index' },
         { id: 'e-d-alget-printitem', source: 'al-get', target: 'print-item', sourceHandle: 'data-out', targetHandle: 'data-in' },
 
         // ═══ getTaskCount ═══
