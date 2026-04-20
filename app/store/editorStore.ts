@@ -22,6 +22,7 @@ import type { ProjectClassInfo, Parameter } from '../utils/nodeTypes';
 import type { Template } from '../utils/templates';
 import { useToastStore } from './toastStore';
 import { analytics } from '../utils/analytics';
+import { isGuiProject } from '../utils/guiProject';
 
 const STORAGE_KEY = 'java-nodegraph-save';
 
@@ -404,10 +405,11 @@ export const useEditorStore = create<EditorStore>()(
           }),
           className: f.className,
         }));
+        const shouldSkipExecution = isGuiProject(syncedFiles);
 
         set({
           isCompiling: true,
-          consoleOutput: ['> Compiling and running Java...'],
+          consoleOutput: [shouldSkipExecution ? '> Compiling Java GUI project...' : '> Compiling and running Java...'],
           inputMode: 'idle' as InputMode,
           pendingInputs: [],
         });
@@ -416,14 +418,19 @@ export const useEditorStore = create<EditorStore>()(
           const res = await fetch('/api/compile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ files: javaFiles, mainClass: className, inputs }),
+            body: JSON.stringify({ files: javaFiles, mainClass: className, inputs, execute: !shouldSkipExecution }),
           });
           const data = await res.json();
 
           if (data.success) {
             const lines = (data.output || '').split('\n').filter((l: string) => l.length > 0);
-            set({ consoleOutput: ['> Compilation successful', '> Output:', ...lines] });
-            toast.addToast('Java program executed successfully', 'success');
+            if (data.compiledOnly) {
+              set({ consoleOutput: ['> Compilation successful', ...lines] });
+              toast.addToast('Java GUI project compiled successfully', 'success');
+            } else {
+              set({ consoleOutput: ['> Compilation successful', '> Output:', ...lines] });
+              toast.addToast('Java program executed successfully', 'success');
+            }
           } else if (data.compilationError) {
             const errLines = data.compilationError.split('\n').filter((l: string) => l.length > 0);
             set({ consoleOutput: ['> Compilation failed:', ...errLines] });

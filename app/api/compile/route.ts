@@ -26,6 +26,7 @@ const compileRequestSchema = z.object({
   files: z.array(javaFileSchema).min(1).optional(),
   mainClass: z.string().min(1).max(256).optional(),
   inputs: z.array(z.string()).optional(),
+  execute: z.boolean().optional(),
   sessionId: z.string().max(100).optional(),
 });
 
@@ -49,6 +50,7 @@ interface CompileResponse {
   error?: string;
   errorCode?: ErrorCode;
   compilationError?: string;
+  compiledOnly?: boolean;
   details?: Record<string, string[]>;
 }
 
@@ -110,7 +112,7 @@ export async function POST(request: Request): Promise<Response> {
         { status: 400 }
       );
     }
-    const { code, className, files, mainClass: reqMainClass, inputs } = parseResult.data;
+    const { code, className, files, mainClass: reqMainClass, inputs, execute = true } = parseResult.data;
 
     // Normalize to multi-file format (support legacy single-file requests)
     let javaFiles: JavaFile[];
@@ -185,6 +187,14 @@ export async function POST(request: Request): Promise<Response> {
         success: false,
         compilationError: sanitizeErrorOutput(stderr, workDir),
         errorCode: 'COMPILATION_ERROR',
+      } satisfies CompileResponse);
+    }
+
+    if (!execute) {
+      return Response.json({
+        success: true,
+        compiledOnly: true,
+        output: 'GUI project compiled successfully. Export the .java files to run the windowed app locally.',
       } satisfies CompileResponse);
     }
 
